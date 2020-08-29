@@ -1,0 +1,19 @@
+{
+  "name": "game",
+  "version": "1.0.0",
+  "description": "Game Development",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Game"
+  ],
+  "author": "Ryan Jewell",
+  "license": "ISC",
+  "dependencies": {
+    "g": "^2.0.1",
+    "jquery": "^3.4.1"
+  }
+}

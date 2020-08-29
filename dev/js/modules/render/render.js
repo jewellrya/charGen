@@ -1,11 +1,12 @@
 import { canvas, ctx } from './canvas.js';
 import * as ImageLoad from './imageLoad.js';
-import { bg, hero, monster, inventory } from './objects/objects.js';
+import { bg, hero, monster, inventory, player, global } from './objects/objects.js';
 import { coin, heroAnimateWalkRight, heroAnimateWalkLeft } from './objects/objectsSprites.js';
 import { keysDown } from '../keysDown.js';
 
 // Draw everything
 var render = function () {
+
     ctx.imageSmoothingEnabled = false;
 
     if (ImageLoad.bgReady) {
@@ -16,26 +17,11 @@ var render = function () {
         coin.render();
     }
 
-    if (ImageLoad.heroReady && ImageLoad.heroAnimateWalkRightReady) {
-        if (68 in keysDown) {
-            heroAnimateWalkRight.render();
-        }
-        else if (65 in keysDown) {
-            heroAnimateWalkLeft.render();
-        }
-        else {
-            ctx.drawImage(ImageLoad.heroImage, hero.x, hero.y, hero.width, hero.height);
-        }
-    }
+    player.draw();
 
-    if (ImageLoad.monsterReady) {
-        ctx.drawImage(ImageLoad.monsterImage, monster.x + bg.x, monster.y + bg.y);
-    }
-
-    if (hero.magic.created) {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(hero.magic.x, hero.magic.y, hero.magic.size, hero.magic.size);
-    }
+    global.pMagic.forEach(function (magic) {
+        magic.draw();
+    });
 
     var padding = 32;
 

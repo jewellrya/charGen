@@ -1,4 +1,4 @@
-import { bg, hero } from './objects/objects.js';
+import { bg, player } from './objects/objects.js';
 
 function sprite(options) {
     var that = {},
@@ -87,10 +87,10 @@ function playerSprite(options) {
             0,
             that.width / numberOfFrames,
             that.height,
-            that.x + hero.x,
-            that.y + hero.y,
-            hero.width,
-            hero.height
+            that.x + player.x,
+            that.y + player.y,
+            player.width,
+            player.height
         );
     };
     return that;

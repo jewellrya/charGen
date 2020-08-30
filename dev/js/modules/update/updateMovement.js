@@ -1,4 +1,4 @@
-import { bg, hero, player } from '../render/objects/objects.js';
+import { bg, player, global } from '../render/objects/objects.js';
 import * as ImageLoad from '../render/imageLoad.js';
 import { canvas } from '../render/canvas.js';
 import { keysDown } from '../keysDown.js';
@@ -12,6 +12,9 @@ var updateMovement = function (modifier) {
     } else if (bg.y < 0) {
         if (87 in keysDown) {
             bg.y += player.speed * modifier;
+            global.pMagic.forEach(function (magic) {
+                magic.y += player.speed * modifier;
+            });
         }
     } else {
         if (player.y + (player.height / 3) > 0) {
@@ -29,6 +32,9 @@ var updateMovement = function (modifier) {
     } else if (bg.y >= -bg.height + canvas.height) {
         if (83 in keysDown) {
             bg.y -= player.speed * modifier;
+            global.pMagic.forEach(function (magic) {
+                magic.y -= player.speed * modifier;
+            });
         }
     } else {
         if (player.y + (player.height / 1.2) < canvas.height) {
@@ -49,6 +55,9 @@ var updateMovement = function (modifier) {
     } else if (bg.x < 0) {
         if (65 in keysDown) {
             bg.x += player.speed * modifier;
+            global.pMagic.forEach(function (magic) {
+                magic.x += player.speed * modifier;
+            });
         }
     } else {
         if (player.x + (player.width / 3) > 0) {
@@ -69,6 +78,9 @@ var updateMovement = function (modifier) {
     } else if (bg.x >= -bg.width + canvas.width) {
         if (68 in keysDown) {
             bg.x -= player.speed * modifier;
+            global.pMagic.forEach(function (magic) {
+                magic.x -= player.speed * modifier;
+            });
         }
     } else {
         if (player.x + (player.width / 1.2) < canvas.width) {

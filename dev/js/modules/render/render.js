@@ -1,6 +1,6 @@
 import { canvas, ctx } from './canvas.js';
 import * as ImageLoad from './imageLoad.js';
-import { bg, hero, monster, inventory, player, global } from './objects/objects.js';
+import { bg, monster, inventory, player, global } from './objects/objects.js';
 import { coin, heroAnimateWalkRight, heroAnimateWalkLeft } from './objects/objectsSprites.js';
 import { keysDown } from '../keysDown.js';
 
@@ -15,6 +15,10 @@ var render = function () {
 
     if (ImageLoad.coinReady) {
         coin.render();
+    }
+
+    if (ImageLoad.monsterReady) {
+        ctx.drawImage(ImageLoad.monsterImage, monster.x + bg.x, monster.y + bg.y);
     }
 
     player.draw();
@@ -33,7 +37,7 @@ var render = function () {
 
     // Score
     ctx.fillText("Collect 4 gold to beat the scarecrow.", padding, 20);
-    ctx.fillText("Scarecrows defeated: " + hero.monstersCaught, padding, 40);
+    ctx.fillText("Scarecrows defeated: " + global.monstersCaught, padding, 40);
 
     // Inventory
     ctx.fillStyle = 'rgba(0,0,0,0.65)';

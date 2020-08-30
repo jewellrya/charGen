@@ -1,5 +1,6 @@
 import { canvas, ctx } from '../canvas.js';
 import { keysDown } from '../../keysDown.js';
+import reset from '../../reset.js';
 import * as ImageLoad from '../imageLoad.js';
 import { heroAnimateWalkRight, heroAnimateWalkLeft } from './objectsSprites.js';
 
@@ -10,10 +11,11 @@ var player = new Player();
 var global = {
     pMagic: [],
     w_delay: 0,
-    hit_delay: 0
+    hit_delay: 0,
+    monstersCaught: 0,
+    friction: .05
 }
 
-///////////////////////////////////////////////////
 // Player Class
 function Player() {
     // private variables
@@ -57,32 +59,38 @@ Player.prototype.draw = function () {
 
 Player.prototype.shoot = function () {
     if (global.w_delay === 0) {
-        global.pMagic.push(new Magic({
-            vel: 7,
-            x: this.x + this.width / 2,
-            y: this.y
-        }));
-        global.w_delay = 100;
+        if (ImageLoad.heroImage.src.includes('Left')) {
+            global.pMagic.push(new Magic({
+                vel: -5,
+                x: this.x,
+                y: this.y + this.height / 2
+            }));
+        } else {
+            global.pMagic.push(new Magic({
+                vel: 5,
+                x: this.x + this.width,
+                y: this.y + this.height / 2
+            }));
+        }
+        global.w_delay = 400;
     }
 };
-
-///////////////////////////////////////////////////
 
 // Magic Class
 function Magic(magic) {
     this.x = magic.x;
     this.y = magic.y;
-    this.yVel = -magic.vel;
+    this.xVel = magic.vel;
     this.width = 10;
     this.height = 10;
     this.active = true;
     this.color = 'red';
+
 }
 
-// Magic Class
 Magic.prototype.inBounds = function () {
     return this.x >= 0 && this.x <= canvas.width
-        && this.y >= 0 && this.y <= canvas.height;
+        && this.y >= 0 && this.y <= canvas.height
 };
 
 Magic.prototype.draw = function () {
@@ -91,13 +99,37 @@ Magic.prototype.draw = function () {
 };
 
 Magic.prototype.update = function () {
-    this.y += this.yVel;
+    if (this.xVel > global.friction) {
+        this.xVel -= global.friction;
+        if (this.xVel <= global.friction) {
+            this.active = false;
+        }
+    }
+    if (this.xVel < -global.friction) {
+        this.xVel -= -global.friction;
+        if (this.xVel > -global.friction) {
+            this.active = false;
+        }
+    }
+    this.x += this.xVel;
     this.active = this.inBounds() && this.active;
 };
 
 Magic.prototype.die = function () {
     this.active = false;
 };
+
+Magic.prototype.touchMonster = function () {
+    if (
+        this.x + this.width >= monster.x + bg.x + 35
+        && this.x <= monster.x + bg.x + monster.width - 35
+        && this.y + this.height >= monster.y + bg.y + 35
+        && this.y <= monster.y + bg.y + monster.height - 35
+    ) {
+        ++player.monstersCaught;
+        reset();
+    }
+}
 
 // Game objects
 var bg = {
@@ -124,7 +156,6 @@ export {
 
 
     bg,
-    hero,
     monster,
     inventory
 }

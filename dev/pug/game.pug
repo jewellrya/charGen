@@ -2,3 +2,29 @@ include _index.pug
 block game
     .d-flex.justify-content-center.align-items-center.vh-100( style='background-color: black')
         #game
+
+        script.
+            // Create a Pixi Application
+            let app = new PIXI.Application({
+                width: 256, 
+                height: 256
+                }
+            );
+
+            // Add the canvas that Pixi automatically created for you.
+            document.body.appendChild(app.view);
+
+            PIXI.Loader.shared
+                .add([
+                    '../../assets/coin_ss.png',
+                    '../../assets/male/male1_walkRight_ss.png'
+                ])
+                .load(setup);
+
+            function setup() {
+                let coin = new PIXI.Sprite(
+                    PIXI.Loader.shared.resources['../../assets/coin_ss.png'].texture
+                );
+
+                app.stage.addChild(coin);
+            }

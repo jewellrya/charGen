@@ -4,27 +4,71 @@ block game
         #game
 
         script.
+            // Aliases
+            let Application = PIXI.Application,
+                loader = PIXI.Loader,
+                TextureCache = PIXI.utils.TextureCache,
+                resources = PIXI.Loader.shared.resources,
+                Sprite = PIXI.Sprite,
+                Rectangle = PIXI.Rectangle;
+
             // Create a Pixi Application
-            let app = new PIXI.Application({
-                width: 256, 
-                height: 256
+            let app = new Application({
+                width: 600, 
+                height: 400
                 }
             );
+
+            let texture = 
 
             // Add the canvas that Pixi automatically created for you.
             document.body.appendChild(app.view);
 
-            PIXI.Loader.shared
-                .add([
-                    '../../assets/coin_ss.png',
-                    '../../assets/male/male1_walkRight_ss.png'
-                ])
+            function asset (asset) {
+                var assetDir = '../../assets/';
+                if (typeof asset === 'object') {
+                    for ( var i = 0; i < asset.length; i++) {
+                        asset[i] = assetDir + asset[i] + '.png';
+                    }
+                } 
+                if (typeof asset === 'string') {
+                    asset = assetDir + asset + '.png';
+                }
+                return asset;
+            }
+
+            loader.shared
+                .add('../../assets/sprites.json')
                 .load(setup);
 
-            function setup() {
-                let coin = new PIXI.Sprite(
-                    PIXI.Loader.shared.resources['../../assets/coin_ss.png'].texture
-                );
+            // Define variables in more than one function
+            let id, state, derp, bg;
 
-                app.stage.addChild(coin);
+            function setup() {
+                
+                id = PIXI.Loader.shared.resources['../../assets/sprites.json'].textures;
+
+                bg = new Sprite(id['environment.png']);
+                app.stage.addChild(bg);
+
+                derp = new Sprite(id['male1_standRight.png']);
+                derp.x = 50;
+                derp.vx = 0;
+                derp.yx = 0;
+                app.stage.addChild(derp);
+
+                state = play;
+
+                app.ticker.add(delta => gameLoop(delta));
+            }
+
+            function gameLoop(delta) {
+                
+                state(delta);
+            }
+
+            function play(delta) {
+                
+                derp.vy = 2;
+                derp.y += derp.vy + delta;
             }

@@ -85,7 +85,6 @@ function Magic(magic) {
     this.height = 10;
     this.active = true;
     this.color = 'red';
-
 }
 
 Magic.prototype.inBounds = function () {

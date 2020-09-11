@@ -1,3 +1,4 @@
+// TODO: Health bar above enemies
 // TODO: Melee weapon mechanic
 // TODO: Ranged mechanic for magic & ranged weapons
 // TODO: Animate when taking damage
@@ -6,7 +7,6 @@
 // TODO: Create sprites for equipment & cosmetics that overlay the player.
 // TODO: Change position of sprites rendering
 
-import SpriteUtilities from './module/SpriteUtilities.js';
 import { hitTestRectangle } from './module/hit.js';
 import keyboard from './module/keyboard.js';
 
@@ -45,7 +45,7 @@ let id, state, sheet;
 let player, bg, gold;
 let enemies = [];
 let numberOfRats;
-let playerStats, inventory, messageGold, messageGameOver;
+let playerContainer, playerStats, inventory, messageGold, messageGameOver;
 let resourceHealthOuter, resourceHealthInner, resourceFatigueInner, resourceFatigueOuter, resourceSoulInner, resourceSoulOuter, resourceBarX, resourceBarY, resourceBarHeight, resourceBarInnerOffset, resourceBarMargin;
 let playerSheet = {};
 let playerIdleTexture;
@@ -59,8 +59,16 @@ app.renderer.plugins.interaction.cursorStyles.hover = hoverIcon;
 // keyboard event handlers
 window.addEventListener("keydown", keysDown);
 window.addEventListener("keyup", keysUp);
+window.addEventListener('mousedown', mouseDown);
+window.addEventListener('mouseup', mouseUp);
+window.addEventListener('mousemove', mouseMove);
 
 let keys = {};
+let click = {};
+let cursor = {
+    x: 0,
+    y: 0
+}
 
 function keysDown(e) {
     keys[e.keyCode] = true;
@@ -68,6 +76,19 @@ function keysDown(e) {
 
 function keysUp(e) {
     keys[e.keyCode] = false;
+}
+
+function mouseDown(e) {
+    click['mouse'] = true;
+}
+
+function mouseUp(e) {
+    click['mouse'] = false;
+}
+
+function mouseMove(e) {
+    cursor.x = e.offsetX;
+    cursor.y = e.offsetY;
 }
 
 playerStats = {
@@ -80,6 +101,9 @@ playerStats = {
     intelligence: 10, // Affects magic damage and magic cost.
     wisdom: 10, // Affects soul amount and soul regen.
     charisma: 10, // Dialogue options.
+}
+
+function test() {
 }
 
 function setup() {
@@ -129,16 +153,32 @@ function setup() {
         playerSheet['walkWest'] = sheet.animations["maleWalkWest"];
     }
 
+    function Base(parent) {
+        // Create a base for sometric interactions
+        let basePlane = .2;
+        let baseOffSet = 3;
+        let base = new Graphics();
+        base.beginFill('0x000000');
+        base.drawRect(
+            parent.x - baseOffSet,
+            (parent.height * basePlane) + baseOffSet * 2,
+            parent.width + baseOffSet * 2,
+            base.height = parent.width + baseOffSet * 2
+        );
+        parent.addChild(base);
+    }
+
     function createPlayer() {
+        playerContainer = new Container();
+        gameScene.addChild(playerContainer);
+
         player = new AnimatedSprite(playerSheet.idleEast);
-        player.scale.set(2.5);
         player.x = app.view.width / 2 - player.width / 2;
         player.y = app.view.height / 2 - player.height / 2;
-        player.vx = 0;
-        player.vy = 0;
+        player.scale.set(2.5);
         player.animationSpeed = .025;
         player.loop = false;
-        gameScene.addChild(player);
+        playerContainer.addChild(player);
         player.play();
     }
 
@@ -153,8 +193,11 @@ function setup() {
     gold.play();
     gameScene.addChild(gold);
 
-    numberOfRats = 3;
+    numberOfRats = 1;
     for (let i = 0; i < numberOfRats; i++) {
+        let ratContainer = new Container();
+        gameScene.addChild(ratContainer);
+
         let rat = new AnimatedSprite(sheet.animations["rat"]);
         rat.x = randomInt(bg.x, bg.x + bg.width - rat.width);
         rat.y = randomInt(bg.y, bg.y + bg.height - rat.height);
@@ -165,7 +208,7 @@ function setup() {
         rat.speed = 1;
         rat.strength = .01;
         enemies.push(rat);
-        gameScene.addChild(rat);
+        ratContainer.addChild(rat);
     }
 
     let textStyle = new TextStyle({
@@ -275,12 +318,13 @@ function setup() {
 
 function gameLoop(delta) {
 
+    test();
+
     let secondaryStats = { endurance: playerStats.endurance, dexterity: playerStats.dexterity, speed: playerStats.speed(), fatigueRegen: Math.round(playerStats.fatigueRegen * 100), fatigueCost: Math.round(playerStats.fatigueCost * 100) };
     document.getElementById("playerStats").innerHTML = JSON.stringify(secondaryStats);
 
     // Create an array of objects that will move with the environment
-    let entities = [bg, gold];
-    let environment = entities.concat(enemies);
+    let environment = [bg, gold].concat(enemies);
 
     function moveEnvironment(x, y) {
         environment.forEach(function (item) {
@@ -404,6 +448,8 @@ function gameLoop(delta) {
         enemy.cursor = 'hover';
         enemy.interactive = true;
         var range = 100;
+
+        // If enemy is within range of player's base
         if (enemy.x + enemy.width >= player.x - range
             && enemy.x <= player.x + player.width + range
             && enemy.y + enemy.height >= player.y - range
@@ -429,6 +475,8 @@ function gameLoop(delta) {
             }
         }
     })
+
+    // Player
 
     // Game Over Scene
     let gameOverStyle = new TextStyle({

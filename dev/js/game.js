@@ -1,4 +1,10 @@
-// WATCH SOME PIXI BASICS TUTORIALS
+// TODO: Melee weapon mechanic
+// TODO: Ranged mechanic for magic & ranged weapons
+// TODO: Animate when taking damage
+// TODO: Animations for attacks
+// TODO: Inventory and item equip.
+// TODO: Create sprites for equipment & cosmetics that overlay the player.
+// TODO: Change position of sprites rendering
 
 import SpriteUtilities from './module/SpriteUtilities.js';
 import { hitTestRectangle } from './module/hit.js';
@@ -11,6 +17,7 @@ let Application = PIXI.Application,
     resources = PIXI.Loader.shared.resources,
     Sprite = PIXI.Sprite,
     AnimatedSprite = PIXI.AnimatedSprite,
+    Container = PIXI.Container,
     Text = PIXI.Text,
     TextStyle = PIXI.TextStyle,
     Graphics = PIXI.Graphics,
@@ -32,37 +39,22 @@ loader.shared
     .add('../../assets/sprites.json')
     .load(setup);
 
-// Define variables in more than one function\
+// Define variables in more than one function
+let gameScene, gameOverScene;
 let id, state, sheet;
 let player, bg, gold;
 let enemies = [];
 let numberOfRats;
-let playerStats, inventory, messageGold;
+let playerStats, inventory, messageGold, messageGameOver;
 let resourceHealthOuter, resourceHealthInner, resourceFatigueInner, resourceFatigueOuter, resourceSoulInner, resourceSoulOuter, resourceBarX, resourceBarY, resourceBarHeight, resourceBarInnerOffset, resourceBarMargin;
 let playerSheet = {};
 let playerIdleTexture;
 
-// // Like Magic(magic)
-// function Rat(rat) {
-//     rat = new PIXI.AnimatedSprite(sheet.animations["rat"]);
-//     this.x = 50;
-//     this.y = 50;
-//     rat.scale.set(2.5, 2.5);
-//     rat.play();
-//     app.stage.addChild(rat);
-// }
-
-// Rat.prototype.draw = function () {
-
-// }
-
-// Rat.prototype.update = function () {
-//     if (keys["87"]) {
-//         rats.forEach(function (rat) {
-//             console.log(rat);
-//         })
-//     }
-// }
+// Cursor
+const defaultIcon = "url('../../assets/cursor.png'),auto";
+const hoverIcon = "url('../../assets/cursorAttack.png'),auto";
+app.renderer.plugins.interaction.cursorStyles.default = defaultIcon;
+app.renderer.plugins.interaction.cursorStyles.hover = hoverIcon;
 
 // keyboard event handlers
 window.addEventListener("keydown", keysDown);
@@ -94,6 +86,13 @@ function setup() {
 
     sheet = PIXI.Loader.shared.resources["../../assets/sprites.json"].spritesheet;
     id = PIXI.Loader.shared.resources['../../assets/sprites.json'].textures;
+
+    gameScene = new Container();
+    app.stage.addChild(gameScene);
+
+    gameOverScene = new Container();
+    gameOverScene.visible = false;
+    app.stage.addChild(gameOverScene);
 
     // Resources
     playerStats.health = playerStats.vitality;
@@ -139,12 +138,12 @@ function setup() {
         player.vy = 0;
         player.animationSpeed = .025;
         player.loop = false;
-        app.stage.addChild(player);
+        gameScene.addChild(player);
         player.play();
     }
 
     bg = new Sprite(id['environment.png']);
-    app.stage.addChild(bg);
+    gameScene.addChild(bg);
 
     gold = new PIXI.AnimatedSprite(sheet.animations["gold"]);
     gold.scale.set(0.5, 0.5);
@@ -152,26 +151,21 @@ function setup() {
     gold.y = randomInt(bg.y, bg.y + bg.height - gold.height);
     gold.animationSpeed = 0.1;
     gold.play();
-    app.stage.addChild(gold);
+    gameScene.addChild(gold);
 
-    // rat = new PIXI.AnimatedSprite(sheet.animations["rat"]);
-    // rat.scale.set(2.5, 2.5);
-    // rat.x = randomInt(bg.x, bg.x + bg.width - rat.width);
-    // rat.y = randomInt(bg.x, bg.x + bg.width - rat.width);
-    // rat.animationSpeed = 0.2;
-    // rat.play();
-    // app.stage.addChild(rat);
-
-    numberOfRats = 2;
+    numberOfRats = 3;
     for (let i = 0; i < numberOfRats; i++) {
         let rat = new AnimatedSprite(sheet.animations["rat"]);
         rat.x = randomInt(bg.x, bg.x + bg.width - rat.width);
-        rat.y = 50;
+        rat.y = randomInt(bg.y, bg.y + bg.height - rat.height);
         rat.scale.set(2.5, 2.5);
         rat.animationSpeed = .2;
+        rat.direction = randomIntReverse[randomInt(0, 1)];
         rat.play();
+        rat.speed = 1;
+        rat.strength = .01;
         enemies.push(rat);
-        app.stage.addChild(rat);
+        gameScene.addChild(rat);
     }
 
     let textStyle = new TextStyle({
@@ -182,7 +176,7 @@ function setup() {
 
     messageGold = new Text("Gold: " + inventory.gold, textStyle);
     messageGold.position.set(32, 32);
-    app.stage.addChild(messageGold);
+    gameScene.addChild(messageGold);
 
     resourceBarX = 16;
     resourceBarY = 16;
@@ -196,7 +190,7 @@ function setup() {
     resourceSoulOuter.drawRect(0, 0, playerStats.soul * 2, resourceBarHeight);
     resourceSoulOuter.x = resourceBarX;
     resourceSoulOuter.y = app.view.height - resourceSoulOuter.height - resourceBarY;
-    app.stage.addChild(resourceSoulOuter);
+    gameScene.addChild(resourceSoulOuter);
 
     resourceSoulInner = new Graphics();
     resourceSoulInner.beginFill('0x00d9ff');
@@ -206,7 +200,7 @@ function setup() {
     resourceSoulInner.width = playerStats.soul * 2 - resourceBarInnerOffset * 2;
     resourceSoulInner.height = resourceBarHeight - resourceBarInnerOffset * 2;
     resourceSoulInner.endFill();
-    app.stage.addChild(resourceSoulInner);
+    gameScene.addChild(resourceSoulInner);
 
     // Fatigue (Yellow)
     resourceFatigueOuter = new Graphics();
@@ -214,7 +208,7 @@ function setup() {
     resourceFatigueOuter.drawRect(0, 0, playerStats.fatigue * 2, resourceBarHeight);
     resourceFatigueOuter.x = resourceBarX;
     resourceFatigueOuter.y = resourceSoulOuter.y - resourceFatigueOuter.height - resourceBarMargin;
-    app.stage.addChild(resourceFatigueOuter);
+    gameScene.addChild(resourceFatigueOuter);
 
     resourceFatigueInner = new Graphics();
     resourceFatigueInner.beginFill('0xffff00');
@@ -224,7 +218,7 @@ function setup() {
     resourceFatigueInner.width = playerStats.fatigue * 2 - resourceBarInnerOffset * 2;
     resourceFatigueInner.height = resourceBarHeight - resourceBarInnerOffset * 2;
     resourceFatigueInner.endFill();
-    app.stage.addChild(resourceFatigueInner);
+    gameScene.addChild(resourceFatigueInner);
 
     // Health (Red)
     resourceHealthOuter = new Graphics();
@@ -232,7 +226,7 @@ function setup() {
     resourceHealthOuter.drawRect(0, 0, playerStats.health * 2, resourceBarHeight);
     resourceHealthOuter.x = resourceBarX;
     resourceHealthOuter.y = resourceFatigueOuter.y - resourceHealthOuter.height - resourceBarMargin;
-    app.stage.addChild(resourceHealthOuter);
+    gameScene.addChild(resourceHealthOuter);
 
     resourceHealthInner = new Graphics();
     resourceHealthInner.beginFill('0xff0000');
@@ -242,7 +236,7 @@ function setup() {
     resourceHealthInner.width = playerStats.health * 2 - resourceBarInnerOffset * 2;
     resourceHealthInner.height = resourceBarHeight - resourceBarInnerOffset * 2;
     resourceHealthInner.endFill();
-    app.stage.addChild(resourceHealthInner);
+    gameScene.addChild(resourceHealthInner);
 
     //Capture the keyboard arrow keys
     let controls = [
@@ -288,17 +282,11 @@ function gameLoop(delta) {
     let entities = [bg, gold];
     let environment = entities.concat(enemies);
 
-    function moveEnvironment(direction, factor) {
-        if (direction === 'y') {
-            environment.forEach(function (item) {
-                item.y += factor;
-            })
-        }
-        if (direction === 'x') {
-            environment.forEach(function (item) {
-                item.x += factor;
-            })
-        }
+    function moveEnvironment(x, y) {
+        environment.forEach(function (item) {
+            item.y += y;
+            item.x += x;
+        })
     }
 
     // W
@@ -315,7 +303,7 @@ function gameLoop(delta) {
             }
             player.play();
         }
-        moveEnvironment('y', playerStats.speed());
+        moveEnvironment(0, playerStats.speed());
     }
 
     // A
@@ -334,7 +322,7 @@ function gameLoop(delta) {
             }
             player.play();
         }
-        moveEnvironment('x', playerStats.speed());
+        moveEnvironment(playerStats.speed(), 0);
     }
 
     // S
@@ -348,7 +336,7 @@ function gameLoop(delta) {
             }
             player.play();
         }
-        moveEnvironment('y', -playerStats.speed());
+        moveEnvironment(0, -playerStats.speed());
     }
 
     // D
@@ -361,7 +349,7 @@ function gameLoop(delta) {
             }
             player.play();
         }
-        moveEnvironment('x', -playerStats.speed());
+        moveEnvironment(-playerStats.speed(), 0);
     }
 
     // Faster fps for walking & sprinting animation
@@ -383,9 +371,7 @@ function gameLoop(delta) {
         }
     }
 
-
     // Fatigue
-
     if (keys["16"]) {
         if (!player.playing) {
             // Sprinting animation with Shift
@@ -398,7 +384,6 @@ function gameLoop(delta) {
         if (playerStats.fatigue > 0) {
             playerStats.fatigue -= playerStats.fatigueCost;
         }
-
         resourceFatigueInner.width = playerStats.fatigue * 2 - resourceBarInnerOffset * 2;
 
     }
@@ -411,9 +396,50 @@ function gameLoop(delta) {
         } else {
             playerStats.fatigue += playerStats.fatigueRegen;
         }
-
         resourceFatigueInner.width = playerStats.fatigue * 2 - resourceBarInnerOffset * 2;
     }
+
+    // Enemies
+    enemies.forEach(function (enemy) {
+        enemy.cursor = 'hover';
+        enemy.interactive = true;
+        var range = 100;
+        if (enemy.x + enemy.width >= player.x - range
+            && enemy.x <= player.x + player.width + range
+            && enemy.y + enemy.height >= player.y - range
+            && enemy.y <= player.y + player.height + range
+        ) {
+            if (enemy.x + (enemy.width / 2) < player.x + (player.width / 2)) {
+                enemy.x += enemy.speed;
+            }
+            if (enemy.x + (enemy.width / 2) > player.x + (player.width / 2)) {
+                enemy.x += -enemy.speed;
+            }
+            if (enemy.y + (enemy.height / 2) < player.y + (player.height / 2)) {
+                enemy.y += enemy.speed;
+            }
+            if (enemy.y + (enemy.height / 2) > player.y + (player.height / 2)) {
+                enemy.y += -enemy.speed;
+            }
+        } else {
+            enemy.x += enemy.speed * enemy.direction;
+            if (enemy.x >= bg.x + bg.width - enemy.width ||
+                enemy.x <= bg.x) {
+                enemy.direction *= -1;
+            }
+        }
+    })
+
+    // Game Over Scene
+    let gameOverStyle = new TextStyle({
+        fontFamily: 'Visitor',
+        fontSize: 64,
+        fill: 'white'
+    });
+    messageGameOver = new Text("RIP in Pieces", gameOverStyle);
+    messageGameOver.x = app.view.width / 2 - messageGameOver.width / 2;
+    messageGameOver.y = app.view.height / 2 - messageGameOver.height / 2;
+    gameOverScene.addChild(messageGameOver);
 
     state(delta);
 }
@@ -427,9 +453,27 @@ function play(delta) {
         messageGold.text = 'Gold: ' + inventory.gold;
     }
 
+    enemies.forEach(function (enemy) {
+        if (hitTestRectangle(enemy, player)) {
+            if (playerStats.health > 0) {
+                playerStats.health -= enemy.strength;
+                resourceHealthInner.width = playerStats.health * 2 - resourceBarInnerOffset * 2;
+            }
+        }
+    })
+
+    if (playerStats.health <= 0) {
+        state = end;
+    }
 }
 
-// Throw gold randomly around
+function end() {
+    gameScene.visible = false;
+    gameOverScene.visible = true;
+}
+
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+let randomIntReverse = [-1, 1];

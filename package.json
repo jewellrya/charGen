@@ -19,6 +19,7 @@
     "jquery": "^3.5.1",
     "live-server": "^1.2.1",
     "pixi.js": "^5.3.3",
+    "pug": "^3.0.2",
     "sass": "^1.32.8"
   },
   "devDependencies": {

@@ -9,7 +9,7 @@ let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext('2d');
 let t = 0;
 
-ctx.scale(8, 8);
+ctx.scale(12, 12);
 ctx.imageSmoothingEnabled = false;
 
 var loadedImages = [];
@@ -42,9 +42,11 @@ preload(images, function(){
 	}
 
 	var img = canvas.toDataURL("image/png");
-	document.write('<img src="'+img+'"/>');
+	document.write('<img src="'+img+'"/><a href="'+img+'" download="derp">export png</a>');
 
 });
+
+
 
 // function update() {
 // 	requestAnimationFrame(update);

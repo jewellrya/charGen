@@ -9,11 +9,6 @@ let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext('2d');
 let t = 0;
 
-// var hair1 = new Image();
-// var human1 = new Image();
-// hair1.src = "../../assets/Hair1.png";
-// human1.src = "../../assets/Human1.png";
-
 ctx.scale(8, 8);
 ctx.imageSmoothingEnabled = false;
 
@@ -51,10 +46,10 @@ preload(images, function(){
 
 });
 
-function update() {
-	requestAnimationFrame(update);
-};
+// function update() {
+// 	requestAnimationFrame(update);
+// };
 
-update();
+// update();
 
 

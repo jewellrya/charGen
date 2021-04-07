@@ -1,10 +1,3 @@
-// Add browser prefixes to the requestAnimationFrame "Object Method"
-(function() {
-	let requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
-	window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
-	window.requestAnimationFrame = requestAnimationFrame;
-});
-
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext('2d');
 
@@ -44,11 +37,3 @@ preload(images, function(){
 	document.write('<img src="'+img+'"/><a href="'+img+'" download="derp">export png</a>');
 
 });
-
-// function update() {
-// 	requestAnimationFrame(update);
-// };
-
-// update();
-
-

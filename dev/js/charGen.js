@@ -33,8 +33,8 @@ var humanMale = [
 	],
 	[
 		{name: 'humanMaleArmor_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'humanMaleHeavy1', src: '../../assets/Human\ Male\ Heavy1.png', x: xOffset-1, y: yOffset},
-		{name: 'humanMaleHeavy2', src: '../../assets/Human\ Male\ Heavy2.png', x: xOffset-4, y: yOffset},
+		{name: 'humanMaleHeavy1', src: '../../assets/Human\ Male\ Heavy1.png', x: xOffset-4, y: yOffset+1},
+		{name: 'humanMaleHeavy2', src: '../../assets/Human\ Male\ Heavy2.png', x: xOffset-1, y: yOffset+8},
 	],
 ]
 
@@ -67,15 +67,34 @@ function drawChar(imageArray, name) {
 		}
 
 		var img = canvas.toDataURL("image/png");
-		var exportModule = '<div id="' + name + '" class="col-12 col-md-6 col-lg-3"><div class="d-flex flex-column"><img src="' + img + '"/><a class="text-center text-truncate" href="' + img + '" download="' + name + '">Export \"' + name + '\"</a></div></div>';
-		document.getElementById('charGen').innerHTML += exportModule;
+		var charGenComponent = '<div id="' + name + '" class="col-12 col-md-6 col-lg-3"><div class="d-flex flex-column"><img src="' + img + '"/><a class="text-center text-truncate" href="' + img + '" download="' + name + '">Export \"' + name + '\"</a></div></div>';
+		document.getElementById('charGen').innerHTML += charGenComponent;
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		
 	});
 }
 
+//- Exclusions from the normal permutation.
+for(var i = 0; i < humanMale[0].length; i++) {
+	for(var j = 0; j < humanMale[5].length; j++) {
+		for(var k = 0; k < humanMale[1].length; k++) {
+			for(var l = 0; l < humanMale[2].length; l++) {
 
+				var genChar = [];
+
+				genChar.push(humanMale[0][i]);
+				genChar.push(humanMale[5][j]);
+				genChar.push(humanMale[1][k]);
+				genChar.push(humanMale[2][l]);
+
+				drawChar(genChar, 'humanMale' + (i + 1) + j + k + l);
+			}
+		}
+	}
+}
+
+//- Permutation for all skin tones.
 for(var i = 0; i < humanMale[0].length; i++) {
      for(var j = 0; j < humanMale[1].length; j++) {
 		for(var k = 0; k < humanMale[2].length; k++) {

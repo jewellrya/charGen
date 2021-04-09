@@ -75,6 +75,8 @@ function drawChar(imageArray, name) {
 	});
 }
 
+let drawAmount = 0;
+
 //- Exclusions from the normal permutation.
 for(var i = 0; i < humanMale[0].length; i++) {
 	for(var j = 0; j < humanMale[5].length; j++) {
@@ -89,6 +91,9 @@ for(var i = 0; i < humanMale[0].length; i++) {
 				genChar.push(humanMale[2][l]);
 
 				drawChar(genChar, 'humanMale' + (i + 1) + j + k + l);
+
+				drawAmount++;
+				document.getElementById("drawAmount").innerHTML = drawAmount + ' results.';
 			}
 		}
 	}

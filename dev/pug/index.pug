@@ -2,6 +2,13 @@ extends ../templates/_template.pug
 
 block ui
 
-	canvas#canvas( width='350' height='550' )
+	//- Canvas that generates images.
+	canvas#canvas.d-none( width='350' height='550' )
 
-	script( src='../../dev/js/charGen.js' )
+	.container
+		.row 
+			.col.py-5
+				h1 NFT charGen
+
+		//- Container for the printed png images.
+		#charGen.row

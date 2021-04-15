@@ -15,6 +15,7 @@
   "author": "Ryan Jewell",
   "license": "ISC",
   "dependencies": {
+    "bootstrap": "^5.0.0-beta3",
     "g": "^2.0.1",
     "jquery": "^3.6.0",
     "live-server": "^1.2.1",

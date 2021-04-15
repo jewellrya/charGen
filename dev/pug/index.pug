@@ -1,15 +1,54 @@
 extends ../templates/_template.pug
 
 block ui
-
-	//- Canvas that generates images.
+	
 	canvas#canvas.d-none( width='350' height='550' )
 
 	.container
 		.row 
 			.col.py-5
-				h1 NFT charGen
-				#drawAmount
+				h1 charGen
 
-		//- Container for the printed png images.
-		#charGen.row
+		.row
+			.col-3
+				.row.g-1.mb-4
+					.col-auto
+						button.btn.btn-primary.btn-sm( onclick="randomChar(humanMale)" ) Random
+					.col-auto
+						button.btn.btn-primary.btn-sm( onclick="permute()" ) Generate all Combinations
+						
+
+
+				mixin featureSelector(category)
+					.row.align-items-center.mb-2
+						.col-auto
+							button.btn.btn-primary.btn-sm( onclick='selectChar(\"' + category + '\", \"decrease\")') <
+						.col
+							p.mb-0.text-capitalize= category
+						.col-auto
+							button.btn.btn-primary.btn-sm( onclick='selectChar(\"' + category + '\", \"increase\")') >
+				
+				.row.g-1.mb-3
+					.col-6
+						button.btn.btn-primary.btn-sm.w-100( onclick='selectGender(\"male\")' ) Male
+					.col-6
+						button.btn.btn-primary.btn-sm.w-100( onclick='selectGender(\"female\")' ) Female
+
+				.row.align-items-center.mb-2
+						.col-auto
+							button.btn.btn-primary.btn-sm( onclick='selectRace("decrease")' ) <
+						.col
+							p.mb-0.text-capitalize Race
+						.col-auto
+							button.btn.btn-primary.btn-sm( onclick='selectRace("increase")' ) >
+
+				+featureSelector('skin')
+				+featureSelector('hair')
+				+featureSelector('beard')
+				+featureSelector('adornment')
+				+featureSelector('tattoo')
+				
+			//- Container for the printed png images.
+			.col
+				#drawAmount
+				#charGen.row

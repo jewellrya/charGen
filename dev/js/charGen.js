@@ -201,40 +201,48 @@ preload = function(imageArray, callback) {
 	}
 }
 
-hairColors = {
-	brown1: '#6c5956',
-	brown2: '#534442'
+var hairColors = {
+	brown1: ['#7a6966', '#574845'],
+	yellow1: ['#c7b881', '#ac9f6f'],
 }
 
-var hairColor = hairColors.brown1;
-
-function invertColors(data) {
-	for (var i = 0; i < data.length; i+= 4) {
-		data[i] = data[i] ^ 255; // Invert Red
-		data[i+1] = data[i+1] ^ 255; // Invert Green
-		data[i+2] = data[i+2] ^ 255; // Invert Blue
-	}
+function hexToRgb(hex){
+    var c;
+    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+        c= hex.substring(1).split('');
+        if(c.length== 3){
+            c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c= '0x'+c.join('');
+        return [(c>>16)&255, (c>>8)&255, c&255];
+    }
+    throw new Error('Bad Hex: ' + hex);
 }
 
-function replaceColor(data) {
+function replaceColor(data, colorFind, colorReplace) {
+
+	var rgbFind = hexToRgb(colorFind);
+	var rgbReplace = hexToRgb(colorReplace);
+
 	for (let i = 0; i < data.length; i += 4) { // red, green, blue, and alpha
         var r = data[i + 0];
         var g = data[i + 1];
         var b = data[i + 2];
         var a = data[i + 3];
 		
-        if (r === 138 && g === 138 && b === 138 && a === 255) { // light gray
-			data[i + 0] = 106;
-            data[i + 1] = 166;
-            data[i + 2] = 147;
-        }
-
-		if (r === 120 && g === 120 && b === 120 && a === 255) { // darker gray
-			data[i + 0] = 87;
-            data[i + 1] = 151;
-            data[i + 2] = 129;
+        if (r === rgbFind[0] && g === rgbFind[1] && b === rgbFind[2] && a === 255) {
+			data[i + 0] = rgbReplace[0];
+            data[i + 1] = rgbReplace[1];
+            data[i + 2] = rgbReplace[2];
         }
     }
+}
+
+function applyHairColor(data) {
+	var colorArray = createdColor[raceIndex][raceTemplateName].hair;
+
+	replaceColor(data, '#8a8a8a', colorArray[0]);
+	replaceColor(data, '#787878', colorArray[1]);
 }
 
 function drawChar(imageArray, name, replace) {
@@ -245,7 +253,7 @@ function drawChar(imageArray, name, replace) {
 
 			//- Colors Test
 			var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-			replaceColor(imageData.data);
+			applyHairColor(imageData.data);
 			ctx.putImageData(imageData, 0, 0);
 		}
 
@@ -348,6 +356,21 @@ var createdCharacter = [
 	},
 ]
 
+var createdColor = [
+	{
+		humanMale: {hair: hairColors.brown1},
+		humanFemale: {hair: hairColors.brown1},
+	},
+	{
+		halforcMale: {hair: hairColors.brown1},
+		halforcFemale: {hair: hairColors.brown1},
+	},
+	{
+		dwarfMale: {hair: hairColors.brown1},
+		dwarfFemale: {hair: hairColors.brown1},
+	},
+]
+
 function popRaceName(raceTemplateName) {
 	var raceName;
 
@@ -366,7 +389,7 @@ function popRaceName(raceTemplateName) {
 	document.getElementById('selectedRace').innerHTML = raceName;
 }
 
-var raceIndex, raceTemplateGenders, raceTemplateIndex, raceTemplateName, raceTemplate;
+var raceIndex, raceTemplateGenders, genderIndex, raceTemplateName, raceTemplate;
 
 // Select Character Features Randomly
 function randomChar() {
@@ -379,9 +402,9 @@ function randomChar() {
 	}
 	
 	raceIndex = getRandomInt(createdCharacter.length);
-	raceTemplateIndex = getRandomInt(Object.keys(createdCharacter[raceIndex]).length);
-	raceTemplateName = Object.keys(createdCharacter[raceIndex])[raceTemplateIndex];
-	raceTemplate = raceTemplates[raceIndex][raceTemplateIndex];
+	genderIndex = getRandomInt(Object.keys(createdCharacter[raceIndex]).length);
+	raceTemplateName = Object.keys(createdCharacter[raceIndex])[genderIndex];
+	raceTemplate = raceTemplates[raceIndex][genderIndex];
 	popRaceName(raceTemplateName);
 
 	function getRandom(array) {
@@ -403,12 +426,13 @@ function randomChar() {
 		createdCharacterObject[prop] = genIndex[i];
 	}
 
-	genName = raceTemplateIndex.toString() + raceIndex.toString() + genName;
+	genName = genderIndex.toString() + raceIndex.toString() + genName;
 
 	drawChar(genChar, genName + 0, true);
 }
 
 randomChar();
+console.log(createdColor[raceIndex][raceTemplateName].hair);
 
 // Select Character Features
 function create(raceTemplate) {
@@ -422,7 +446,7 @@ function create(raceTemplate) {
 		genName = genName + createdCharacterObject[prop];
 	}
 
-	genName = raceTemplateIndex.toString() + raceIndex.toString() + genName;
+	genName = genderIndex.toString() + raceIndex.toString() + genName;
 
 	drawChar(genChar, genName + 0, true);
 };
@@ -466,23 +490,23 @@ function selectChar(feature, scale) {
 function selectGender(gender) {
 
 	function changeGender() {
-		raceTemplateName = Object.keys(createdCharacter[raceIndex])[raceTemplateIndex];
-		raceTemplate = raceTemplates[raceIndex][raceTemplateIndex];
+		raceTemplateName = Object.keys(createdCharacter[raceIndex])[genderIndex];
+		raceTemplate = raceTemplates[raceIndex][genderIndex];
 		create(raceTemplate);
 	}
 
 	if( gender === 'male' ) {
-		if( raceTemplateIndex > 0 ) {
+		if( genderIndex > 0 ) {
 
-			raceTemplateIndex--;
+			genderIndex--;
 			changeGender();
 		}
 	}
 	if( gender === 'female' ) {
 
-		if( raceTemplateIndex < Object.keys(raceTemplates[raceIndex]).length - 1 ) {
+		if( genderIndex < Object.keys(raceTemplates[raceIndex]).length - 1 ) {
 
-			raceTemplateIndex++;
+			genderIndex++;
 			changeGender();
 		}
 	}
@@ -491,8 +515,8 @@ function selectGender(gender) {
 function selectRace(scale) {
 
 	function changeRace() {
-		raceTemplateName = Object.keys(createdCharacter[raceIndex])[raceTemplateIndex];
-		raceTemplate = raceTemplates[raceIndex][raceTemplateIndex];
+		raceTemplateName = Object.keys(createdCharacter[raceIndex])[genderIndex];
+		raceTemplate = raceTemplates[raceIndex][genderIndex];
 		create(raceTemplate);
 		popRaceName(raceTemplateName);
 	}
@@ -518,4 +542,8 @@ function selectRace(scale) {
 			changeRace();
 		}
 	}
+}
+
+function selectHairColor(scale) {
+	console.log(Object.keys(hairColors));
 }

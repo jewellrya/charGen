@@ -42,6 +42,15 @@ block ui
 
 				+featureSelector('skin')
 				+featureSelector('hair')
+
+				.row.align-items-center.mb-2
+						.col-auto
+							button.btn.btn-outline-primary.btn-sm( onclick='selectHairColor("decrease")') <
+						.col
+							p.mb-0.text-capitalize Hair Color
+						.col-auto
+							button.btn.btn-outline-primary.btn-sm( onclick='selectHairColor("increase")') >
+
 				+featureSelector('beard')
 				+featureSelector('adornment')
 				+featureSelector('tattoo')

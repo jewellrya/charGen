@@ -124,6 +124,62 @@ var halforcFemale = [
 	],
 ]
 
+var dwarfMale = [
+	[
+		{name: 'dwarfMale1', src: '../../assets/Dwarf\ Male1.png', x: xOffset-1, y: yOffset+4}, 
+		{name: 'dwarfMale2', src: '../../assets/Dwarf\ Male2.png', x: xOffset-1, y: yOffset+4},
+		{name: 'dwarfMale3', src: '../../assets/Dwarf\ Male3.png', x: xOffset-1, y: yOffset+4},
+	],
+	[
+		{name: 'dwarfMaleHair_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+		{name: 'dwarfMaleHair1', src: '../../assets/Dwarf\ Male\ Hair1.png', x: xOffset+1, y: yOffset+4},
+		{name: 'dwarfMaleHair2', src: '../../assets/Dwarf\ Male\ Hair2.png', x: xOffset+1, y: yOffset+3},
+		{name: 'dwarfMaleHair3', src: '../../assets/Dwarf\ Male\ Hair3.png', x: xOffset+2, y: yOffset+4},
+	],
+	[
+		{name: 'dwarfMaleBeard_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+		{name: 'dwarfMaleBeard1', src: '../../assets/Dwarf\ Male\ Beard1.png', x: xOffset+3, y: yOffset+9}, 
+		{name: 'dwarfMaleBeard2', src: '../../assets/Dwarf\ Male\ Beard2.png', x: xOffset+3, y: yOffset+9}, 
+		{name: 'dwarfMaleBeard3', src: '../../assets/Dwarf\ Male\ Beard3.png', x: xOffset+4, y: yOffset+8},
+	],
+	[
+		{name: 'dwarfMaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+	],
+	[
+		{name: 'dwarfMaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+	],
+	[
+		{name: 'dwarfMaleArmor_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+	],
+]
+
+var dwarfFemale = [
+	[
+		{name: 'dwarfFemale1', src: '../../assets/Dwarf\ Female1.png', x: xOffset-1, y: yOffset+5},
+		{name: 'dwarfFemale2', src: '../../assets/Dwarf\ Female2.png', x: xOffset-1, y: yOffset+5},
+		{name: 'dwarfFemale3', src: '../../assets/Dwarf\ Female3.png', x: xOffset-1, y: yOffset+5},
+	],
+	[
+		{name: 'dwarfFemaleHair_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+		{name: 'dwarfFemaleHair1', src: '../../assets/Dwarf\ Female\ Hair1.png', x: xOffset+1, y: yOffset+4},
+		{name: 'dwarfFemaleHair2', src: '../../assets/Dwarf\ Female\ Hair2.png', x: xOffset+1, y: yOffset+4},
+		{name: 'dwarfFemaleHair3', src: '../../assets/Dwarf\ Female\ Hair3.png', x: xOffset-1, y: yOffset+2},
+	],
+	[
+		{name: 'dwarfFemaleBeard_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+	],
+	[
+		{name: 'dwarfFemaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+		{name: 'dwarfFemaleAdornment1', src: '../../assets/Dwarf\ Female\ Adornment1.png', x: xOffset+1, y: yOffset+9},
+	],
+	[
+		{name: 'dwarfFemaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+	],
+	[
+		{name: 'dwarfFemaleArmor_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+	],
+]
+
 preload = function(imageArray, callback) {
 
 	var imagesLoaded = 0;
@@ -234,7 +290,11 @@ var raceTemplates = [
 	[
 		halforcMale,
 		halforcFemale
-	]
+	],
+	[
+		dwarfMale,
+		dwarfFemale
+	],
 ]
 
 var createdCharacter = [
@@ -246,7 +306,29 @@ var createdCharacter = [
 		halforcMale: {skin: 1, hair: 2, beard: 2, adornment: 0, tattoo: 1},
 		halforcFemale: {skin: 0, hair: 1, beard: 0, adornment: 1, tattoo: 1},
 	},
+	{
+		dwarfMale: {skin: 1, hair: 2, beard: 2, adornment: 0, tattoo: 0},
+		dwarfFemale: {skin: 0, hair: 2, beard: 0, adornment: 0, tattoo: 0},
+	},
 ]
+
+function popRaceName(raceTemplateName) {
+	var raceName;
+
+	if ( raceTemplateName.includes('halforc') ) {
+		raceName = 'Half Orc';
+	}
+
+	else if ( raceTemplateName.includes('Female') ) {
+		raceName = raceTemplateName.split('Female')[0];
+	}
+
+	else if ( raceTemplateName.includes('Male') ) {
+		raceName = raceTemplateName.split('Male')[0];
+	}
+	
+	document.getElementById('selectedRace').innerHTML = raceName;
+}
 
 var raceIndex, raceTemplateGenders, raceTemplateIndex, raceTemplateName, raceTemplate;
 
@@ -264,6 +346,7 @@ function randomChar() {
 	raceTemplateIndex = getRandomInt(Object.keys(createdCharacter[raceIndex]).length);
 	raceTemplateName = Object.keys(createdCharacter[raceIndex])[raceTemplateIndex];
 	raceTemplate = raceTemplates[raceIndex][raceTemplateIndex];
+	popRaceName(raceTemplateName);
 
 	function getRandom(array) {
 		var randomInt = getRandomInt(array.length)
@@ -306,7 +389,7 @@ function create(raceTemplate) {
 	genName = raceTemplateIndex.toString() + raceIndex.toString() + genName;
 
 	drawChar(genChar, genName + 0, true);
-}
+};
 
 function selectChar(feature, scale) {
 
@@ -375,16 +458,15 @@ function selectRace(scale) {
 		raceTemplateName = Object.keys(createdCharacter[raceIndex])[raceTemplateIndex];
 		raceTemplate = raceTemplates[raceIndex][raceTemplateIndex];
 		create(raceTemplate);
+		popRaceName(raceTemplateName);
 	}
 
 	if( scale === 'increase' ) {
 		if( raceIndex < raceTemplates.length - 1 ) {
-
 			raceIndex++;
 			changeRace();
 		}
 		else {
-
 			raceIndex = 0;
 			changeRace();
 		}
@@ -392,12 +474,10 @@ function selectRace(scale) {
 
 	if( scale === 'decrease' ) {
 		if( raceIndex > 0 ) {
-
 			raceIndex--;
 			changeRace();
 		}
 		else {
-
 			raceIndex = raceTemplates.length - 1;
 			changeRace();
 		}

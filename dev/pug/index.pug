@@ -9,24 +9,22 @@ block ui
 			.col.py-5
 				h1 charGen
 
+		.row.g-1.mb-5.pb-4.border-bottom
+			.col-auto
+				button.btn.btn-outline-primary.btn-sm( onclick="randomChar(humanMale)" ) Random
+			.col-auto
+				button.btn.btn-outline-primary.btn-sm( onclick="permute()" ) Generate all Combinations
+
 		.row
 			.col-3
-				.row.g-1.mb-4
-					.col-auto
-						button.btn.btn-primary.btn-sm( onclick="randomChar(humanMale)" ) Random
-					.col-auto
-						button.btn.btn-primary.btn-sm( onclick="permute()" ) Generate all Combinations
-						
-
-
 				mixin featureSelector(category)
 					.row.align-items-center.mb-2
 						.col-auto
-							button.btn.btn-primary.btn-sm( onclick='selectChar(\"' + category + '\", \"decrease\")') <
+							button.btn.btn-outline-primary.btn-sm( onclick='selectChar(\"' + category + '\", \"decrease\")') <
 						.col
 							p.mb-0.text-capitalize= category
 						.col-auto
-							button.btn.btn-primary.btn-sm( onclick='selectChar(\"' + category + '\", \"increase\")') >
+							button.btn.btn-outline-primary.btn-sm( onclick='selectChar(\"' + category + '\", \"increase\")') >
 				
 				.row.g-1.mb-3
 					.col-6
@@ -34,11 +32,11 @@ block ui
 					.col-6
 						button.btn.btn-primary.btn-sm.w-100( onclick='selectGender(\"female\")' ) Female
 
-				.row.align-items-center.mb-2
+				.row.align-items-center.mb-5
 						.col-auto
 							button.btn.btn-primary.btn-sm( onclick='selectRace("decrease")' ) <
 						.col
-							p.mb-0.text-capitalize Race
+							#selectedRace.text-capitalize
 						.col-auto
 							button.btn.btn-primary.btn-sm( onclick='selectRace("increase")' ) >
 

@@ -1,11 +1,11 @@
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext('2d');
 
-ctx.scale(12, 12);
+ctx.scale(10, 10);
 ctx.imageSmoothingEnabled = false;
 
-var xOffset = 7;
-var yOffset = 5;
+var xOffset = 10;
+var yOffset = 12;
 
 var humanMale = [
 	[
@@ -66,28 +66,29 @@ var humanFemale = [
 
 var halforcMale = [
 	[
-		{name: 'halforcMale1', src: '../../assets/Halforc\ Male1.png', x: xOffset, y: yOffset}, 
-		{name: 'halforcMale2', src: '../../assets/Halforc\ Male2.png', x: xOffset, y: yOffset},
-		{name: 'halforcMale3', src: '../../assets/Halforc\ Male3.png', x: xOffset, y: yOffset},
+		{name: 'halforcMale1', src: '../../assets/Halforc\ Male1.png', x: xOffset-1, y: yOffset-3}, 
+		{name: 'halforcMale2', src: '../../assets/Halforc\ Male2.png', x: xOffset-1, y: yOffset-3},
+		{name: 'halforcMale3', src: '../../assets/Halforc\ Male3.png', x: xOffset-1, y: yOffset-3},
 	],
 	[
 		{name: 'halforcMaleHair_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcMaleHair1', src: '../../assets/Halforc\ Male\ Hair1.png', x: xOffset+3, y: yOffset},
-		{name: 'halforcMaleHair2', src: '../../assets/Halforc\ Male\ Hair2.png', x: xOffset+3, y: yOffset},
+		{name: 'halforcMaleHair1', src: '../../assets/Halforc\ Male\ Hair1.png', x: xOffset+2, y: yOffset-3},
+		{name: 'halforcMaleHair2', src: '../../assets/Halforc\ Male\ Hair2.png', x: xOffset+3, y: yOffset-3},
 	],
 	[
 		{name: 'halforcMaleBeard_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcMaleBeard1', src: '../../assets/Halforc\ Male\ Beard1.png', x: xOffset+3, y: yOffset+4}, 
-		{name: 'halforcMaleBeard2', src: '../../assets/Halforc\ Male\ Beard2.png', x: xOffset+5, y: yOffset+7}, 
+		{name: 'halforcMaleBeard1', src: '../../assets/Halforc\ Male\ Beard1.png', x: xOffset+5, y: yOffset+2}, 
+		{name: 'halforcMaleBeard2', src: '../../assets/Halforc\ Male\ Beard2.png', x: xOffset+6, y: yOffset+4}, 
 	],
 	[
 		{name: 'halforcMaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
+		{name: 'halforcMaleAdornment1', src: '../../assets/Halforc\ Male\ Adornment1.png', x: xOffset+4, y: yOffset+4},
 	],
 	[
 		{name: 'halforcMaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcMaleTattoo1', src: '../../assets/Halforc\ Male\ Tattoo1.png', x: xOffset, y: yOffset+14},
-		{name: 'halforcMaleTattoo2', src: '../../assets/Halforc\ Male\ Tattoo2.png', x: xOffset, y: yOffset+14},
-		{name: 'halforcMaleTattoo3', src: '../../assets/Halforc\ Male\ Tattoo3.png', x: xOffset, y: yOffset+14},
+		{name: 'halforcMaleTattoo1', src: '../../assets/Halforc\ Male\ Tattoo1.png', x: xOffset-1, y: yOffset+8},
+		{name: 'halforcMaleTattoo2', src: '../../assets/Halforc\ Male\ Tattoo2.png', x: xOffset+4, y: yOffset},
+		{name: 'halforcMaleTattoo3', src: '../../assets/Halforc\ Male\ Tattoo3.png', x: xOffset+4, y: yOffset+8},
 	],
 	[
 		{name: 'halforcMaleArmor_blank', src: '../../assets/_blank.png', x: 0, y: 0},
@@ -96,27 +97,27 @@ var halforcMale = [
 
 var halforcFemale = [
 	[
-		{name: 'halforcFemale1', src: '../../assets/Halforc\ Female1.png', x: xOffset, y: yOffset+1},
-		{name: 'halforcFemale2', src: '../../assets/Halforc\ Female2.png', x: xOffset, y: yOffset+1},
-		{name: 'halforcFemale3', src: '../../assets/Halforc\ Female3.png', x: xOffset, y: yOffset+1},
+		{name: 'halforcFemale1', src: '../../assets/Halforc\ Female1.png', x: xOffset, y: yOffset-2},
+		{name: 'halforcFemale2', src: '../../assets/Halforc\ Female2.png', x: xOffset, y: yOffset-2},
+		{name: 'halforcFemale3', src: '../../assets/Halforc\ Female3.png', x: xOffset, y: yOffset-2},
 	],
 	[
 		{name: 'halforcFemaleHair_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcFemaleHair1', src: '../../assets/Halforc\ Female\ Hair1.png', x: xOffset+1, y: yOffset+1},
-		{name: 'halforcFemaleHair2', src: '../../assets/Halforc\ Female\ Hair2.png', x: xOffset+1, y: yOffset+1},
+		{name: 'halforcFemaleHair1', src: '../../assets/Halforc\ Female\ Hair1.png', x: xOffset+1, y: yOffset-2},
+		{name: 'halforcFemaleHair2', src: '../../assets/Halforc\ Female\ Hair2.png', x: xOffset, y: yOffset-4},
 	],
 	[
 		{name: 'halforcFemaleBeard_blank', src: '../../assets/_blank.png', x: 0, y: 0},
 	],
 	[
 		{name: 'halforcFemaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcFemaleAdornment1', src: '../../assets/Halforc\ Female\ Adornment1.png', x: xOffset+3, y: yOffset+5},
+		{name: 'halforcFemaleAdornment1', src: '../../assets/Halforc\ Female\ Adornment1.png', x: xOffset+3, y: yOffset+3},
 	],
 	[
 		{name: 'halforcFemaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcFemaleTattoo1', src: '../../assets/Halforc\ Female\ Tattoo1.png', x: xOffset, y: yOffset+12},
-		{name: 'halforcFemaleTattoo2', src: '../../assets/Halforc\ Female\ Tattoo2.png', x: xOffset, y: yOffset+12},
-		{name: 'halforcFemaleTattoo3', src: '../../assets/Halforc\ Female\ Tattoo3.png', x: xOffset, y: yOffset+12},
+		{name: 'halforcFemaleTattoo1', src: '../../assets/Halforc\ Female\ Tattoo1.png', x: xOffset+3, y: yOffset+28},
+		{name: 'halforcFemaleTattoo2', src: '../../assets/Halforc\ Female\ Tattoo2.png', x: xOffset+10, y: yOffset+14},
+		{name: 'halforcFemaleTattoo3', src: '../../assets/Halforc\ Female\ Tattoo3.png', x: xOffset+5, y: yOffset},
 	],
 	[
 		{name: 'halforcFemaleArmor_blank', src: '../../assets/_blank.png', x: 0, y: 0},
@@ -151,8 +152,20 @@ function drawChar(imageArray, name, replace) {
 			ctx.drawImage(loadedImages[i], imageArray[i].x, imageArray[i].y);
 		}
 
+		// function invertColors(data) {
+		// 	for (var i = 0; i < data.length; i+= 4) {
+		// 	  data[i] = data[i] ^ 255; // Invert Red
+		// 	  data[i+1] = data[i+1] ^ 255; // Invert Green
+		// 	  data[i+2] = data[i+2] ^ 255; // Invert Blue
+		// 	}
+		//   }
+
+		// var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		// invertColors(imageData.data);
+		// ctx.putImageData(imageData, 0, 0);
+
 		var img = canvas.toDataURL("image/png");
-		var charGenComponent = '<div id="' + name + '" class="col-12 col-md-6 col-lg-3"><div class="d-flex flex-column"><img src="' + img + '"/><a class="text-center text-truncate" href="' + img + '" download="' + name + '">Export \"' + name + '\"</a></div></div>';
+		var charGenComponent = '<div id="component_' + name + '" class="col-12 col-md-6 col-lg-4"><div class="d-flex flex-column"><img id="img_' + name + '" src="' + img + '"/><a class="text-center text-truncate" href="' + img + '" download="' + name + '">Export \"' + name + '\"</a></div></div>';
 		if(!replace) {
 			document.getElementById('charGen').innerHTML += charGenComponent;
 		} else {
@@ -226,17 +239,14 @@ var raceTemplates = [
 
 var createdCharacter = [
 	{
-		humanMale: {skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0},
-		humanFemale: {skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0},
+		humanMale: {skin: 2, hair: 0, beard: 1, adornment: 0, tattoo: 0},
+		humanFemale: {skin: 2, hair: 2, beard: 0, adornment: 1, tattoo: 1},
 	},
 	{
-		halforcMale: {skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0},
-		halforcFemale: {skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0},
+		halforcMale: {skin: 1, hair: 2, beard: 2, adornment: 0, tattoo: 1},
+		halforcFemale: {skin: 0, hair: 1, beard: 0, adornment: 1, tattoo: 1},
 	},
 ]
-
-// console.log(raceTemplates[0][0]);
-// console.log(createdCharacter[0].humanMale.skin);
 
 var raceIndex, raceTemplateGenders, raceTemplateIndex, raceTemplateName, raceTemplate;
 
@@ -267,14 +277,14 @@ function randomChar() {
 		getRandom(raceTemplate[i]);
 	}
 
-	for(var i = 0; i < Object.keys(createdCharacter[raceIndex][raceTemplateName]).length; i++) {
-		var prop = Object.keys(createdCharacter[raceIndex][raceTemplateName])[i];
-		createdCharacter[raceIndex][raceTemplateName][prop] = genIndex[i];
+	var createdCharacterObject = createdCharacter[raceIndex][raceTemplateName];
+
+	for(var i = 0; i < Object.keys(createdCharacterObject).length; i++) {
+		var prop = Object.keys(createdCharacterObject)[i];
+		createdCharacterObject[prop] = genIndex[i];
 	}
 
-	genName = raceTemplateIndex + raceIndex + genName;
-
-	console.log(raceIndex);
+	genName = raceTemplateIndex.toString() + raceIndex.toString() + genName;
 
 	drawChar(genChar, genName + 0, true);
 }
@@ -285,14 +295,15 @@ randomChar();
 function create(raceTemplate) {
 	var genChar = [];
 	var genName = [];
+	var createdCharacterObject = createdCharacter[raceIndex][raceTemplateName];
 
-	for(var i = 0; i < Object.keys(createdCharacter[raceIndex][raceTemplateName]).length; i++) {
-		var prop = Object.keys(createdCharacter[raceIndex][raceTemplateName])[i];
-		genChar.push(raceTemplate[i][createdCharacter[raceIndex][raceTemplateName][prop]]);
-		genName = genName + createdCharacter[raceIndex][raceTemplateName][prop];
+	for(var i = 0; i < Object.keys(createdCharacterObject).length; i++) {
+		var prop = Object.keys(createdCharacterObject)[i];
+		genChar.push(raceTemplate[i][createdCharacterObject[prop]]);
+		genName = genName + createdCharacterObject[prop];
 	}
 
-	genName = raceTemplateIndex + raceIndex + genName;
+	genName = raceTemplateIndex.toString() + raceIndex.toString() + genName;
 
 	drawChar(genChar, genName + 0, true);
 }
@@ -334,21 +345,26 @@ function selectChar(feature, scale) {
 }
 
 function selectGender(gender) {
+
+	function changeGender() {
+		raceTemplateName = Object.keys(createdCharacter[raceIndex])[raceTemplateIndex];
+		raceTemplate = raceTemplates[raceIndex][raceTemplateIndex];
+		create(raceTemplate);
+	}
+
 	if( gender === 'male' ) {
 		if( raceTemplateIndex > 0 ) {
 
 			raceTemplateIndex--;
-			raceTemplate = raceTemplates[raceIndex][raceTemplateIndex];
-			create(raceTemplate);
+			changeGender();
 		}
 	}
 	if( gender === 'female' ) {
 
 		if( raceTemplateIndex < Object.keys(raceTemplates[raceIndex]).length - 1 ) {
+
 			raceTemplateIndex++;
-			raceTemplate = raceTemplates[raceIndex][raceTemplateIndex];
-			console.log(raceTemplate);
-			create(raceTemplate);
+			changeGender();
 		}
 	}
 }

@@ -201,27 +201,63 @@ preload = function(imageArray, callback) {
 	}
 }
 
+hairColors = {
+	brown1: '#6c5956',
+	brown2: '#534442'
+}
+
+var hairColor = hairColors.brown1;
+
+function invertColors(data) {
+	for (var i = 0; i < data.length; i+= 4) {
+		data[i] = data[i] ^ 255; // Invert Red
+		data[i+1] = data[i+1] ^ 255; // Invert Green
+		data[i+2] = data[i+2] ^ 255; // Invert Blue
+	}
+}
+
+function replaceColor(data) {
+	for (let i = 0; i < data.length; i += 4) { // red, green, blue, and alpha
+        var r = data[i + 0];
+        var g = data[i + 1];
+        var b = data[i + 2];
+        var a = data[i + 3];
+		
+        if (r === 138 && g === 138 && b === 138 && a === 255) { // light gray
+			data[i + 0] = 106;
+            data[i + 1] = 166;
+            data[i + 2] = 147;
+        }
+
+		if (r === 120 && g === 120 && b === 120 && a === 255) { // darker gray
+			data[i + 0] = 87;
+            data[i + 1] = 151;
+            data[i + 2] = 129;
+        }
+    }
+}
+
 function drawChar(imageArray, name, replace) {
 	preload(imageArray, function(loadedImages){
 
 		for (var i = 0; i < imageArray.length; i++) {
 			ctx.drawImage(loadedImages[i], imageArray[i].x, imageArray[i].y);
+
+			//- Colors Test
+			var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+			replaceColor(imageData.data);
+			ctx.putImageData(imageData, 0, 0);
 		}
 
-		// function invertColors(data) {
-		// 	for (var i = 0; i < data.length; i+= 4) {
-		// 	  data[i] = data[i] ^ 255; // Invert Red
-		// 	  data[i+1] = data[i+1] ^ 255; // Invert Green
-		// 	  data[i+2] = data[i+2] ^ 255; // Invert Blue
-		// 	}
-		//   }
-
-		// var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		// invertColors(imageData.data);
-		// ctx.putImageData(imageData, 0, 0);
+		for (var i = 0; i < imageArray.length; i++) {
+			if( loadedImages[i].src.includes('Hair') || 
+				loadedImages[i].src.includes('Beard' ) ) {
+			}
+		}
 
 		var img = canvas.toDataURL("image/png");
 		var charGenComponent = '<div id="component_' + name + '" class="col-12 col-md-6 col-lg-4"><div class="d-flex flex-column"><img id="img_' + name + '" src="' + img + '"/><a class="text-center text-truncate" href="' + img + '" download="' + name + '">Export \"' + name + '\"</a></div></div>';
+
 		if(!replace) {
 			document.getElementById('charGen').innerHTML += charGenComponent;
 		} else {

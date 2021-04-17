@@ -82,7 +82,6 @@ var halforcMale = [
 	],
 	[
 		{name: 'halforcMaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcMaleAdornment1', src: '../../assets/Halforc\ Male\ Adornment1.png', x: xOffset+4, y: yOffset+4},
 	],
 	[
 		{name: 'halforcMaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
@@ -202,8 +201,38 @@ preload = function(imageArray, callback) {
 }
 
 var hairColors = {
+	black1: ['#4b4d59', '#25262c'],
+	black2: ['#4a4839', '#25251b'],
 	brown1: ['#7a6966', '#574845'],
+	brown2: ['#a0815c', '#7e6648'],
 	yellow1: ['#c7b881', '#ac9f6f'],
+	red1: ['#d0a778', '#b49067'],
+	gray1: ['#8a8a8a', '#787878'],
+	gray2: ['#c5c5c5', '#a6a6a6'],
+	white1: ['#e4e4e4', '#d2d2d2']
+}
+
+function genColorSwatches(colorObject) {
+	document.getElementById('colorSwatches').innerHTML = '';
+
+	for( var i = 0; i < Object.keys(colorObject).length; i++ ) {
+		var colorName = Object.keys(colorObject)[i];
+		var primaryColor = colorObject[colorName][0];
+
+		var colorSwatchComponent = '<div class="col-auto"><input class="btn-check shadow-none" id="btnradio' + i.toString() + '" type="radio" name="btnradio" autocomplete="off"><label onclick=selectHairColor(\"' + colorName + '\") class="btn swatch shadow-none" style="background-color: ' + primaryColor + '" for="btnradio' + i.toString() + '"></label></div>'
+		document.getElementById('colorSwatches').innerHTML += colorSwatchComponent;
+	}
+
+	for( var i = 0; i < Object.keys(colorObject).length; i++ ) {
+		var colorName = Object.keys(colorObject)[i];
+		var primaryColor = colorObject[colorName][0];
+		
+		if(primaryColor === createdColor[raceIndex][raceTemplateName].hair[0]) {
+			console.log('true');
+			var selectedColorRadio = document.getElementById("btnradio" + i);
+			selectedColorRadio.checked = true;
+		}
+	}
 }
 
 function hexToRgb(hex){
@@ -432,7 +461,7 @@ function randomChar() {
 }
 
 randomChar();
-console.log(createdColor[raceIndex][raceTemplateName].hair);
+genColorSwatches(hairColors);
 
 // Select Character Features
 function create(raceTemplate) {
@@ -493,6 +522,7 @@ function selectGender(gender) {
 		raceTemplateName = Object.keys(createdCharacter[raceIndex])[genderIndex];
 		raceTemplate = raceTemplates[raceIndex][genderIndex];
 		create(raceTemplate);
+		genColorSwatches(hairColors);
 	}
 
 	if( gender === 'male' ) {
@@ -519,6 +549,7 @@ function selectRace(scale) {
 		raceTemplate = raceTemplates[raceIndex][genderIndex];
 		create(raceTemplate);
 		popRaceName(raceTemplateName);
+		genColorSwatches(hairColors);
 	}
 
 	if( scale === 'increase' ) {
@@ -544,6 +575,9 @@ function selectRace(scale) {
 	}
 }
 
-function selectHairColor(scale) {
-	console.log(Object.keys(hairColors));
+function selectHairColor(color) {
+	var selectedHairColor = hairColors[color];
+	createdColor[raceIndex][raceTemplateName].hair = selectedHairColor;
+
+	create(raceTemplate);
 }

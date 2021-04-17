@@ -14,3 +14,18 @@ canvas
 	image-rendering: -webkit-crisp-edges
 	image-rendering: pixelated
 	image-rendering: crisp-edges
+
+.swatch
+	transition: all .1s ease-in-out
+	width: 1.75rem
+	height: 1.75rem
+	cursor: pointer
+
+.btn-check
+	cursor: pointer
+
+.btn-check:checked + .swatch
+	transform: scale(1)
+
+.btn-check:not(:checked) + .swatch
+	transform: scale(0.75)

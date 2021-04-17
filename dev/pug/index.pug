@@ -33,23 +33,18 @@ block ui
 						button.btn.btn-primary.btn-sm.w-100( onclick='selectGender(\"female\")' ) Female
 
 				.row.align-items-center.mb-5
-						.col-auto
-							button.btn.btn-primary.btn-sm( onclick='selectRace("decrease")' ) <
-						.col
-							#selectedRace.text-capitalize
-						.col-auto
-							button.btn.btn-primary.btn-sm( onclick='selectRace("increase")' ) >
+					.col-auto
+						button.btn.btn-primary.btn-sm( onclick='selectRace("decrease")' ) <
+					.col
+						#selectedRace.text-capitalize
+					.col-auto
+						button.btn.btn-primary.btn-sm( onclick='selectRace("increase")' ) >
 
 				+featureSelector('skin')
 				+featureSelector('hair')
 
-				.row.align-items-center.mb-2
-						.col-auto
-							button.btn.btn-outline-primary.btn-sm( onclick='selectHairColor("decrease")') <
-						.col
-							p.mb-0.text-capitalize Hair Color
-						.col-auto
-							button.btn.btn-outline-primary.btn-sm( onclick='selectHairColor("increase")') >
+				#colorSwatches.row.g-0.btn-group( role='group' aria-label='Basic radio toggle button group' ).mb-2
+					
 
 				+featureSelector('beard')
 				+featureSelector('adornment')

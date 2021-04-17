@@ -226,9 +226,8 @@ function genColorSwatches(colorObject) {
 	for( var i = 0; i < Object.keys(colorObject).length; i++ ) {
 		var colorName = Object.keys(colorObject)[i];
 		var primaryColor = colorObject[colorName][0];
-		
+
 		if(primaryColor === createdColor[raceIndex][raceTemplateName].hair[0]) {
-			console.log('true');
 			var selectedColorRadio = document.getElementById("btnradio" + i);
 			selectedColorRadio.checked = true;
 		}
@@ -387,16 +386,16 @@ var createdCharacter = [
 
 var createdColor = [
 	{
-		humanMale: {hair: hairColors.brown1},
-		humanFemale: {hair: hairColors.brown1},
+		humanMale: {hair: hairColors.yellow1},
+		humanFemale: {hair: hairColors.black1},
 	},
 	{
 		halforcMale: {hair: hairColors.brown1},
-		halforcFemale: {hair: hairColors.brown1},
+		halforcFemale: {hair: hairColors.black2},
 	},
 	{
-		dwarfMale: {hair: hairColors.brown1},
-		dwarfFemale: {hair: hairColors.brown1},
+		dwarfMale: {hair: hairColors.gray2},
+		dwarfFemale: {hair: hairColors.brown2},
 	},
 ]
 
@@ -436,7 +435,7 @@ function randomChar() {
 	raceTemplate = raceTemplates[raceIndex][genderIndex];
 	popRaceName(raceTemplateName);
 
-	function getRandom(array) {
+	function getRandomFeature(array) {
 		var randomInt = getRandomInt(array.length)
 		genChar.push(array[randomInt]);
 		var randomIntString = randomInt.toString();
@@ -445,7 +444,7 @@ function randomChar() {
 	}
 
 	for(var i = 0; i < raceTemplate.length - 1; i++) {
-		getRandom(raceTemplate[i]);
+		getRandomFeature(raceTemplate[i]);
 	}
 
 	var createdCharacterObject = createdCharacter[raceIndex][raceTemplateName];
@@ -454,6 +453,15 @@ function randomChar() {
 		var prop = Object.keys(createdCharacterObject)[i];
 		createdCharacterObject[prop] = genIndex[i];
 	}
+
+	function getRandomHairColor() {
+		var randomInt = getRandomInt(Object.keys(hairColors).length);
+		var colorName = Object.keys(hairColors)[randomInt];
+		selectHairColor(colorName);
+		genColorSwatches(hairColors);
+	};
+
+	getRandomHairColor();
 
 	genName = genderIndex.toString() + raceIndex.toString() + genName;
 

@@ -202,7 +202,7 @@ preload = function(imageArray, callback) {
 }
 
 var hairColorIndex;
-var hairColors = {
+var hairColors = { // 'primary' color first, shade second
 	black1: ['#4b4d59', '#25262c'],
 	black2: ['#4a4839', '#25251b'],
 	brown1: ['#51403a', '#362b27'],
@@ -222,8 +222,18 @@ var hairColors = {
 var tattooColorIndex;
 var tattooColors = {
 	red1: '#8a4646',
-	green1: '#3c8f46',
+	red2: '#6d451e',
+	orange1: '#9d7a65',
+	yellow1: '#b8bc6b',
+	green1: '#4a630c',
+	green2: '#5ba347',
+	cyan1: '#659d91',
 	blue1: '#4164ab',
+	violet1: '#75659d',
+	black1: '#6a645f',
+	gray1: '#a5a09a',
+	white1: '#e6dbd2',
+	white2: '#d5dae0',
 }
 
 function genColorSwatches(colorObject, subject) {

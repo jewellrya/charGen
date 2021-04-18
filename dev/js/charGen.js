@@ -18,7 +18,7 @@ var humanMaleMap = {
 		[1,1]
 	],
 	tattoo: [
-		[0,14]
+		[0,14], [0,12]
 	],
 	armor: [
 		[-4,1], [-1,8]
@@ -38,7 +38,7 @@ var humanFemaleMap = {
 		[3,5]
 	],
 	tattoo: [
-		[0,12]
+		[0,12], [0,14]
 	],
 	armor: [
 	],
@@ -57,7 +57,7 @@ var halforcMaleMap = {
 	adornment: [
 	],
 	tattoo: [
-		[-1,8], [4,0], [4,8]
+		[-1,8], [4,0], [-1,8]
 	],
 	armor: [
 	],
@@ -76,7 +76,7 @@ var halforcFemaleMap = {
 		[3,3]
 	],
 	tattoo: [
-		[3,28], [10,14], [5,0]
+		[3,28], [0,14], [4,1]
 	],
 	armor: [
 	],
@@ -93,8 +93,10 @@ var dwarfMaleMap = {
 		[3,9], [3,9], [4,8]
 	],
 	adornment: [
+		[3,7]
 	],
 	tattoo: [
+		[-1,16], [-1,14], [-1,14]
 	],
 	armor: [
 	],
@@ -110,14 +112,14 @@ var dwarfFemaleMap = {
 	beard: [
 	],
 	adornment: [
-		[1,9]
+		[4,12], [2,10], [8,7]
 	],
 	tattoo: [
+		[-1,17], [-1,15], [-1,15]
 	],
 	armor: [
 	],
 }
-
 
 var xOffset = 10;
 var yOffset = 12;
@@ -178,121 +180,6 @@ function createRaceTemplate(race, gender, map) {
 	return genTemplate;
 }
 
-var halforcMale = [
-	[
-		{name: 'halforcMale1', src: '../../assets/Halforc\ Male1.png', x: xOffset-1, y: yOffset-3}, 
-		{name: 'halforcMale2', src: '../../assets/Halforc\ Male2.png', x: xOffset-1, y: yOffset-3},
-		{name: 'halforcMale3', src: '../../assets/Halforc\ Male3.png', x: xOffset-1, y: yOffset-3},
-	],
-	[
-		{name: 'halforcMaleHair_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcMaleHair1', src: '../../assets/Halforc\ Male\ Hair1.png', x: xOffset+2, y: yOffset-3},
-		{name: 'halforcMaleHair2', src: '../../assets/Halforc\ Male\ Hair2.png', x: xOffset+3, y: yOffset-3},
-	],
-	[
-		{name: 'halforcMaleBeard_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcMaleBeard1', src: '../../assets/Halforc\ Male\ Beard1.png', x: xOffset+5, y: yOffset+2}, 
-		{name: 'halforcMaleBeard2', src: '../../assets/Halforc\ Male\ Beard2.png', x: xOffset+6, y: yOffset+4}, 
-	],
-	[
-		{name: 'halforcMaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-	[
-		{name: 'halforcMaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcMaleTattoo1', src: '../../assets/Halforc\ Male\ Tattoo1.png', x: xOffset-1, y: yOffset+8},
-		{name: 'halforcMaleTattoo2', src: '../../assets/Halforc\ Male\ Tattoo2.png', x: xOffset+4, y: yOffset},
-		{name: 'halforcMaleTattoo3', src: '../../assets/Halforc\ Male\ Tattoo3.png', x: xOffset+4, y: yOffset+8},
-	],
-	[
-		{name: 'halforcMaleArmor_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-]
-
-var halforcFemale = [
-	[
-		{name: 'halforcFemale1', src: '../../assets/Halforc\ Female1.png', x: xOffset, y: yOffset-2},
-		{name: 'halforcFemale2', src: '../../assets/Halforc\ Female2.png', x: xOffset, y: yOffset-2},
-		{name: 'halforcFemale3', src: '../../assets/Halforc\ Female3.png', x: xOffset, y: yOffset-2},
-	],
-	[
-		{name: 'halforcFemaleHair_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcFemaleHair1', src: '../../assets/Halforc\ Female\ Hair1.png', x: xOffset+1, y: yOffset-2},
-		{name: 'halforcFemaleHair2', src: '../../assets/Halforc\ Female\ Hair2.png', x: xOffset, y: yOffset-4},
-	],
-	[
-		{name: 'halforcFemaleBeard_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-	[
-		{name: 'halforcFemaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcFemaleAdornment1', src: '../../assets/Halforc\ Female\ Adornment1.png', x: xOffset+3, y: yOffset+3},
-	],
-	[
-		{name: 'halforcFemaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'halforcFemaleTattoo1', src: '../../assets/Halforc\ Female\ Tattoo1.png', x: xOffset+3, y: yOffset+28},
-		{name: 'halforcFemaleTattoo2', src: '../../assets/Halforc\ Female\ Tattoo2.png', x: xOffset+10, y: yOffset+14},
-		{name: 'halforcFemaleTattoo3', src: '../../assets/Halforc\ Female\ Tattoo3.png', x: xOffset+5, y: yOffset},
-	],
-	[
-		{name: 'halforcFemaleArmor_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-]
-
-var dwarfMale = [
-	[
-		{name: 'dwarfMale1', src: '../../assets/Dwarf\ Male1.png', x: xOffset-1, y: yOffset+4}, 
-		{name: 'dwarfMale2', src: '../../assets/Dwarf\ Male2.png', x: xOffset-1, y: yOffset+4},
-		{name: 'dwarfMale3', src: '../../assets/Dwarf\ Male3.png', x: xOffset-1, y: yOffset+4},
-	],
-	[
-		{name: 'dwarfMaleHair_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'dwarfMaleHair1', src: '../../assets/Dwarf\ Male\ Hair1.png', x: xOffset+1, y: yOffset+4},
-		{name: 'dwarfMaleHair2', src: '../../assets/Dwarf\ Male\ Hair2.png', x: xOffset+1, y: yOffset+3},
-		{name: 'dwarfMaleHair3', src: '../../assets/Dwarf\ Male\ Hair3.png', x: xOffset+2, y: yOffset+4},
-	],
-	[
-		{name: 'dwarfMaleBeard_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'dwarfMaleBeard1', src: '../../assets/Dwarf\ Male\ Beard1.png', x: xOffset+3, y: yOffset+9}, 
-		{name: 'dwarfMaleBeard2', src: '../../assets/Dwarf\ Male\ Beard2.png', x: xOffset+3, y: yOffset+9}, 
-		{name: 'dwarfMaleBeard3', src: '../../assets/Dwarf\ Male\ Beard3.png', x: xOffset+4, y: yOffset+8},
-	],
-	[
-		{name: 'dwarfMaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-	[
-		{name: 'dwarfMaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-	[
-		{name: 'dwarfMaleArmor_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-]
-
-var dwarfFemale = [
-	[
-		{name: 'dwarfFemale1', src: '../../assets/Dwarf\ Female1.png', x: xOffset-1, y: yOffset+5},
-		{name: 'dwarfFemale2', src: '../../assets/Dwarf\ Female2.png', x: xOffset-1, y: yOffset+5},
-		{name: 'dwarfFemale3', src: '../../assets/Dwarf\ Female3.png', x: xOffset-1, y: yOffset+5},
-	],
-	[
-		{name: 'dwarfFemaleHair_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'dwarfFemaleHair1', src: '../../assets/Dwarf\ Female\ Hair1.png', x: xOffset+1, y: yOffset+4},
-		{name: 'dwarfFemaleHair2', src: '../../assets/Dwarf\ Female\ Hair2.png', x: xOffset+1, y: yOffset+4},
-		{name: 'dwarfFemaleHair3', src: '../../assets/Dwarf\ Female\ Hair3.png', x: xOffset-1, y: yOffset+2},
-	],
-	[
-		{name: 'dwarfFemaleBeard_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-	[
-		{name: 'dwarfFemaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'dwarfFemaleAdornment1', src: '../../assets/Dwarf\ Female\ Adornment1.png', x: xOffset+1, y: yOffset+9},
-	],
-	[
-		{name: 'dwarfFemaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-	[
-		{name: 'dwarfFemaleArmor_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-]
-
 preload = function(imageArray, callback) {
 
 	var imagesLoaded = 0;
@@ -314,6 +201,7 @@ preload = function(imageArray, callback) {
 	}
 }
 
+var hairColorIndex;
 var hairColors = {
 	black1: ['#4b4d59', '#25262c'],
 	black2: ['#4a4839', '#25251b'],
@@ -331,23 +219,47 @@ var hairColors = {
 	white1: ['#e4e4e4', '#d2d2d2']
 }
 
-function genColorSwatches(colorObject) {
-	document.getElementById('colorSwatches').innerHTML = '';
+var tattooColorIndex;
+var tattooColors = {
+	red1: '#8a4646',
+	green1: '#3c8f46',
+	blue1: '#4164ab',
+}
+
+function genColorSwatches(colorObject, subject) {
+	var primaryColor, colorName, createdColorValue;
+
+	var subjectCap = subject.charAt(0).toUpperCase() + subject.slice(1);
+	document.getElementById(subject + 'ColorSwatches').innerHTML = '';
+	
+	function setPrimaryColor() {
+		if ( Array.isArray(colorObject[colorName])) {
+			primaryColor = colorObject[colorName][0];
+			createdColorValue = createdColor[raceIndex][raceTemplateName][subject][0];
+
+		} else {
+			primaryColor = colorObject[colorName];
+			createdColorValue = createdColor[raceIndex][raceTemplateName][subject];
+		}
+	}
 
 	for( var i = 0; i < Object.keys(colorObject).length; i++ ) {
-		var colorName = Object.keys(colorObject)[i];
-		var primaryColor = colorObject[colorName][0];
+		colorName = Object.keys(colorObject)[i];
+		setPrimaryColor();
+		
+		var inputName = 'radio' + subjectCap + 'Color';
 
-		var colorSwatchComponent = '<div class="col-auto"><input class="btn-check shadow-none" id="btnradio' + i.toString() + '" type="radio" name="btnradio" autocomplete="off"><label onclick=selectHairColor(\"' + colorName + '\") class="btn swatch shadow-none" style="background-color: ' + primaryColor + '" for="btnradio' + i.toString() + '"></label></div>'
-		document.getElementById('colorSwatches').innerHTML += colorSwatchComponent;
+		var colorSwatchComponent = '<div class="col-auto"><input class="btn-check shadow-none" id="' + inputName + i.toString() + '" type="radio" name="' + inputName + '" autocomplete="off"><label onclick=select' + subjectCap + 'Color(\"' + colorName + '\") class="btn swatch shadow-none" style="background-color: ' + primaryColor + '" for="' + inputName + i.toString() + '"></label></div>'
+		document.getElementById(subject + 'ColorSwatches').innerHTML += colorSwatchComponent;
 	}
 
 	for( var i = 0; i < Object.keys(colorObject).length; i++ ) {
 		var colorName = Object.keys(colorObject)[i];
-		var primaryColor = colorObject[colorName][0];
+		setPrimaryColor();
 
-		if(primaryColor === createdColor[raceIndex][raceTemplateName].hair[0]) {
-			var selectedColorRadio = document.getElementById("btnradio" + i);
+		if( primaryColor === createdColorValue ) {
+			console.log('selected ' + subject + primaryColor + ' true');
+			var selectedColorRadio = document.getElementById(inputName + i);
 			selectedColorRadio.checked = true;
 		}
 	}
@@ -392,15 +304,21 @@ function applyHairColor(data) {
 	replaceColor(data, '#787878', colorArray[1]);
 }
 
+function applyTattooColor(data) {
+	var color = createdColor[raceIndex][raceTemplateName].tattoo;
+
+	replaceColor(data, '#8a4646', color);
+}
+
 function drawChar(imageArray, name, replace) {
 	preload(imageArray, function(loadedImages){
 
 		for (var i = 0; i < imageArray.length; i++) {
 			ctx.drawImage(loadedImages[i], imageArray[i].x, imageArray[i].y);
 
-			//- Colors Test
 			var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 			applyHairColor(imageData.data);
+			applyTattooColor(imageData.data);
 			ctx.putImageData(imageData, 0, 0);
 		}
 
@@ -505,16 +423,16 @@ var createdCharacter = [
 
 var createdColor = [
 	{
-		humanMale: {hair: hairColors.yellow1},
-		humanFemale: {hair: hairColors.black1},
+		humanMale: {hair: hairColors.yellow1, tattoo: tattooColors.green1},
+		humanFemale: {hair: hairColors.black1, tattoo: tattooColors.green1},
 	},
 	{
-		halforcMale: {hair: hairColors.brown1},
-		halforcFemale: {hair: hairColors.black2},
+		halforcMale: {hair: hairColors.brown1, tattoo: tattooColors.red1},
+		halforcFemale: {hair: hairColors.black2, tattoo: tattooColors.red1},
 	},
 	{
-		dwarfMale: {hair: hairColors.gray2},
-		dwarfFemale: {hair: hairColors.brown2},
+		dwarfMale: {hair: hairColors.gray2, tattoo: tattooColors.blue1},
+		dwarfFemale: {hair: hairColors.brown2, tattoo: tattooColors.blue1},
 	},
 ]
 
@@ -534,6 +452,15 @@ function popRaceName(raceTemplateName) {
 	}
 	
 	document.getElementById('selectedRace').innerHTML = raceName;
+}
+
+function padZeroes(number, length) {
+    var my_string = '' + number;
+    while (my_string.length < length) {
+        my_string = '0' + my_string;
+    }
+
+    return my_string;
 }
 
 var raceIndex, raceTemplateGenders, genderIndex, raceTemplateName, raceTemplate;
@@ -558,7 +485,7 @@ function randomChar() {
 		var randomInt = getRandomInt(array.length)
 		genChar.push(array[randomInt]);
 		var randomIntString = randomInt.toString();
-		genName += randomIntString;
+		genName += padZeroes(randomIntString, 2);
 		genIndex.push(randomInt);
 	}
 
@@ -573,42 +500,46 @@ function randomChar() {
 		createdCharacterObject[prop] = genIndex[i];
 	}
 
-	function getRandomHairColor() {
-		var randomInt = getRandomInt(Object.keys(hairColors).length);
-		var colorName = Object.keys(hairColors)[randomInt];
-		selectHairColor(colorName);
-		genColorSwatches(hairColors);
-	};
+	// get random hair color.
+	var randomHairColorInt = getRandomInt(Object.keys(hairColors).length);
+	var randomHairColorName = Object.keys(hairColors)[randomHairColorInt];
+	selectHairColor(randomHairColorName);
+	genColorSwatches(hairColors, 'hair');
 
-	getRandomHairColor();
+	// get random tattoo color.
+	var randomTattooColorInt = getRandomInt(Object.keys(tattooColors).length);
+	var randomTattooColorName = Object.keys(tattooColors)[randomTattooColorInt];
+	selectTattooColor(randomTattooColorName);
+	genColorSwatches(tattooColors, 'tattoo');
 
-	genName = genderIndex.toString() + raceIndex.toString() + genName;
-
-	drawChar(genChar, genName + 0, true);
+	// 0(gender) 0(race) 00(features) 00(hairColor) 00(tattooColor)
+	genName = genderIndex.toString() + raceIndex.toString() + genName + padZeroes(hairColorIndex, 2) + padZeroes(tattooColorIndex, 2);
+	drawChar(genChar, genName, true);
 }
 
 randomChar();
-genColorSwatches(hairColors);
 
 // Select Character Features
-function create(raceTemplate) {
+function createCharacter(raceTemplate) {
 	var genChar = [];
 	var genName = [];
+	raceTemplateName = Object.keys(createdCharacter[raceIndex])[genderIndex];
 	var createdCharacterObject = createdCharacter[raceIndex][raceTemplateName];
 
 	for(var i = 0; i < Object.keys(createdCharacterObject).length; i++) {
 		var prop = Object.keys(createdCharacterObject)[i];
 		genChar.push(raceTemplate[i][createdCharacterObject[prop]]);
-		genName = genName + createdCharacterObject[prop];
+		genName += padZeroes(createdCharacterObject[prop], 2);
 	}
 
-	genName = genderIndex.toString() + raceIndex.toString() + genName;
-
-	drawChar(genChar, genName + 0, true);
+	genName = genderIndex.toString() + raceIndex.toString() + genName + padZeroes(hairColorIndex, 2) + padZeroes(tattooColorIndex, 2);
+	drawChar(genChar, genName, true);
 };
 
-function selectChar(feature, scale) {
+// var test = raceTemplates[2][0];
+// drawChar([test[0][1], test[1][0], test[2][0], test[3][1], test[4][0]], 'test', true);
 
+function selectChar(feature, scale) {
 	var array = createdCharacter[raceIndex][raceTemplateName];
 
 	function changeProp() {
@@ -619,11 +550,11 @@ function selectChar(feature, scale) {
 			if( array[feature] < raceTemplate[index].length - 1 ) {
 				
 				array[feature]++;
-				create(raceTemplate);
+				createCharacter(raceTemplate);
 			} else {
 
 				array[feature] = 0;
-				create(raceTemplate);
+				createCharacter(raceTemplate);
 			}
 		}
 
@@ -631,11 +562,11 @@ function selectChar(feature, scale) {
 			if( array[feature] === 0 ) {
 
 				array[feature] = raceTemplate[index].length - 1;
-				create(raceTemplate);
+				createCharacter(raceTemplate);
 			} else {
 
 				array[feature]--;
-				create(raceTemplate);
+				createCharacter(raceTemplate);
 			}
 		}
 	}
@@ -646,10 +577,9 @@ function selectChar(feature, scale) {
 function selectGender(gender) {
 
 	function changeGender() {
-		raceTemplateName = Object.keys(createdCharacter[raceIndex])[genderIndex];
 		raceTemplate = raceTemplates[raceIndex][genderIndex];
-		create(raceTemplate);
-		genColorSwatches(hairColors);
+		createCharacter(raceTemplate);
+		genColorSwatches(hairColors, 'hair');
 	}
 
 	if( gender === 'male' ) {
@@ -672,11 +602,10 @@ function selectGender(gender) {
 function selectRace(scale) {
 
 	function changeRace() {
-		raceTemplateName = Object.keys(createdCharacter[raceIndex])[genderIndex];
 		raceTemplate = raceTemplates[raceIndex][genderIndex];
-		create(raceTemplate);
+		createCharacter(raceTemplate);
 		popRaceName(raceTemplateName);
-		genColorSwatches(hairColors);
+		genColorSwatches(hairColors, 'hair');
 	}
 
 	if( scale === 'increase' ) {
@@ -705,6 +634,15 @@ function selectRace(scale) {
 function selectHairColor(color) {
 	var selectedHairColor = hairColors[color];
 	createdColor[raceIndex][raceTemplateName].hair = selectedHairColor;
+	hairColorIndex = Object.keys(hairColors).indexOf(color);
 
-	create(raceTemplate);
+	createCharacter(raceTemplate);
+}
+
+function selectTattooColor(color) {
+	var selectedTattooColor = tattooColors[color];
+	createdColor[raceIndex][raceTemplateName].tattoo = selectedTattooColor;
+	tattooColorIndex = Object.keys(tattooColors).indexOf(color);
+
+	createCharacter(raceTemplate);
 }

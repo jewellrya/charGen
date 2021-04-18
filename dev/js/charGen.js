@@ -4,65 +4,179 @@ let ctx = canvas.getContext('2d');
 ctx.scale(10, 10);
 ctx.imageSmoothingEnabled = false;
 
+var humanMaleMap = {
+	skin: [
+		[0,0], [0,0], [0,0]
+	],
+	hair: [
+		[3,0], [3,0]
+	],
+	beard: [
+		[3,4], [5,7]
+	],
+	adornment: [
+		[1,1]
+	],
+	tattoo: [
+		[0,14]
+	],
+	armor: [
+		[-4,1], [-1,8]
+	],
+}
+
+var humanFemaleMap = {
+	skin: [
+		[0,1], [0,1], [0,1]
+	],
+	hair: [
+		[0,1], [1,1], [0,-2]
+	],
+	beard: [
+	],
+	adornment: [
+		[3,5]
+	],
+	tattoo: [
+		[0,12]
+	],
+	armor: [
+	],
+}
+
+var halforcMaleMap = {
+	skin: [
+		[-1,-3], [-1,-3], [-1,-3]
+	],
+	hair: [
+		[2,-3], [3,-3]
+	],
+	beard: [
+		[5,2], [6,4]
+	],
+	adornment: [
+	],
+	tattoo: [
+		[-1,8], [4,0], [4,8]
+	],
+	armor: [
+	],
+}
+
+var halforcFemaleMap = {
+	skin: [
+		[0,-2], [0,-2], [0,-2]
+	],
+	hair: [
+		[1,-2], [0,-4]
+	],
+	beard: [
+	],
+	adornment: [
+		[3,3]
+	],
+	tattoo: [
+		[3,28], [10,14], [5,0]
+	],
+	armor: [
+	],
+}
+
+var dwarfMaleMap = {
+	skin: [
+		[-1,4], [-1,4], [-1,4],
+	],
+	hair: [
+		[1,4], [1,3], [2,4]
+	],
+	beard: [
+		[3,9], [3,9], [4,8]
+	],
+	adornment: [
+	],
+	tattoo: [
+	],
+	armor: [
+	],
+}
+
+var dwarfFemaleMap = {
+	skin: [
+		[-1,5], [-1,5], [-1,5],
+	],
+	hair: [
+		[1,4], [1,4], [-1,2]
+	],
+	beard: [
+	],
+	adornment: [
+		[1,9]
+	],
+	tattoo: [
+	],
+	armor: [
+	],
+}
+
+
 var xOffset = 10;
 var yOffset = 12;
 
-var humanMale = [
-	[
-		{name: 'humanMale1', src: '../../assets/Human\ Male1.png', x: xOffset, y: yOffset}, 
-		{name: 'humanMale2', src: '../../assets/Human\ Male2.png', x: xOffset, y: yOffset},
-		{name: 'humanMale3', src: '../../assets/Human\ Male3.png', x: xOffset, y: yOffset},
-	],
-	[
-		{name: 'humanMaleHair_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'humanMaleHair1', src: '../../assets/Human\ Male\ Hair1.png', x: xOffset+3, y: yOffset},
-		{name: 'humanMaleHair2', src: '../../assets/Human\ Male\ Hair2.png', x: xOffset+3, y: yOffset},
-	],
-	[
-		{name: 'humanMaleBeard_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'humanMaleBeard1', src: '../../assets/Human\ Male\ Beard1.png', x: xOffset+3, y: yOffset+4}, 
-		{name: 'humanMaleBeard2', src: '../../assets/Human\ Male\ Beard2.png', x: xOffset+5, y: yOffset+7}, 
-	],
-	[
-		{name: 'humanMaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'humanMaleAdornment1', src: '../../assets/Human\ Male\ Adornment1.png', x: xOffset+1, y: yOffset+1},
-	],
-	[
-		{name: 'humanMaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'humanMaleTattoo1', src: '../../assets/Human\ Male\ Tattoo1.png', x: xOffset, y: yOffset+14},
-	],
-	[
-		{name: 'humanMaleHeavy1', src: '../../assets/Human\ Male\ Heavy1.png', x: xOffset-4, y: yOffset+1},
-		{name: 'humanMaleHeavy2', src: '../../assets/Human\ Male\ Heavy2.png', x: xOffset-1, y: yOffset+8},
-	],
-]
+function createRaceTemplate(race, gender, map) {
+	var genTemplate = [];
 
-var humanFemale = [
-	[
-		{name: 'humanFemale1', src: '../../assets/Human\ Female1.png', x: xOffset, y: yOffset+1},
-		{name: 'humanFemale2', src: '../../assets/Human\ Female2.png', x: xOffset, y: yOffset+1},
-		{name: 'humanFemale3', src: '../../assets/Human\ Female3.png', x: xOffset, y: yOffset+1},
-	],
-	[
-		{name: 'humanFemaleHair_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'humanFemaleHair1', src: '../../assets/Human\ Female\ Hair1.png', x: xOffset, y: yOffset+1},
-		{name: 'humanFemaleHair2', src: '../../assets/Human\ Female\ Hair2.png', x: xOffset+1, y: yOffset+1},
-	],
-	[
-		{name: 'humanFemaleBeard_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-	[
-		{name: 'humanFemaleAdornment_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'humanFemaleAdornment1', src: '../../assets/Human\ Female\ Adornment1.png', x: xOffset+3, y: yOffset+5},
-	],
-	[
-		{name: 'humanFemaleTattoo_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-		{name: 'humanFemaleTattoo1', src: '../../assets/Human\ Female\ Tattoo1.png', x: xOffset, y: yOffset+12},
-	],
-	[
-		{name: 'humanFemaleArmor_blank', src: '../../assets/_blank.png', x: 0, y: 0},
-	],
-]
+	for( var i = 0; i < Object.keys(map).length; i++ ) {
+		var propArray = [];
+		var prop = Object.keys(map)[i];
+		var propCap = prop.charAt(0).toUpperCase() + prop.slice(1);
+		var raceCap = race.charAt(0).toUpperCase() + race.slice(1);
+		var genderCap = gender.charAt(0).toUpperCase() + gender.slice(1);
+		
+		for( var j = 0; j < map[prop].length; j++) {
+			var propArrayObject;
+			var index = (j + 1).toString();
+
+			if ( i === 0 ) {
+				propArrayObject = {
+					name: race + genderCap + index,
+					src: '../../assets/' + raceCap + ' ' + genderCap + index + '.png',
+					x: xOffset + (map[prop][j][0]),
+					y: yOffset + (map[prop][j][1]),
+				}
+			}
+			else if ( i > 0 ) {
+
+				propArrayObject = {
+					name: race + genderCap + propCap + index,
+					src: '../../assets/' + raceCap + ' ' + genderCap + ' ' + propCap + index + '.png',
+					x: xOffset + (map[prop][j][0]),
+					y: yOffset + (map[prop][j][1]),
+				}
+			}
+
+			propArray.push(propArrayObject);
+		}
+
+		genTemplate.push(propArray);
+	}
+
+	for( var i = 0; i < Object.keys(map).length; i++ ) {
+		var prop = Object.keys(map)[i];
+		var propCap = prop.charAt(0).toUpperCase() + prop.slice(1);
+		var genderCap = gender.charAt(0).toUpperCase() + gender.slice(1);
+
+		if (i > 0) {
+			genTemplate[i].unshift({
+				name: race + genderCap + propCap + '_blank',
+				src: '../../assets/_blank.png',
+				x: 0,
+				y: 0
+			})
+		}
+	}
+
+	return genTemplate;
+}
 
 var halforcMale = [
 	[
@@ -205,8 +319,8 @@ var hairColors = {
 	black2: ['#4a4839', '#25251b'],
 	brown1: ['#51403a', '#362b27'],
 	brown2: ['#5f4148', '#4e373d'],
-	brown2: ['#7a6966', '#574845'],
-	brown3: ['#a0815c', '#7e6648'],
+	brown3: ['#7a6966', '#574845'],
+	brown4: ['#a0815c', '#7e6648'],
 	yellow1: ['#b9a088', '#a58f79'],
 	yellow2: ['#dbc6ad', '#c7b39d'],
 	yellow3: ['#f6dec2', '#dfc9b0'],
@@ -361,16 +475,16 @@ function permute() {
 
 var raceTemplates = [
 	[
-		humanMale,
-		humanFemale
+		humanMale = createRaceTemplate('human', 'male', humanMaleMap),
+		humanFemale = createRaceTemplate('human', 'female', humanFemaleMap)
 	],
 	[
-		halforcMale,
-		halforcFemale
+		halforcMale = createRaceTemplate('halforc', 'male', halforcMaleMap),
+		halforcFemale = createRaceTemplate('halforc', 'female', halforcFemaleMap)
 	],
 	[
-		dwarfMale,
-		dwarfFemale
+		dwarfMale = createRaceTemplate('dwarf', 'male', dwarfMaleMap),
+		dwarfFemale = createRaceTemplate('dwarf', 'female', dwarfFemaleMap)
 	],
 ]
 

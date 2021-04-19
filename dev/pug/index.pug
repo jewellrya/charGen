@@ -28,13 +28,13 @@ block ui
 							button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectChar(\"' + category + '\", \"decrease\")')
 								p.fs-5.mb-0 <
 						.col
-							p.mb-0.text-capitalize( id=category + 'Value' )
+							p.mb-0.text-capitalize.text-primary( id=category + 'Value' )
 						.col-auto
 							button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectChar(\"' + category + '\", \"increase\")')
 								p.fs-5.mb-0 >
 				
 				//- Gender Toggle
-				.btn-group.w-100.mb-2( role='group' aria-label='Basic radio toggle button group' )
+				.btn-group.w-100.mb-3( role='group' aria-label='Basic radio toggle button group' )
 					input.btn-check( type='radio' name='genderRadio' id='genderRadio1' autocomplete="off" )
 					label.btn.btn-primary.d-flex.align-items-center.p-3( onclick='selectGender("male")' for='genderRadio1')
 						i.fas.fa-mars.w-100
@@ -44,15 +44,17 @@ block ui
 						i.fas.fa-venus.w-100
 
 				//- Select Race
-				.row.align-items-center.border-bottom.pb-2.mb-2
+				.row
+					p.mb-0 Race
+				.row.align-items-center.mb-3
 					.col-auto
 						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectRace("decrease")' )
-							p.fs-5.mb-0 <
+							p.fs-5.text-primary.mb-0 <
 					.col
-						#selectedRace.text-capitalize
+						#selectedRace.text-capitalize.text-primary
 					.col-auto
 						button.btn.btn-link.btn-sm.border-0(.d-flex.align-items-center onclick='selectRace("increase")' )
-							p.fs-5.mb-0 >
+							p.fs-5.text-primary.mb-0 >
 
 				+featureSelector('skin')
 				+featureSelector('hair')

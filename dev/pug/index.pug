@@ -11,7 +11,7 @@ block ui
 
 		.row.g-1.mb-5.pb-4.border-bottom
 			.col-auto
-				button.btn.btn-link.btn-sm( onclick="randomChar(humanMale)" )
+				button.btn.btn-link.btn-sm( onclick="randomChar()" )
 					i.fas.fa-dice
 
 			.col-auto
@@ -19,22 +19,21 @@ block ui
 					i.fas.fa-infinity
 
 		.row
+			mixin featureSelector(category)
+				.row
+					p.mb-0= category
+				.row.align-items-center.mb-4
+					.col-auto
+						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectChar(\"' + category + '\", \"decrease\")')
+							p.fs-5.mb-0 <
+					.col
+						p.mb-0.text-capitalize.text-primary( id=category + 'Value' )
+					.col-auto
+						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectChar(\"' + category + '\", \"increase\")')
+							p.fs-5.mb-0 >
 			.col-3
-				mixin featureSelector(category)
-					.row
-						p.mb-0= category
-					.row.align-items-center.mb-3
-						.col-auto
-							button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectChar(\"' + category + '\", \"decrease\")')
-								p.fs-5.mb-0 <
-						.col
-							p.mb-0.text-capitalize.text-primary( id=category + 'Value' )
-						.col-auto
-							button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectChar(\"' + category + '\", \"increase\")')
-								p.fs-5.mb-0 >
-				
 				//- Gender Toggle
-				.btn-group.w-100.mb-3( role='group' aria-label='Basic radio toggle button group' )
+				.btn-group.w-100.mb-4( role='group' aria-label='Basic radio toggle button group' )
 					input.btn-check( type='radio' name='genderRadio' id='genderRadio1' autocomplete="off" )
 					label.btn.btn-primary.d-flex.align-items-center.p-3( onclick='selectGender("male")' for='genderRadio1')
 						i.fas.fa-mars.w-100
@@ -46,32 +45,34 @@ block ui
 				//- Select Race
 				.row
 					p.mb-0 Race
-				.row.align-items-center.mb-3
+				.row.align-items-center.mb-4
 					.col-auto
-						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectRace("decrease")' )
+						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectPrimaryRace("decrease")' )
 							p.fs-5.text-primary.mb-0 <
 					.col
-						#selectedRace.text-capitalize.text-primary
+						#selectedRacePrimary.text-capitalize.text-primary
 					.col-auto
-						button.btn.btn-link.btn-sm.border-0(.d-flex.align-items-center onclick='selectRace("increase")' )
+						button.btn.btn-link.btn-sm.border-0(.d-flex.align-items-center onclick='selectPrimaryRace("increase")' )
 							p.fs-5.text-primary.mb-0 >
 
-				+featureSelector('skin')
-				+featureSelector('hair')
-				+featureSelector('beard')
-				
-				p.mb-0 Hair Color
-				#hairColorSwatches.row.g-0.btn-group( role='group' aria-label='Basic radio toggle button group' ).mb-4
-				
-			
+				.row.align-items-center.mb-4
+					p#selectedRaceLore.small.text-gray-600.mb-0
+					
 			.col
 				//- Container for the printed png images.
 				#drawAmount
 				#charGen.row.justify-content-center
 			
 			.col-3
+				+featureSelector('skin')
+				+featureSelector('hair')
+				+featureSelector('beard')
+
+				p.mb-0 Hair Color
+				#hairColorSwatches.row.g-0.btn-group.mb-4( role='group' aria-label='Basic radio toggle button group' )
+
 				+featureSelector('adornment')
 				+featureSelector('tattoo')
 
 				p.mb-0 Tattoo Color
-				#tattooColorSwatches.row.g-0.btn-group( role='group' aria-label='Basic radio toggle button group' ).mb-4
+				#tattooColorSwatches.row.g-0.btn-group(.mb-4 role='group' aria-label='Basic radio toggle button group' )

@@ -4,7 +4,7 @@ let ctx = canvas.getContext('2d');
 ctx.scale(10, 10);
 ctx.imageSmoothingEnabled = false;
 
-var humanMaleMap = {
+var celtonHumanMaleMap = {
 	skin: [
 		[0,0], [0,0], [0,0]
 	],
@@ -25,7 +25,7 @@ var humanMaleMap = {
 	],
 }
 
-var humanFemaleMap = {
+var celtonHumanFemaleMap = {
 	skin: [
 		[0,1], [0,1], [0,1]
 	],
@@ -124,7 +124,7 @@ var dwarfFemaleMap = {
 var xOffset = 10;
 var yOffset = 12;
 
-function createRaceTemplate(race, gender, map) {
+function createRaceTemplate(race, racePrimary, gender, map) {
 	var genTemplate = [];
 
 	for( var i = 0; i < Object.keys(map).length; i++ ) {
@@ -132,16 +132,21 @@ function createRaceTemplate(race, gender, map) {
 		var prop = Object.keys(map)[i];
 		var propCap = prop.charAt(0).toUpperCase() + prop.slice(1);
 		var raceCap = race.charAt(0).toUpperCase() + race.slice(1);
+		var racePrimaryCap = racePrimary.charAt(0).toUpperCase() + racePrimary.slice(1);
 		var genderCap = gender.charAt(0).toUpperCase() + gender.slice(1);
+
+		if(racePrimary.length > 0) {
+			racePrimaryCap = racePrimaryCap + ' ';
+		}
 		
 		for( var j = 0; j < map[prop].length; j++) {
 			var propArrayObject;
 			var index = (j + 1).toString();
-
+			
 			if ( i === 0 ) {
 				propArrayObject = {
 					name: race + genderCap + index,
-					src: '../../assets/' + raceCap + ' ' + genderCap + index + '.png',
+					src: '../../assets/' + raceCap + ' ' + racePrimaryCap + genderCap + index + '.png',
 					x: xOffset + (map[prop][j][0]),
 					y: yOffset + (map[prop][j][1]),
 				}
@@ -150,7 +155,7 @@ function createRaceTemplate(race, gender, map) {
 
 				propArrayObject = {
 					name: race + genderCap + propCap + index,
-					src: '../../assets/' + raceCap + ' ' + genderCap + ' ' + propCap + index + '.png',
+					src: '../../assets/' + raceCap + ' ' + racePrimaryCap + genderCap + ' ' + propCap + index + '.png',
 					x: xOffset + (map[prop][j][0]),
 					y: yOffset + (map[prop][j][1]),
 				}
@@ -245,11 +250,11 @@ function genColorSwatches(colorObject, subject) {
 	function setPrimaryColor() {
 		if ( Array.isArray(colorObject[colorName])) {
 			primaryColor = colorObject[colorName][0];
-			createdColorValue = createdColor[raceIndex][raceTemplateName][subject][0];
+			createdColorValue = createdColor[racePrimaryIndex][raceIndex][raceTemplateName][subject][0];
 
 		} else {
 			primaryColor = colorObject[colorName];
-			createdColorValue = createdColor[raceIndex][raceTemplateName][subject];
+			createdColorValue = createdColor[racePrimaryIndex][raceIndex][raceTemplateName][subject];
 		}
 	}
 
@@ -307,14 +312,14 @@ function replaceColor(data, colorFind, colorReplace) {
 }
 
 function applyHairColor(data) {
-	var colorArray = createdColor[raceIndex][raceTemplateName].hair;
+	var colorArray = createdColor[racePrimaryIndex][raceIndex][raceTemplateName].hair;
 
 	replaceColor(data, '#8a8a8a', colorArray[0]);
 	replaceColor(data, '#787878', colorArray[1]);
 }
 
 function applyTattooColor(data) {
-	var color = createdColor[raceIndex][raceTemplateName].tattoo;
+	var color = createdColor[racePrimaryIndex][raceIndex][raceTemplateName].tattoo;
 
 	replaceColor(data, '#8a4646', color);
 }
@@ -356,19 +361,19 @@ let drawAmount = 0;
 // Generate all possible permutations of characters.
 function permute() {
 	//- Exclusions from the normal permutation.
-	for(var i = 0; i < humanMale[0].length; i++) {
-		for(var j = 0; j < humanMale[5].length; j++) {
-			for(var k = 0; k < humanMale[1].length; k++) {
-				for(var l = 0; l < humanMale[2].length; l++) {
+	for(var i = 0; i < celtonHumanMale[0].length; i++) {
+		for(var j = 0; j < celtonHumanMale[5].length; j++) {
+			for(var k = 0; k < celtonHumanMale[1].length; k++) {
+				for(var l = 0; l < celtonHumanMale[2].length; l++) {
 
 					var genChar = [];
 
-					genChar.push(humanMale[0][i]);
-					genChar.push(humanMale[5][j]);
-					genChar.push(humanMale[1][k]);
-					genChar.push(humanMale[2][l]);
+					genChar.push(celtonHumanMale[0][i]);
+					genChar.push(celtonHumanMale[5][j]);
+					genChar.push(celtonHumanMale[1][k]);
+					genChar.push(celtonHumanMale[2][l]);
 
-					drawChar(genChar, 'humanMale' + i + k + l + 0 + 0 + j);
+					drawChar(genChar, 'celtonHumanMale' + i + k + l + 0 + 0 + j);
 
 					drawAmount++;
 					document.getElementById("drawAmount").innerHTML = drawAmount + ' results.';
@@ -378,21 +383,21 @@ function permute() {
 	}
 
 	//- Permutation for all skin tones.
-	for(var i = 0; i < humanMale[0].length; i++) {
-		for(var j = 0; j < humanMale[1].length; j++) {
-			for(var k = 0; k < humanMale[2].length; k++) {
-				for(var l = 0; l < humanMale[3].length; l++) {
-					for(var m = 0; m < humanMale[4].length; m++) {
+	for(var i = 0; i < celtonHumanMale[0].length; i++) {
+		for(var j = 0; j < celtonHumanMale[1].length; j++) {
+			for(var k = 0; k < celtonHumanMale[2].length; k++) {
+				for(var l = 0; l < celtonHumanMale[3].length; l++) {
+					for(var m = 0; m < celtonHumanMale[4].length; m++) {
 							
 						var genChar = [];
 
-						genChar.push(humanMale[0][i]);
-						genChar.push(humanMale[1][j]);
-						genChar.push(humanMale[2][k]);
-						genChar.push(humanMale[3][l]);
-						genChar.push(humanMale[4][m]);
+						genChar.push(celtonHumanMale[0][i]);
+						genChar.push(celtonHumanMale[1][j]);
+						genChar.push(celtonHumanMale[2][k]);
+						genChar.push(celtonHumanMale[3][l]);
+						genChar.push(celtonHumanMale[4][m]);
 
-						drawChar(genChar, 'humanMale' + i + j + k + l + m + 0);
+						drawChar(genChar, 'celtonHumanMale' + i + j + k + l + m + 0);
 					}
 				}
 			}
@@ -402,65 +407,87 @@ function permute() {
 
 var raceTemplates = [
 	[
-		humanMale = createRaceTemplate('human', 'male', humanMaleMap),
-		humanFemale = createRaceTemplate('human', 'female', humanFemaleMap)
+		[
+			celtonHumanMale = createRaceTemplate('celton', 'human', 'male', celtonHumanMaleMap),
+			celtonHumanFemale = createRaceTemplate('celton', 'human', 'female', celtonHumanFemaleMap)
+		]
 	],
 	[
-		halforcMale = createRaceTemplate('halforc', 'male', halforcMaleMap),
-		halforcFemale = createRaceTemplate('halforc', 'female', halforcFemaleMap)
+		[
+			halforcMale = createRaceTemplate('halforc', '', 'male', halforcMaleMap),
+			halforcFemale = createRaceTemplate('halforc', '', 'female', halforcFemaleMap)
+		]
 	],
 	[
-		dwarfMale = createRaceTemplate('dwarf', 'male', dwarfMaleMap),
-		dwarfFemale = createRaceTemplate('dwarf', 'female', dwarfFemaleMap)
+		[
+			dwarfMale = createRaceTemplate('dwarf', '', 'male', dwarfMaleMap),
+			dwarfFemale = createRaceTemplate('dwarf', '', 'female', dwarfFemaleMap)
+		]
 	],
 ]
 
 var createdCharacter = [
-	{
-		humanMale: {skin: 2, hair: 0, beard: 1, adornment: 0, tattoo: 0},
-		humanFemale: {skin: 2, hair: 2, beard: 0, adornment: 1, tattoo: 1},
-	},
-	{
-		halforcMale: {skin: 1, hair: 2, beard: 1, adornment: 0, tattoo: 2},
-		halforcFemale: {skin: 0, hair: 2, beard: 0, adornment: 1, tattoo: 2},
-	},
-	{
-		dwarfMale: {skin: 1, hair: 2, beard: 2, adornment: 0, tattoo: 3},
-		dwarfFemale: {skin: 0, hair: 3, beard: 0, adornment: 1, tattoo: 0},
-	},
+	[
+		{
+			celtonHumanMale: {skin: 2, hair: 0, beard: 1, adornment: 0, tattoo: 0},
+			celtonHumanFemale: {skin: 2, hair: 2, beard: 0, adornment: 1, tattoo: 1},
+		},
+	],
+	[
+		{
+			halforcMale: {skin: 1, hair: 2, beard: 1, adornment: 0, tattoo: 2},
+			halforcFemale: {skin: 0, hair: 2, beard: 0, adornment: 1, tattoo: 2},
+		},
+	],
+	[
+		{
+			dwarfMale: {skin: 1, hair: 2, beard: 2, adornment: 0, tattoo: 3},
+			dwarfFemale: {skin: 0, hair: 3, beard: 0, adornment: 1, tattoo: 0},
+		},
+	],
 ]
 
 var createdColor = [
-	{
-		humanMale: {hair: hairColors.yellow1, tattoo: tattooColors.green1},
-		humanFemale: {hair: hairColors.yellow2, tattoo: tattooColors.green1},
-	},
-	{
-		halforcMale: {hair: hairColors.brown1, tattoo: tattooColors.red1},
-		halforcFemale: {hair: hairColors.black2, tattoo: tattooColors.green2},
-	},
-	{
-		dwarfMale: {hair: hairColors.gray2, tattoo: tattooColors.blue1},
-		dwarfFemale: {hair: hairColors.brown2, tattoo: tattooColors.blue1},
-	},
+	[
+		{
+			celtonHumanMale: {hair: hairColors.yellow1, tattoo: tattooColors.green1},
+			celtonHumanFemale: {hair: hairColors.yellow2, tattoo: tattooColors.green1},
+		},
+	],
+	[
+		{
+			halforcMale: {hair: hairColors.brown1, tattoo: tattooColors.red1},
+			halforcFemale: {hair: hairColors.black2, tattoo: tattooColors.green2},
+		},
+	],
+	[
+		{
+			dwarfMale: {hair: hairColors.gray2, tattoo: tattooColors.blue1},
+			dwarfFemale: {hair: hairColors.brown2, tattoo: tattooColors.blue1},
+		},
+	]
 ]
 
-function popRaceName(raceTemplateName) {
-	var raceName;
+function genRacePrimaryName(raceTemplateName) {
+	var racePrimaryName, racePrimaryLore;
+
+	if ( raceTemplateName.includes('Human') ) {
+		racePrimaryName = 'Human';
+		racePrimaryLore = 'Being versatile and ambitious, humans are the most diplomatic when bringing races of the Mortal Kingdoms together for multitudes of reasons. Although humans have a relatively young history, in recent times, many of their kingdoms have made great progress.';
+	}
 
 	if ( raceTemplateName.includes('halforc') ) {
-		raceName = 'Half Orc';
+		racePrimaryName = 'Half-orc';
+		racePrimaryLore = 'Half-orcs are humanoids born of both celton and orc ancestry. Often shunned in both celton and orcish society, they have an ability to thrive in unwelcome or unusual locations. With their intelligence on par with celtons and their strength comparable to orcs, Half-orcs prove to be formidable.';
 	}
 
-	else if ( raceTemplateName.includes('Female') ) {
-		raceName = raceTemplateName.split('Female')[0];
-	}
-
-	else if ( raceTemplateName.includes('Male') ) {
-		raceName = raceTemplateName.split('Male')[0];
+	else if ( raceTemplateName.includes('dwarf') ) {
+		racePrimaryName = 'Dwarf';
+		racePrimaryLore = 'Coming from seven primary clans throughout the Mortal Empires, Dwarves are tradition-abiding folk known for their strong martial traditions and beautiful craftmanship. Dwarves are hardy, loyal, and wise, looking to their ancestors for inspiration.';
 	}
 	
-	document.getElementById('selectedRace').innerHTML = raceName;
+	document.getElementById('selectedRacePrimary').innerHTML = racePrimaryName;
+	document.getElementById('selectedRaceLore').innerHTML = racePrimaryLore;
 }
 
 function padZeroes(number, length) {
@@ -472,7 +499,7 @@ function padZeroes(number, length) {
     return my_string;
 }
 
-var raceIndex, raceTemplateGenders, genderIndex, raceTemplateName, raceTemplate;
+var racePrimaryIndex, raceIndex, raceTemplateGenders, genderIndex, raceTemplateName, raceTemplate;
 
 // Select Character Features Randomly
 function randomChar() {
@@ -484,11 +511,12 @@ function randomChar() {
 		return Math.floor(Math.random() * max);
 	}
 	
-	raceIndex = getRandomInt(createdCharacter.length);
-	genderIndex = getRandomInt(Object.keys(createdCharacter[raceIndex]).length);
-	raceTemplateName = Object.keys(createdCharacter[raceIndex])[genderIndex];
-	raceTemplate = raceTemplates[raceIndex][genderIndex];
-	popRaceName(raceTemplateName);
+	racePrimaryIndex = getRandomInt(createdCharacter.length);
+	raceIndex = getRandomInt(createdCharacter[racePrimaryIndex].length);
+	genderIndex = getRandomInt(Object.keys(createdCharacter[racePrimaryIndex][raceIndex]).length);
+	raceTemplateName = Object.keys(createdCharacter[racePrimaryIndex][raceIndex])[genderIndex];
+	raceTemplate = raceTemplates[racePrimaryIndex][raceIndex][genderIndex];
+	genRacePrimaryName(raceTemplateName);
 
 	// check gender radio
 	var selectedGenderRadio = document.getElementById('genderRadio' + (genderIndex + 1));
@@ -506,7 +534,7 @@ function randomChar() {
 		getRandomFeature(raceTemplate[i]);
 	}
 
-	var createdCharacterObject = createdCharacter[raceIndex][raceTemplateName];
+	var createdCharacterObject = createdCharacter[racePrimaryIndex][raceIndex][raceTemplateName];
 
 	for(var i = 0; i < Object.keys(createdCharacterObject).length; i++) {
 		var prop = Object.keys(createdCharacterObject)[i];
@@ -536,8 +564,8 @@ randomChar();
 function createCharacter(raceTemplate) {
 	var genChar = [];
 	var genName = [];
-	raceTemplateName = Object.keys(createdCharacter[raceIndex])[genderIndex];
-	var createdCharacterObject = createdCharacter[raceIndex][raceTemplateName];
+	raceTemplateName = Object.keys(createdCharacter[racePrimaryIndex][raceIndex])[genderIndex];
+	var createdCharacterObject = createdCharacter[racePrimaryIndex][raceIndex][raceTemplateName];
 
 	for(var i = 0; i < Object.keys(createdCharacterObject).length; i++) {
 		var prop = Object.keys(createdCharacterObject)[i];
@@ -554,7 +582,7 @@ function createCharacter(raceTemplate) {
 // drawChar([test[0][1], test[1][0], test[2][0], test[3][1], test[4][0]], 'test', true);
 
 function selectChar(feature, scale) {
-	var array = createdCharacter[raceIndex][raceTemplateName];
+	var array = createdCharacter[racePrimaryIndex][raceIndex][raceTemplateName];
 
 	function changeProp() {
 		var index = Object.keys(array).indexOf(feature);
@@ -591,7 +619,7 @@ function selectChar(feature, scale) {
 function selectGender(gender) {
 
 	function changeGender() {
-		raceTemplate = raceTemplates[raceIndex][genderIndex];
+		raceTemplate = raceTemplates[racePrimaryIndex][raceIndex][genderIndex];
 		createCharacter(raceTemplate);
 		genColorSwatches(hairColors, 'hair');
 	}
@@ -605,7 +633,7 @@ function selectGender(gender) {
 	}
 	if( gender === 'female' ) {
 
-		if( genderIndex < Object.keys(raceTemplates[raceIndex]).length - 1 ) {
+		if( genderIndex < Object.keys(raceTemplates[racePrimaryIndex][raceIndex]).length - 1 ) {
 				
 			genderIndex++;
 			changeGender();
@@ -613,41 +641,41 @@ function selectGender(gender) {
 	}
 }
 
-function selectRace(scale) {
+function selectPrimaryRace(scale) {
 
-	function changeRace() {
-		raceTemplate = raceTemplates[raceIndex][genderIndex];
+	function changeRacePrimary() {
+		raceTemplate = raceTemplates[racePrimaryIndex][raceIndex][genderIndex];
 		createCharacter(raceTemplate);
-		popRaceName(raceTemplateName);
+		genRacePrimaryName(raceTemplateName);
 		genColorSwatches(hairColors, 'hair');
 	}
 
 	if( scale === 'increase' ) {
-		if( raceIndex < raceTemplates.length - 1 ) {
-			raceIndex++;
-			changeRace();
+		if( racePrimaryIndex < raceTemplates.length - 1 ) {
+			racePrimaryIndex++;
+			changeRacePrimary();
 		}
 		else {
-			raceIndex = 0;
-			changeRace();
+			racePrimaryIndex = 0;
+			changeRacePrimary();
 		}
 	}
 
 	if( scale === 'decrease' ) {
-		if( raceIndex > 0 ) {
-			raceIndex--;
-			changeRace();
+		if( racePrimaryIndex > 0 ) {
+			racePrimaryIndex--;
+			changeRacePrimary();
 		}
 		else {
-			raceIndex = raceTemplates.length - 1;
-			changeRace();
+			racePrimaryIndex = raceTemplates.length - 1;
+			changeRacePrimary();
 		}
 	}
 }
 
 function selectHairColor(color) {
 	var selectedHairColor = hairColors[color];
-	createdColor[raceIndex][raceTemplateName].hair = selectedHairColor;
+	createdColor[racePrimaryIndex][raceIndex][raceTemplateName].hair = selectedHairColor;
 	hairColorIndex = Object.keys(hairColors).indexOf(color);
 
 	createCharacter(raceTemplate);
@@ -655,7 +683,7 @@ function selectHairColor(color) {
 
 function selectTattooColor(color) {
 	var selectedTattooColor = tattooColors[color];
-	createdColor[raceIndex][raceTemplateName].tattoo = selectedTattooColor;
+	createdColor[racePrimaryIndex][raceIndex][raceTemplateName].tattoo = selectedTattooColor;
 	tattooColorIndex = Object.keys(tattooColors).indexOf(color);
 
 	createCharacter(raceTemplate);

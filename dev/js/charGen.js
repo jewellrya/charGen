@@ -57,7 +57,7 @@ var halforcMaleMap = {
 	adornment: [
 	],
 	tattoo: [
-		[-1,8], [4,0], [-1,8]
+		[-1,8], [3,0], [-1,8]
 	],
 	armor: [
 	],
@@ -268,7 +268,6 @@ function genColorSwatches(colorObject, subject) {
 		setPrimaryColor();
 
 		if( primaryColor === createdColorValue ) {
-			console.log('selected ' + subject + primaryColor + ' true');
 			var selectedColorRadio = document.getElementById(inputName + i);
 			selectedColorRadio.checked = true;
 		}
@@ -339,7 +338,7 @@ function drawChar(imageArray, name, replace) {
 		}
 
 		var img = canvas.toDataURL("image/png");
-		var charGenComponent = '<div id="component_' + name + '" class="col-12 col-md-6 col-lg-4"><div class="d-flex flex-column"><img id="img_' + name + '" src="' + img + '"/><a class="text-center text-truncate" href="' + img + '" download="' + name + '">Export \"' + name + '\"</a></div></div>';
+		var charGenComponent = '<div id="component_' + name + '" class="col-12 col-md-6"><div class="d-flex flex-column"><img id="img_' + name + '" src="' + img + '"/><a class="text-center text-truncate" href="' + img + '" download="' + name + '">Export \"' + name + '\"</a></div></div>';
 
 		if(!replace) {
 			document.getElementById('charGen').innerHTML += charGenComponent;
@@ -422,23 +421,23 @@ var createdCharacter = [
 		humanFemale: {skin: 2, hair: 2, beard: 0, adornment: 1, tattoo: 1},
 	},
 	{
-		halforcMale: {skin: 1, hair: 2, beard: 2, adornment: 0, tattoo: 1},
-		halforcFemale: {skin: 0, hair: 1, beard: 0, adornment: 1, tattoo: 1},
+		halforcMale: {skin: 1, hair: 2, beard: 1, adornment: 0, tattoo: 2},
+		halforcFemale: {skin: 0, hair: 2, beard: 0, adornment: 1, tattoo: 2},
 	},
 	{
-		dwarfMale: {skin: 1, hair: 2, beard: 2, adornment: 0, tattoo: 0},
-		dwarfFemale: {skin: 0, hair: 2, beard: 0, adornment: 0, tattoo: 0},
+		dwarfMale: {skin: 1, hair: 2, beard: 2, adornment: 0, tattoo: 3},
+		dwarfFemale: {skin: 0, hair: 3, beard: 0, adornment: 1, tattoo: 0},
 	},
 ]
 
 var createdColor = [
 	{
 		humanMale: {hair: hairColors.yellow1, tattoo: tattooColors.green1},
-		humanFemale: {hair: hairColors.black1, tattoo: tattooColors.green1},
+		humanFemale: {hair: hairColors.yellow2, tattoo: tattooColors.green1},
 	},
 	{
 		halforcMale: {hair: hairColors.brown1, tattoo: tattooColors.red1},
-		halforcFemale: {hair: hairColors.black2, tattoo: tattooColors.red1},
+		halforcFemale: {hair: hairColors.black2, tattoo: tattooColors.green2},
 	},
 	{
 		dwarfMale: {hair: hairColors.gray2, tattoo: tattooColors.blue1},
@@ -491,6 +490,10 @@ function randomChar() {
 	raceTemplate = raceTemplates[raceIndex][genderIndex];
 	popRaceName(raceTemplateName);
 
+	// check gender radio
+	var selectedGenderRadio = document.getElementById('genderRadio' + (genderIndex + 1));
+	selectedGenderRadio.checked = true;
+
 	function getRandomFeature(array) {
 		var randomInt = getRandomInt(array.length)
 		genChar.push(array[randomInt]);
@@ -540,6 +543,7 @@ function createCharacter(raceTemplate) {
 		var prop = Object.keys(createdCharacterObject)[i];
 		genChar.push(raceTemplate[i][createdCharacterObject[prop]]);
 		genName += padZeroes(createdCharacterObject[prop], 2);
+		document.getElementById(prop + 'Value').innerHTML = createdCharacterObject[prop];
 	}
 
 	genName = genderIndex.toString() + raceIndex.toString() + genName + padZeroes(hairColorIndex, 2) + padZeroes(tattooColorIndex, 2);
@@ -602,7 +606,7 @@ function selectGender(gender) {
 	if( gender === 'female' ) {
 
 		if( genderIndex < Object.keys(raceTemplates[raceIndex]).length - 1 ) {
-
+				
 			genderIndex++;
 			changeGender();
 		}

@@ -11,47 +11,65 @@ block ui
 
 		.row.g-1.mb-5.pb-4.border-bottom
 			.col-auto
-				button.btn.btn-outline-primary.btn-sm( onclick="randomChar(humanMale)" ) Random
+				button.btn.btn-link.btn-sm( onclick="randomChar(humanMale)" )
+					i.fas.fa-dice
+
 			.col-auto
-				button.btn.btn-outline-primary.btn-sm( onclick="permute()" ) Generate all Combinations
+				button.btn.btn-link.btn-sm( onclick="permute()" )
+					i.fas.fa-infinity
 
 		.row
 			.col-3
 				mixin featureSelector(category)
-					.row.align-items-center.mb-2
+					.row
+						p.mb-0= category
+					.row.align-items-center.mb-3
 						.col-auto
-							button.btn.btn-outline-primary.btn-sm( onclick='selectChar(\"' + category + '\", \"decrease\")') <
+							button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectChar(\"' + category + '\", \"decrease\")')
+								p.fs-5.mb-0 <
 						.col
-							p.mb-0.text-capitalize= category
+							p.mb-0.text-capitalize( id=category + 'Value' )
 						.col-auto
-							button.btn.btn-outline-primary.btn-sm( onclick='selectChar(\"' + category + '\", \"increase\")') >
+							button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectChar(\"' + category + '\", \"increase\")')
+								p.fs-5.mb-0 >
 				
-				.row.g-1.mb-3
-					.col-6
-						button.btn.btn-primary.btn-sm.w-100( onclick='selectGender(\"male\")' ) Male
-					.col-6
-						button.btn.btn-primary.btn-sm.w-100( onclick='selectGender(\"female\")' ) Female
+				//- Gender Toggle
+				.btn-group.w-100.mb-2( role='group' aria-label='Basic radio toggle button group' )
+					input.btn-check( type='radio' name='genderRadio' id='genderRadio1' autocomplete="off" )
+					label.btn.btn-primary.d-flex.align-items-center.p-3( onclick='selectGender("male")' for='genderRadio1')
+						i.fas.fa-mars.w-100
+					
+					input.btn-check( type='radio' name='genderRadio' id='genderRadio2' autocomplete="off" )
+					label.btn.btn-primary.d-flex.align-items-center.p-3( onclick='selectGender("female")' for='genderRadio2' )
+						i.fas.fa-venus.w-100
 
-				.row.align-items-center.mb-5
+				//- Select Race
+				.row.align-items-center.border-bottom.pb-2.mb-2
 					.col-auto
-						button.btn.btn-primary.btn-sm( onclick='selectRace("decrease")' ) <
+						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectRace("decrease")' )
+							p.fs-5.mb-0 <
 					.col
 						#selectedRace.text-capitalize
 					.col-auto
-						button.btn.btn-primary.btn-sm( onclick='selectRace("increase")' ) >
+						button.btn.btn-link.btn-sm.border-0(.d-flex.align-items-center onclick='selectRace("increase")' )
+							p.fs-5.mb-0 >
 
 				+featureSelector('skin')
 				+featureSelector('hair')
 				+featureSelector('beard')
-
+				
+				p.mb-0 Hair Color
 				#hairColorSwatches.row.g-0.btn-group( role='group' aria-label='Basic radio toggle button group' ).mb-4
-					
+				
+			
+			.col
+				//- Container for the printed png images.
+				#drawAmount
+				#charGen.row.justify-content-center
+			
+			.col-3
 				+featureSelector('adornment')
 				+featureSelector('tattoo')
 
+				p.mb-0 Tattoo Color
 				#tattooColorSwatches.row.g-0.btn-group( role='group' aria-label='Basic radio toggle button group' ).mb-4
-				
-			//- Container for the printed png images.
-			.col
-				#drawAmount
-				#charGen.row

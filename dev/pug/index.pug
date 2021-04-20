@@ -45,16 +45,31 @@ block ui
 				//- Select Race
 				.row
 					p.mb-0 Race
-				.row.align-items-center.mb-4
-					.col-auto
-						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectPrimaryRace("decrease")' )
-							p.fs-5.text-primary.mb-0 <
-					.col
-						#selectedRacePrimary.text-capitalize.text-primary
-					.col-auto
-						button.btn.btn-link.btn-sm.border-0(.d-flex.align-items-center onclick='selectPrimaryRace("increase")' )
-							p.fs-5.text-primary.mb-0 >
 
+				.mb-4
+					.row.align-items-center
+						.col-auto
+							button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectRacePrimary("decrease")' )
+								p.fs-5.text-primary.mb-0 <
+						.col
+							#selectedRacePrimary.text-capitalize.text-primary
+						.col-auto
+							button.btn.btn-link.btn-sm.border-0(.d-flex.align-items-center onclick='selectRacePrimary("increase")' )
+								p.fs-5.text-primary.mb-0 >
+
+					#selectedRaceDom.row.align-items-center.mb-4
+						.col-auto
+							button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectRace("decrease")' )
+								p.fs-5.text-primary.mb-0 <
+						.col
+							#selectedRace.text-capitalize.text-primary
+						.col-auto
+							button.btn.btn-link.btn-sm.border-0(.d-flex.align-items-center onclick='selectRace("increase")' )
+								p.fs-5.text-primary.mb-0 >
+
+				.row.align-items-center.mb-4
+					p#selectedRacePrimaryLore.small.text-gray-600.mb-0
+				
 				.row.align-items-center.mb-4
 					p#selectedRaceLore.small.text-gray-600.mb-0
 					

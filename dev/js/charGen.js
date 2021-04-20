@@ -1,125 +1,10 @@
+import { charMaps } from './charMaps.js';
+
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext('2d');
 
 ctx.scale(10, 10);
 ctx.imageSmoothingEnabled = false;
-
-var celtonHumanMaleMap = {
-	skin: [
-		[0,0], [0,0], [0,0]
-	],
-	hair: [
-		[3,0], [3,0]
-	],
-	beard: [
-		[3,4], [5,7]
-	],
-	adornment: [
-		[1,1]
-	],
-	tattoo: [
-		[0,14], [0,12]
-	],
-	armor: [
-		[-4,1], [-1,8]
-	],
-}
-
-var celtonHumanFemaleMap = {
-	skin: [
-		[0,1], [0,1], [0,1]
-	],
-	hair: [
-		[0,1], [1,1], [0,-2]
-	],
-	beard: [
-	],
-	adornment: [
-		[3,5]
-	],
-	tattoo: [
-		[0,12], [0,14]
-	],
-	armor: [
-	],
-}
-
-var halforcMaleMap = {
-	skin: [
-		[-1,-3], [-1,-3], [-1,-3]
-	],
-	hair: [
-		[2,-3], [3,-3]
-	],
-	beard: [
-		[5,2], [6,4]
-	],
-	adornment: [
-	],
-	tattoo: [
-		[-1,8], [3,0], [-1,8]
-	],
-	armor: [
-	],
-}
-
-var halforcFemaleMap = {
-	skin: [
-		[0,-2], [0,-2], [0,-2]
-	],
-	hair: [
-		[1,-2], [0,-4]
-	],
-	beard: [
-	],
-	adornment: [
-		[3,3]
-	],
-	tattoo: [
-		[3,28], [0,14], [4,1]
-	],
-	armor: [
-	],
-}
-
-var dwarfMaleMap = {
-	skin: [
-		[-1,4], [-1,4], [-1,4],
-	],
-	hair: [
-		[1,4], [1,3], [2,4]
-	],
-	beard: [
-		[3,9], [3,9], [4,8]
-	],
-	adornment: [
-		[3,7]
-	],
-	tattoo: [
-		[-1,16], [-1,14], [-1,14]
-	],
-	armor: [
-	],
-}
-
-var dwarfFemaleMap = {
-	skin: [
-		[-1,5], [-1,5], [-1,5],
-	],
-	hair: [
-		[1,4], [1,4], [-1,2]
-	],
-	beard: [
-	],
-	adornment: [
-		[4,12], [2,10], [8,7]
-	],
-	tattoo: [
-		[-1,17], [-1,15], [-1,15]
-	],
-	armor: [
-	],
-}
 
 var xOffset = 10;
 var yOffset = 12;
@@ -185,7 +70,7 @@ function createRaceTemplate(race, racePrimary, gender, map) {
 	return genTemplate;
 }
 
-preload = function(imageArray, callback) {
+var preload = function(imageArray, callback) {
 
 	var imagesLoaded = 0;
 	var loadedImages = [];
@@ -405,24 +290,58 @@ function permute() {
 	}
 }
 
+var celtonHumanMale, 
+	celtonHumanFemale, 
+	halokrHumanMale, 
+	halokrHumanFemale, 
+	halforcMale, 
+	halforcFemale, 
+	dwarfMale, 
+	dwarfFemale,
+	highElfMale,
+	highElfFemale,
+	woodElfMale,
+	woodElfFemale,
+	deepElfMale,
+	deepElfFemale;
+
 var raceTemplates = [
 	[
 		[
-			celtonHumanMale = createRaceTemplate('celton', 'human', 'male', celtonHumanMaleMap),
-			celtonHumanFemale = createRaceTemplate('celton', 'human', 'female', celtonHumanFemaleMap)
+			celtonHumanMale = createRaceTemplate('celton', 'human', 'male', charMaps.celtonHumanMale),
+			celtonHumanFemale = createRaceTemplate('celton', 'human', 'female', charMaps.celtonHumanFemale)
+		],
+		[
+			halokrHumanMale = createRaceTemplate('halokr', 'human', 'male', charMaps.halokrHumanMale),
+			halokrHumanFemale = createRaceTemplate('halokr', 'human', 'female', charMaps.halokrHumanFemale)
 		]
 	],
 	[
 		[
-			halforcMale = createRaceTemplate('halforc', '', 'male', halforcMaleMap),
-			halforcFemale = createRaceTemplate('halforc', '', 'female', halforcFemaleMap)
+			halforcMale = createRaceTemplate('halforc', '', 'male', charMaps.halforcMale),
+			halforcFemale = createRaceTemplate('halforc', '', 'female', charMaps.halforcFemale)
 		]
 	],
 	[
 		[
-			dwarfMale = createRaceTemplate('dwarf', '', 'male', dwarfMaleMap),
-			dwarfFemale = createRaceTemplate('dwarf', '', 'female', dwarfFemaleMap)
+			dwarfMale = createRaceTemplate('dwarf', '', 'male', charMaps.dwarfMale),
+			dwarfFemale = createRaceTemplate('dwarf', '', 'female', charMaps.dwarfFemale)
 		]
+	],
+	[
+		[
+			highElfMale = createRaceTemplate('highelf', 'elf', 'male', charMaps.highElfMale),
+			highElfFemale = createRaceTemplate('highelf', 'elf', 'female', charMaps.highElfFemale)
+
+		],
+		[
+			woodElfMale = createRaceTemplate('woodelf', 'elf', 'male', charMaps.woodElfMale),
+			woodElfFemale = createRaceTemplate('woodelf', 'elf', 'male', charMaps.woodElfFemale)
+		],
+		[
+			deepElfMale = createRaceTemplate('deepelf', 'elf', 'male', charMaps.deepElfMale),
+			deepElfFemale = createRaceTemplate('deepelf', 'elf', 'female', charMaps.deepElfFemale),
+		],
 	],
 ]
 
@@ -431,6 +350,10 @@ var createdCharacter = [
 		{
 			celtonHumanMale: {skin: 2, hair: 0, beard: 1, adornment: 0, tattoo: 0},
 			celtonHumanFemale: {skin: 2, hair: 2, beard: 0, adornment: 1, tattoo: 1},
+		},
+		{
+			halokrHumanMale: {skin: 0, hair: 2, beard: 2, adornment: 1, tattoo: 1},
+			halokrHumanFemale: {skin: 0, hair: 3, beard: 0, adornment: 1, tattoo: 0},
 		},
 	],
 	[
@@ -445,6 +368,17 @@ var createdCharacter = [
 			dwarfFemale: {skin: 0, hair: 3, beard: 0, adornment: 1, tattoo: 0},
 		},
 	],
+	[
+		{
+			highElfMale: {skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0},
+		},
+		{
+			woodElfMale: {skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0},
+		},
+		{
+			deepElfMale: {skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0},
+		},
+	],
 ]
 
 var createdColor = [
@@ -452,6 +386,10 @@ var createdColor = [
 		{
 			celtonHumanMale: {hair: hairColors.yellow1, tattoo: tattooColors.green1},
 			celtonHumanFemale: {hair: hairColors.yellow2, tattoo: tattooColors.green1},
+		},
+		{
+			halokrHumanMale: {hair: hairColors.black1, tattoo: tattooColors.red1},
+			halokrHumanFemale: {hair: hairColors.brown1, tattoo: tattooColors.red1},
 		},
 	],
 	[
@@ -465,31 +403,85 @@ var createdColor = [
 			dwarfMale: {hair: hairColors.gray2, tattoo: tattooColors.blue1},
 			dwarfFemale: {hair: hairColors.brown2, tattoo: tattooColors.blue1},
 		},
-	]
+	],
+	[
+		{
+			highElfMale: {hair: hairColors.brown1, tattoo: tattooColors.red1},
+		},
+		{
+			woodElfMale: {hair: hairColors.brown1, tattoo: tattooColors.red1},
+		},
+		{
+			deepElfMale: {hair: hairColors.brown1, tattoo: tattooColors.red1},
+		},
+	],
 ]
 
-function genRacePrimaryName(raceTemplateName) {
-	var racePrimaryName, racePrimaryLore;
+function genRaceNames(raceTemplateName) {
+	var racePrimaryName, racePrimaryLore, raceName, raceLore;
 
+	// Primary Race
 	if ( raceTemplateName.includes('Human') ) {
 		racePrimaryName = 'Human';
-		racePrimaryLore = 'Being versatile and ambitious, humans are the most diplomatic when bringing races of the Mortal Kingdoms together for multitudes of reasons. Although humans have a relatively young history, in recent times, many of their kingdoms have made great progress.';
+		racePrimaryLore = 'Being versatile and ambitious, humans are the most diplomatic when bringing races of the Mortal Kingdoms together for multitudes of reasons. Although humans have a relatively young history, many of their kingdoms have made great progress in recent eras.';
 	}
 
 	if ( raceTemplateName.includes('halforc') ) {
 		racePrimaryName = 'Half-orc';
-		racePrimaryLore = 'Half-orcs are humanoids born of both celton and orc ancestry. Often shunned in both celton and orcish society, they have an ability to thrive in unwelcome or unusual locations. With their intelligence on par with celtons and their strength comparable to orcs, Half-orcs prove to be formidable.';
+		racePrimaryLore = 'Half-orcs are humanoids born of both human and orc ancestry. Often shunned in both human and orcish society, they have an ability to thrive in unwelcome or unusual locations. With their intelligence on par with humans and their strength comparable to orcs, Half-orcs prove to be formidable.';
 	}
 
-	else if ( raceTemplateName.includes('dwarf') ) {
+	if ( raceTemplateName.includes('dwarf') ) {
 		racePrimaryName = 'Dwarf';
 		racePrimaryLore = 'Coming from seven primary clans throughout the Mortal Empires, Dwarves are tradition-abiding folk known for their strong martial traditions and beautiful craftmanship. Dwarves are hardy, loyal, and wise, looking to their ancestors for inspiration.';
 	}
-	
+
+	if ( raceTemplateName.includes('Elf') ) {
+		racePrimaryName = 'Elf';
+		racePrimaryLore = 'Elf Lore.';
+	}
+
+	// Race
+	if ( raceTemplateName.includes('celton') ) {
+		raceName = 'Celton';
+		raceLore = 'For what they lack in physical skill, the Celtons make up for it in their affinity for spell weaving, particularly with nature. Their tribes are led by kings and the druid-warrior aristocracy. Celton are natural mercantile folk, with a large commerce of ores and jewels across the Mortal Empires.';
+	}
+
+	if ( raceTemplateName.includes('halokr') ) {
+		raceName = 'Halok\'r';
+		raceLore = 'Halok\'r hail from the great desert province of Nazinthal. They are descended from a long line of warriors and mystic seers. Their pride and fierce independence of spirit makes them suitable as free ranging heroes and adventurers.';
+	}
+
+	if ( raceTemplateName.includes('high') ) {
+		raceName = 'High Elf';
+		raceLore = 'Elf Lore.';
+	}
+
+	if ( raceTemplateName.includes('wood') ) {
+		raceName = 'Wood Elf';
+		raceLore = 'Elf Lore.';
+	}
+
+	if ( raceTemplateName.includes('deep') ) {
+		raceName = 'Deep Elf';
+		raceLore = 'Elf Lore.';
+	}
+
 	document.getElementById('selectedRacePrimary').innerHTML = racePrimaryName;
-	document.getElementById('selectedRaceLore').innerHTML = racePrimaryLore;
+	document.getElementById('selectedRacePrimaryLore').innerHTML = racePrimaryLore;
+
+	if (raceTemplates[racePrimaryIndex].length <= 1) {
+		document.getElementById('selectedRaceDom').classList.add('d-none');
+		document.getElementById('selectedRace').innerHTML = '';
+		document.getElementById('selectedRaceLore').innerHTML = '';
+	} else {
+		document.getElementById('selectedRaceDom').classList.remove('d-none');
+		document.getElementById('selectedRace').innerHTML = raceName;
+		document.getElementById('selectedRaceLore').innerHTML = raceLore;
+	}
 }
 
+// pad zeros so number is always x digits long.
 function padZeroes(number, length) {
     var my_string = '' + number;
     while (my_string.length < length) {
@@ -499,7 +491,7 @@ function padZeroes(number, length) {
     return my_string;
 }
 
-var racePrimaryIndex, raceIndex, raceTemplateGenders, genderIndex, raceTemplateName, raceTemplate;
+var racePrimaryIndex, raceIndex, genderIndex, raceTemplateName, raceTemplate;
 
 // Select Character Features Randomly
 function randomChar() {
@@ -516,7 +508,7 @@ function randomChar() {
 	genderIndex = getRandomInt(Object.keys(createdCharacter[racePrimaryIndex][raceIndex]).length);
 	raceTemplateName = Object.keys(createdCharacter[racePrimaryIndex][raceIndex])[genderIndex];
 	raceTemplate = raceTemplates[racePrimaryIndex][raceIndex][genderIndex];
-	genRacePrimaryName(raceTemplateName);
+	genRaceNames(raceTemplateName);
 
 	// check gender radio
 	var selectedGenderRadio = document.getElementById('genderRadio' + (genderIndex + 1));
@@ -558,6 +550,7 @@ function randomChar() {
 	drawChar(genChar, genName, true);
 }
 
+window.randomChar = randomChar;
 randomChar();
 
 // Select Character Features
@@ -571,16 +564,33 @@ function createCharacter(raceTemplate) {
 		var prop = Object.keys(createdCharacterObject)[i];
 		genChar.push(raceTemplate[i][createdCharacterObject[prop]]);
 		genName += padZeroes(createdCharacterObject[prop], 2);
-		document.getElementById(prop + 'Value').innerHTML = createdCharacterObject[prop];
+
+		var uiFeatureValue;
+		if (createdCharacterObject[prop] > 0) {
+			if( prop !== 'skin' ) {
+				uiFeatureValue = createdCharacterObject[prop];
+			} else {
+				uiFeatureValue = createdCharacterObject[prop] + 1;
+			}
+		} else {
+			if( prop !== 'skin' ) {
+				uiFeatureValue = 'None';
+			} else {
+				uiFeatureValue = 1;
+			}
+		}
+		
+		document.getElementById(prop + 'Value').innerHTML = uiFeatureValue;
 	}
 
 	genName = genderIndex.toString() + raceIndex.toString() + genName + padZeroes(hairColorIndex, 2) + padZeroes(tattooColorIndex, 2);
 	drawChar(genChar, genName, true);
 };
 
-// var test = raceTemplates[2][0];
-// drawChar([test[0][1], test[1][0], test[2][0], test[3][1], test[4][0]], 'test', true);
+// var test = raceTemplates[0][1][1];
+// drawChar([test[0][0], test[1][3], test[2][0], test[3][2], test[4][0]], 'test', true);
 
+// select character features and redraw each time.
 function selectChar(feature, scale) {
 	var array = createdCharacter[racePrimaryIndex][raceIndex][raceTemplateName];
 
@@ -615,7 +625,9 @@ function selectChar(feature, scale) {
 
 	changeProp();
 }
+window.selectChar = selectChar;
 
+// select gender
 function selectGender(gender) {
 
 	function changeGender() {
@@ -640,13 +652,15 @@ function selectGender(gender) {
 		}
 	}
 }
+window.selectGender = selectGender;
 
-function selectPrimaryRace(scale) {
-
+// select primary race
+function selectRacePrimary(scale) {
 	function changeRacePrimary() {
+		raceIndex = 0;
 		raceTemplate = raceTemplates[racePrimaryIndex][raceIndex][genderIndex];
 		createCharacter(raceTemplate);
-		genRacePrimaryName(raceTemplateName);
+		genRaceNames(raceTemplateName);
 		genColorSwatches(hairColors, 'hair');
 	}
 
@@ -672,7 +686,43 @@ function selectPrimaryRace(scale) {
 		}
 	}
 }
+window.selectRacePrimary = selectRacePrimary;
 
+// select race or "sub-race"
+function selectRace(scale) {
+
+	function changeRace() {
+		raceTemplate = raceTemplates[racePrimaryIndex][raceIndex][genderIndex];
+		createCharacter(raceTemplate);
+		genRaceNames(raceTemplateName);
+		genColorSwatches(hairColors, 'hair');
+	}
+
+	if( scale === 'increase' ) {
+		if( raceIndex < raceTemplates[racePrimaryIndex].length - 1 ) {
+			raceIndex++;
+			changeRace();
+		}
+		else {
+			raceIndex = 0;
+			changeRace();
+		}
+	}
+
+	if( scale === 'decrease' ) {
+		if( raceIndex > 0 ) {
+			raceIndex--;
+			changeRace();
+		}
+		else {
+			raceIndex = raceTemplates[racePrimaryIndex].length - 1;
+			changeRace();
+		}
+	}
+}
+window.selectRace = selectRace;
+
+// select hair color
 function selectHairColor(color) {
 	var selectedHairColor = hairColors[color];
 	createdColor[racePrimaryIndex][raceIndex][raceTemplateName].hair = selectedHairColor;
@@ -680,7 +730,9 @@ function selectHairColor(color) {
 
 	createCharacter(raceTemplate);
 }
+window.selectHairColor = selectHairColor;
 
+// select tattoo color
 function selectTattooColor(color) {
 	var selectedTattooColor = tattooColors[color];
 	createdColor[racePrimaryIndex][raceIndex][raceTemplateName].tattoo = selectedTattooColor;
@@ -688,3 +740,4 @@ function selectTattooColor(color) {
 
 	createCharacter(raceTemplate);
 }
+window.selectTattooColor = selectTattooColor;

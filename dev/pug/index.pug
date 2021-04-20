@@ -24,12 +24,12 @@ block ui
 					p.mb-0= category
 				.row.align-items-center.mb-4
 					.col-auto
-						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectChar(\"' + category + '\", \"decrease\")')
+						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectFeaturePresets(\"' + category + '\", \"decrease\")')
 							p.fs-5.mb-0 <
 					.col
 						p.mb-0.text-capitalize.text-primary( id=category + 'Value' )
 					.col-auto
-						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectChar(\"' + category + '\", \"increase\")')
+						button.btn.btn-link.btn-sm.border-0.d-flex.align-items-center( onclick='selectFeaturePresets(\"' + category + '\", \"increase\")')
 							p.fs-5.mb-0 >
 			.col-3
 				//- Gender Toggle

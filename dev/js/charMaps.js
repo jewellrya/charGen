@@ -147,7 +147,7 @@ export var charMaps = {
 		armor: [
 		],
 	},
-	highElfMale: {
+	highelfElfMale: {
 		skin: [
 			[0,-2], [0,-2], [0,-2],
 		],
@@ -165,8 +165,9 @@ export var charMaps = {
 		armor: [
 		],
 	},
-	highElfFemale: {
+	highelfElfFemale: {
 		skin: [
+			[0,-1], [0,-1], [0,-1]
 		],
 		hair: [
 		],
@@ -179,7 +180,7 @@ export var charMaps = {
 		armor: [
 		],
 	},
-	woodElfMale: {
+	woodelfElfMale: {
 		skin: [
 			[0,0], [0,0], [0,0],
 		],
@@ -197,8 +198,9 @@ export var charMaps = {
 		armor: [
 		],
 	},
-	woodElfFemale: {
+	woodelfElfFemale: {
 		skin: [
+			[0,1], [0,1], [0,1],
 		],
 		hair: [
 		],
@@ -211,7 +213,7 @@ export var charMaps = {
 		armor: [
 		],
 	},
-	deepElfMale: {
+	deepelfElfMale: {
 		skin: [
 			[0,0], [0,0], [0,0],
 		],
@@ -229,8 +231,9 @@ export var charMaps = {
 		armor: [
 		],
 	},
-	deepElfFemale: {
+	deepelfElfFemale: {
 		skin: [
+			[0,1], [0,1], [0,1],
 		],
 		hair: [
 		],

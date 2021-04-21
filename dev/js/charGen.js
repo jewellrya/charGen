@@ -358,10 +358,13 @@ function genCharUtilities(racePrimary, race, racePrimaryLore, raceLore, raceGend
 	Object.assign(raceGenderTemplateObject, templateObjectValue);
 }
 
+var humanLore = 'Being versatile and ambitious, humans are the most diplomatic when bringing races of the Mortal Kingdoms together for multitudes of reasons. Although humans have a relatively young history, many of their kingdoms have made great progress in recent eras.';
+var elfLore = 'Elves are intelligent, dexterous, and highly perceptive creatures, giving them a preternaturally awareness of their surroundings. Although lacking in physical aptitude, Elves have an unparallel ability in spell weaving. Rumor has it that groups of secluded Elves still practice the ancient magics of their Ael\'falas ancestors.';
+
 genCharUtilities(
 	'Human',
 	'Celton',
-	'Being versatile and ambitious, humans are the most diplomatic when bringing races of the Mortal Kingdoms together for multitudes of reasons. Although humans have a relatively young history, many of their kingdoms have made great progress in recent eras.',
+	humanLore,
 	'For what they lack in physical skill, the Celtons make up for it in their affinity for spell weaving, particularly with nature. Their tribes are led by kings and the druid-warrior aristocracy. Celton are natural mercantile folk, with a large commerce of ores and jewels across the Mortal Empires.',
 	{
 		male: {
@@ -378,7 +381,7 @@ genCharUtilities(
 genCharUtilities(
 	'Human',
 	'Halokr',
-	'Being versatile and ambitious, humans are the most diplomatic when bringing races of the Mortal Kingdoms together for multitudes of reasons. Although humans have a relatively young history, many of their kingdoms have made great progress in recent eras.',
+	humanLore,
 	'Halok\'r hail from the great desert province of Nazinthal. They are descended from a long line of warriors and mystic seers. Their pride and fierce independence of spirit makes them suitable as free ranging heroes and adventurers.',
 	{
 		male: {
@@ -422,6 +425,57 @@ genCharUtilities(
 		female: {
 			colors: { hair: hairColors.brown2, tattoo: tattooColors.blue1 },
 			features: { skin: 0, hair: 3, beard: 0, adornment: 1, tattoo: 0 }
+		}
+	}
+);
+
+genCharUtilities(
+	'Elf',
+	'Highelf',
+	elfLore,
+	'High Elves are the most proficient magic-users of the Elves. They are tall, proud, and culturally snobbish. Knowledge, from a multitude of subjects, is revered in High elf society. Those who master the study of Arcana and Magic are often exalted by their peers.',
+	{
+		male: {
+			colors: { hair: hairColors.yellow2, tattoo: tattooColors.yellow1 },
+			features: { skin: 2, hair: 2, beard: 2, adornment: 0, tattoo: 1 }
+		},
+		female: {
+			colors: { hair: hairColors.brown2, tattoo: tattooColors.blue1 },
+			features: { skin: 2, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
+		}
+	}
+);
+
+genCharUtilities(
+	'Elf',
+	'Woodelf',
+	elfLore,
+	'Rejecting the formalities of the civilized world, the Wood Elves discarded lavish living for a life in the wilderness, among nature, the trees, and animals. Despite their infamy, they are known to be extremely agile and quick. Their nimbleness serves them best in any art involving thievery. Many are well respected archers, due to their inherent mastery of the bow.',
+	{
+		male: {
+			colors: { hair: hairColors.brown3, tattoo: tattooColors.green2 },
+			features: { skin: 0, hair: 1, beard: 1, adornment: 0, tattoo: 1 }
+		},
+		female: {
+			colors: { hair: hairColors.brown3, tattoo: tattooColors.green2 },
+			features: { skin: 2, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
+		}
+	}
+);
+
+genCharUtilities(
+	'Elf',
+	'Deepelf',
+	elfLore,
+	'Not much is known about Deep Elf society, much less their origins. Their combination of powerful intellects with strong and agile physiques produce superior warriors and sorcerers. On the battlefield, Deep Elves are noted for their skill with a balanced integration of the sword, the bow and magic.',
+	{
+		male: {
+			colors: { hair: hairColors.brown2, tattoo: tattooColors.red1 },
+			features: { skin: 2, hair: 1, beard: 1, adornment: 0, tattoo: 2 }
+		},
+		female: {
+			colors: { hair: hairColors.gray1, tattoo: tattooColors.white1 },
+			features: { skin: 2, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
 		}
 	}
 );
@@ -625,6 +679,9 @@ function selectRacePrimary(scale) {
 		racePrimaryName = Object.keys(raceGenderTemplateObject)[racePrimaryIndex];
 
 		if (raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
+			if(raceIndex === undefined) {
+				raceIndex = 0;
+			}
 			raceName = Object.keys(raceGenderTemplateObject[racePrimaryName]['races'])[raceIndex];
 			raceGenderTemplate = raceGenderTemplateObject[racePrimaryName]['races'][raceName]['genders'][genderName]['template'];
 		} else  {
@@ -731,13 +788,29 @@ function genRaceNameAndLore() {
 	
 	racePrimaryLore = raceGenderTemplateObject[racePrimaryName]['lore'];
 
-	document.getElementById('selectedRacePrimary').innerHTML = racePrimaryName;
+	if( racePrimaryName.includes('halforc') ) {
+		document.getElementById('selectedRacePrimary').innerHTML = 'Half-orc';
+	} else {
+
+		document.getElementById('selectedRacePrimary').innerHTML = racePrimaryName;
+	}
+
 	document.getElementById('selectedRacePrimaryLore').innerHTML = racePrimaryLore;
 
-	if (raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
+	if(raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
 		raceLore = raceGenderTemplateObject[racePrimaryName]['races'][raceName]['lore'];
 		document.getElementById('selectedRaceDom').classList.remove('d-none');
-		document.getElementById('selectedRace').innerHTML = raceName;
+
+		if(raceName.includes('elf')) {
+			document.getElementById('selectedRace').innerHTML = raceName.split('elf')[0] + ' Elf';
+		}
+		else if(raceName.includes('alokr')) {
+			document.getElementById('selectedRace').innerHTML = 'Halok\'r';
+		}
+		else {
+			document.getElementById('selectedRace').innerHTML = raceName;
+		}
+
 		document.getElementById('selectedRaceLore').innerHTML = raceLore;
 		
 	} else {

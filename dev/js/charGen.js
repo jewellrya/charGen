@@ -566,9 +566,6 @@ function randomChar() {
 	drawChar(genChar, genName, true);
 }
 
-window.randomChar = randomChar;
-randomChar();
-
 // Generate Selected Character Features
 function genCharPresets(raceGenderTemplate) {
 	let genChar = [];
@@ -639,6 +636,30 @@ function selectFeaturePresets(feature, scale) {
 }
 window.selectFeaturePresets = selectFeaturePresets;
 
+// Apply feature presets as index
+function applyColorIndex() {
+	
+	if (raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
+		raceGenderColorPresets = raceGenderTemplateObject[racePrimaryName]['races'][raceName]['genders'][genderName]['presets']['colors'];
+	} else {
+		raceGenderColorPresets = raceGenderTemplateObject[racePrimaryName]['genders'][genderName]['presets']['colors'];
+	}
+
+	for(let i = 0; i < Object.keys(hairColors).length; i++) {
+		let hairColorName = Object.keys(hairColors)[i];
+		if(hairColors[hairColorName][0] === raceGenderColorPresets.hair[0]) {
+			hairColorIndex = i;
+		}
+	}
+
+	for(let i = 0; i < Object.keys(tattooColors).length; i++) {
+		let tattooColorName = Object.keys(tattooColors)[i];
+		if(tattooColors[tattooColorName] === raceGenderColorPresets.tattoo) {
+			tattooColorIndex = i;
+		}
+	}
+}
+
 // select gender
 function selectGender(gender) {
 
@@ -652,6 +673,7 @@ function selectGender(gender) {
 			raceGenderTemplate = raceGenderTemplateObject[racePrimaryName]['genders'][genderName]['template'];
 		}
 
+		applyColorIndex();
 		genCharPresets(raceGenderTemplate);
 		genColorSwatches(hairColors, 'hair');
 		genColorSwatches(tattooColors, 'tattoo');
@@ -694,6 +716,7 @@ function selectRacePrimary(scale) {
 			raceGenderTemplate = raceGenderTemplateObject[racePrimaryName]['genders'][genderName]['template'];
 		}
 
+		applyColorIndex();
 		genCharPresets(raceGenderTemplate);
 		genRaceNameAndLore();
 		genColorSwatches(hairColors, 'hair');
@@ -733,6 +756,7 @@ function selectRace(scale) {
 		raceGenderTemplate = raceGenderTemplateObject[racePrimaryName]['races'][raceName]['genders'][genderName]['template'];
 		genCharPresets(raceGenderTemplate);
 
+		applyColorIndex();
 		genRaceNameAndLore();
 		genColorSwatches(hairColors, 'hair');
 		genColorSwatches(tattooColors, 'tattoo');
@@ -827,3 +851,6 @@ function genRaceNameAndLore() {
 		document.getElementById('selectedRaceLore').innerHTML = '';
 	}
 }
+
+window.randomChar = randomChar;
+randomChar();

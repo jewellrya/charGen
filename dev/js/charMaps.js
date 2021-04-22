@@ -1,20 +1,43 @@
 
 export var charMaps = {
+	humanMale: {
+		skin: [],
+		hair: [
+			[3,0], [3,0], [3,0], [3,0], [2,-1]
+		],
+		beard: [
+			[3,4], [5,7], [4,5], [4,6], [3,4]
+		],
+		adornment: [],
+		tattoo: [
+			[0,14], [0,12]
+		],
+		armor: [],
+	},
+	humanFemale: {
+		skin: [],
+		hair: [
+			[0,1], [0,-2], [1,1], [1,0], [0,0], [0,-2]
+		],
+		beard: [],
+		adornment: [],
+		tattoo: [
+			[0,12], [0,14]
+		],
+		armor: [],
+	},
 	celtonHumanMale: {
 		skin: [
 			[0,0], [0,0], [0,0]
 		],
 		hair: [
-			[3,0], [3,0]
 		],
 		beard: [
-			[3,4], [5,7]
 		],
 		adornment: [
 			[1,1]
 		],
 		tattoo: [
-			[0,14], [0,12]
 		],
 		armor: [
 			[-4,1], [-1,8]
@@ -25,7 +48,6 @@ export var charMaps = {
 			[0,1], [0,1], [0,1]
 		],
 		hair: [
-			[0,1], [1,1], [0,-2]
 		],
 		beard: [
 		],
@@ -33,7 +55,6 @@ export var charMaps = {
 			[3,5]
 		],
 		tattoo: [
-			[0,12], [0,14]
 		],
 		armor: [
 		],
@@ -43,10 +64,8 @@ export var charMaps = {
 			[0,0], [0,0], [0,0]
 		],
 		hair: [
-			[3,0], [3,0], [2,-1]
 		],
 		beard: [
-			[4,5], [4,6], [3,4]
 		],
 		adornment: [
 			[4,8]
@@ -62,7 +81,6 @@ export var charMaps = {
 			[0,1], [0,1], [0,1]
 		],
 		hair: [
-			[1,0], [0,0], [0,-2]
 		],
 		beard: [
 		],
@@ -147,20 +165,31 @@ export var charMaps = {
 		armor: [
 		],
 	},
-	highelfElfMale: {
-		skin: [
-			[0,-2], [0,-2], [0,-2],
-		],
+	elfMale: {
+		skin: [],
 		hair: [
-			[3,-2], [2,-3], [1,-2]
+			[3,0], [2,-1], [1,0], [3,0], [2,0], [2,-1], [2,-2], [2,-2]
 		],
 		beard: [
-			[5,4], [4,3]
+			[5,6], [4,5], [4,5], [4,5]
+		],
+		adornment: [],
+		tattoo: [
+			[0,13], [0,10], [1,18], [0,12]
+		],
+		armor: [],
+	},
+	highelfElfMale: {
+		skin: [
+			[0,-2], [0,-2], [0,-2]
+		],
+		hair: [
+		],
+		beard: [
 		],
 		adornment: [
 		],
 		tattoo: [
-			[0,11]
 		],
 		armor: [
 		],
@@ -185,15 +214,13 @@ export var charMaps = {
 			[0,0], [0,0], [0,0],
 		],
 		hair: [
-			[2,-2], [3,0], [2,0]
+			[2,-2]
 		],
 		beard: [
-			[4,5]
 		],
 		adornment: [
 		],
 		tattoo: [
-			[0,10]
 		],
 		armor: [
 		],
@@ -218,15 +245,12 @@ export var charMaps = {
 			[0,0], [0,0], [0,0],
 		],
 		hair: [
-			[2,-1], [2,-2], [2,-2]
 		],
 		beard: [
-			[4,5]
 		],
 		adornment: [
 		],
 		tattoo: [
-			[1,18], [0,12]
 		],
 		armor: [
 		],

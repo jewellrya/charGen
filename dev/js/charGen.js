@@ -9,20 +9,28 @@ ctx.imageSmoothingEnabled = false;
 let xOffset = 10;
 let yOffset = 12;
 
-function createRaceGenderTemplate(race, racePrimary, gender, map) {
+function createRaceGenderTemplate(racePrimary, race, gender, xOffsetRace, yOffsetRace) {
 	let genTemplate = [];
+	let racePrimaryLowerCase = racePrimary.toLowerCase();
+	let raceLowerCase = race.toLowerCase();
+	let genderCap = gender.charAt(0).toUpperCase() + gender.slice(1);
+	let mapPrimary = {};
+	let map = {};
+
+	if( racePrimary.length > 0 ) {
+		Object.assign(map, charMaps[raceLowerCase + racePrimary + genderCap]);
+	} else {
+		Object.assign(map, charMaps[raceLowerCase + genderCap]);
+	}
+
+	if( racePrimary.length > 1 ) {
+		racePrimary = racePrimary + ' ';
+	}
 
 	for( let i = 0; i < Object.keys(map).length; i++ ) {
 		let propArray = [];
 		let prop = Object.keys(map)[i];
 		let propCap = prop.charAt(0).toUpperCase() + prop.slice(1);
-		let raceCap = race.charAt(0).toUpperCase() + race.slice(1);
-		let racePrimaryCap = racePrimary.charAt(0).toUpperCase() + racePrimary.slice(1);
-		let genderCap = gender.charAt(0).toUpperCase() + gender.slice(1);
-
-		if(racePrimary.length > 0) {
-			racePrimaryCap = racePrimaryCap + ' ';
-		}
 		
 		for( let j = 0; j < map[prop].length; j++) {
 			let propArrayObject;
@@ -30,8 +38,8 @@ function createRaceGenderTemplate(race, racePrimary, gender, map) {
 			
 			if ( i === 0 ) {
 				propArrayObject = {
-					name: race + genderCap + index,
-					src: '../../assets/' + raceCap + ' ' + racePrimaryCap + genderCap + index + '.png',
+					name: raceLowerCase + genderCap + index,
+					src: '../../assets/' + race + ' ' + racePrimary + genderCap + index + '.png',
 					x: xOffset + (map[prop][j][0]),
 					y: yOffset + (map[prop][j][1]),
 				}
@@ -39,8 +47,8 @@ function createRaceGenderTemplate(race, racePrimary, gender, map) {
 			else if ( i > 0 ) {
 
 				propArrayObject = {
-					name: race + genderCap + propCap + index,
-					src: '../../assets/' + raceCap + ' ' + racePrimaryCap + genderCap + ' ' + propCap + index + '.png',
+					name: raceLowerCase + genderCap + propCap + index,
+					src: '../../assets/' + race + ' ' + racePrimary + genderCap + ' ' + propCap + index + '.png',
 					x: xOffset + (map[prop][j][0]),
 					y: yOffset + (map[prop][j][1]),
 				}
@@ -50,6 +58,30 @@ function createRaceGenderTemplate(race, racePrimary, gender, map) {
 		}
 
 		genTemplate.push(propArray);
+	}
+
+	if( racePrimary.length > 1 ) {
+		
+		Object.assign(mapPrimary, charMaps[racePrimaryLowerCase + genderCap]);
+
+		for( let i = 0; i < Object.keys(mapPrimary).length; i++ ) {
+			let prop = Object.keys(mapPrimary)[i];
+			let propCap = prop.charAt(0).toUpperCase() + prop.slice(1);
+
+			for( let j = 0; j < mapPrimary[prop].length; j++ ) {
+				let propArrayObject;
+				let index = (j + 1).toString();
+
+				propArrayObject = {
+					name: racePrimaryLowerCase + genderCap + propCap + index,
+					src: '../../assets/' + racePrimary + genderCap + ' ' + propCap + index + '.png',
+					x: xOffset + (mapPrimary[prop][j][0]) + xOffsetRace,
+					y: yOffset + (mapPrimary[prop][j][1]) + yOffsetRace
+				}
+				
+				genTemplate[i].push(propArrayObject);
+			}
+		}
 	}
 
 	for( let i = 0; i < Object.keys(map).length; i++ ) {
@@ -314,7 +346,7 @@ function permute() {
 
 let raceGenderTemplateObject = {};
 
-function genCharUtilities(racePrimary, race, racePrimaryLore, raceLore, raceGenderTemplatePresets) {	
+function genCharUtilities(racePrimary, race, racePrimaryLore, raceLore, xOffsetRace, yOffsetRace, raceGenderTemplatePresets) {	
 	
 	let racePrimaryLowerCase = racePrimary.toLowerCase();
 	let raceLowerCase = race.toLowerCase();
@@ -334,7 +366,7 @@ function genCharUtilities(racePrimary, race, racePrimaryLore, raceLore, raceGend
 
 			let gender = genders[i];
 			let genderLowerCase = gender.toLowerCase();
-			let raceGenderTemplate = createRaceGenderTemplate(raceLowerCase, racePrimaryLowerCase, genderLowerCase, charMaps[raceLowerCase + racePrimary + gender]);
+			let raceGenderTemplate = createRaceGenderTemplate(racePrimary, race, gender, xOffsetRace, yOffsetRace);
 			templateObjectValue[racePrimaryLowerCase]['races'][raceLowerCase]['genders'][genderLowerCase]['template'] = raceGenderTemplate;
 			templateObjectValue[racePrimaryLowerCase]['races'][raceLowerCase]['genders'][genderLowerCase]['presets'] = raceGenderTemplatePresets[genderLowerCase];
 		}
@@ -351,7 +383,7 @@ function genCharUtilities(racePrimary, race, racePrimaryLore, raceLore, raceGend
 
 			let gender = genders[i];
 			let genderLowerCase = gender.toLowerCase();
-			let raceGenderTemplate = createRaceGenderTemplate(raceLowerCase, racePrimaryLowerCase, genderLowerCase, charMaps[raceLowerCase + racePrimary + gender]);
+			let raceGenderTemplate = createRaceGenderTemplate(racePrimary, race, gender, xOffsetRace, yOffsetRace);
 			templateObjectValue[raceLowerCase]['genders'][genderLowerCase]['template'] = raceGenderTemplate;
 			templateObjectValue[raceLowerCase]['genders'][genderLowerCase]['presets'] = raceGenderTemplatePresets[genderLowerCase];
 		}
@@ -367,7 +399,9 @@ genCharUtilities(
 	'Human',
 	'Celton',
 	humanLore,
-	'For what they lack in physical skill, the Celtons make up for it in their affinity for spell weaving, particularly with nature. Their tribes are led by kings and the druid-warrior aristocracy. Celton are natural mercantile folk, with a large commerce of ores and jewels across the Mortal Empires.',
+	'For what they lack in physical skill, the Celtons make up for it in their affinity for spell weaving, particularly with nature. Their tribes are led by kings and the druid-warrior aristocracy. Celton are natural mercantile folk, with a large commerce of ores and jewels, among other goods, across the Mortal Kingdoms.',
+	0,
+	0,
 	{
 		male: {
 			colors: { hair: hairColors.yellow1, tattoo: tattooColors.green1 },
@@ -385,6 +419,8 @@ genCharUtilities(
 	'Halokr',
 	humanLore,
 	'Halok\'r hail from the great desert province of Nazinthal. They are descended from a long line of warriors and mystic seers. Their pride and fierce independence of spirit makes them suitable as free ranging heroes and adventurers.',
+	0,
+	0,
 	{
 		male: {
 			colors: { hair: hairColors.yellow1, tattoo: tattooColors.green1 },
@@ -402,6 +438,8 @@ genCharUtilities(
 	'Halforc',
 	'',
 	'Half-orcs are humanoids born of both human and orc ancestry. Often shunned in both human and orcish society, they have an ability to thrive in unwelcome or unusual locations. With their intelligence on par with humans and their strength comparable to orcs, Half-orcs prove to be formidable.',
+	0,
+	0,
 	{
 		male: {
 			colors: { hair: hairColors.brown1, tattoo: tattooColors.red1 },
@@ -418,7 +456,9 @@ genCharUtilities(
 	'',
 	'Dwarf',
 	'',
-	'Coming from seven primary clans throughout the Mortal Empires, Dwarves are tradition-abiding folk known for their strong martial traditions and beautiful craftmanship. Dwarves are hardy, loyal, and wise, looking to their ancestors for inspiration.',
+	'Coming from seven primary clans throughout the Mortal Kingdoms, Dwarves are tradition-abiding folk known for their strong martial traditions and beautiful craftmanship. Dwarves are hardy, loyal, and wise, looking to their ancestors for inspiration.',
+	0,
+	0,
 	{
 		male: {
 			colors: { hair: hairColors.gray2, tattoo: tattooColors.blue1 },
@@ -435,7 +475,9 @@ genCharUtilities(
 	'Elf',
 	'Highelf',
 	elfLore,
-	'High Elves are the most proficient magic-users of the Elves. They are tall, proud, and culturally snobbish. Knowledge, from a multitude of subjects, is revered in High elf society. Those who master the study of Arcana and Magic are often exalted by their peers.',
+	'High Elves are the most proficient magic-users of the Elves. They are tall, proud, and culturally snobbish. Knowledge from a multitude of subjects is revered in High elf society. Those who master the study of Arcana and Magic are often exalted by their peers.',
+	0,
+	-2,
 	{
 		male: {
 			colors: { hair: hairColors.yellow2, tattoo: tattooColors.yellow1 },
@@ -453,10 +495,12 @@ genCharUtilities(
 	'Woodelf',
 	elfLore,
 	'Rejecting the formalities of the civilized world, the Wood Elves discarded lavish living for a life in the wilderness, among nature, the trees, and animals. Despite their infamy, they are known to be extremely agile and quick. Their nimbleness serves them best in any art involving thievery. Many are well respected archers, due to their inherent mastery of the bow.',
+	0,
+	0,
 	{
 		male: {
 			colors: { hair: hairColors.brown3, tattoo: tattooColors.green2 },
-			features: { skin: 0, hair: 1, beard: 1, adornment: 0, tattoo: 1 }
+			features: { skin: 0, hair: 1, beard: 4, adornment: 0, tattoo: 1 }
 		},
 		female: {
 			colors: { hair: hairColors.brown3, tattoo: tattooColors.green2 },
@@ -470,10 +514,12 @@ genCharUtilities(
 	'Deepelf',
 	elfLore,
 	'Not much is known about Deep Elf society, much less their origins. Their combination of powerful intellects with strong and agile physiques produce superior warriors and sorcerers. On the battlefield, Deep Elves are noted for their skill with a balanced integration of the sword, the bow and magic.',
+	0,
+	0,
 	{
 		male: {
-			colors: { hair: hairColors.brown2, tattoo: tattooColors.red1 },
-			features: { skin: 2, hair: 1, beard: 1, adornment: 0, tattoo: 2 }
+			colors: { hair: hairColors.black2, tattoo: tattooColors.red1 },
+			features: { skin: 1, hair: 6, beard: 0, adornment: 0, tattoo: 2 }
 		},
 		female: {
 			colors: { hair: hairColors.gray1, tattoo: tattooColors.white1 },

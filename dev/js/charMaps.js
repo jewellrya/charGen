@@ -3,7 +3,7 @@ export var charMaps = {
 	humanMale: {
 		skin: [],
 		hair: [
-			[3,0], [3,0], [3,0], [3,0], [2,-1]
+			[3,0], [3,0], [3,0], [3,0], [2,-1], [3,0], [2,0], [2,0]
 		],
 		beard: [
 			[3,4], [5,7], [4,5], [4,6], [3,4]
@@ -17,7 +17,7 @@ export var charMaps = {
 	humanFemale: {
 		skin: [],
 		hair: [
-			[0,1], [0,-2], [1,1], [1,0], [0,0], [0,-2]
+			[0,1], [0,-2], [1,1], [0,-2], [2,1], [1,1]
 		],
 		beard: [],
 		adornment: [],
@@ -81,11 +81,106 @@ export var charMaps = {
 			[0,1], [0,1], [0,1]
 		],
 		hair: [
+			[1,0], [0,0]
 		],
 		beard: [
 		],
 		adornment: [
 			[3,6], [4,9]
+		],
+		tattoo: [
+		],
+		armor: [
+		],
+	},
+	nordenHumanMale: {
+		skin: [
+			[0,0], [0,0]
+		],
+		hair: [
+		],
+		beard: [
+			[4,6], [4,5], [4,5]
+		],
+		adornment: [
+		],
+		tattoo: [
+			[4,10], [4,3], [0,4]
+		],
+		armor: [
+		],
+	},
+	nordenHumanFemale: {
+		skin: [
+			[0,1], [0,1]
+		],
+		hair: [
+			[2,1]
+		],
+		beard: [
+		],
+		adornment: [
+		],
+		tattoo: [
+			[0,5], [4,4]
+		],
+		armor: [
+		],
+	},
+	gotharienHumanMale: {
+		skin: [
+			[0,0], [0,0], [0,0]
+		],
+		hair: [
+		],
+		beard: [
+		],
+		adornment: [
+		],
+		tattoo: [
+		],
+		armor: [
+		],
+	},
+	gotharienHumanFemale: {
+		skin: [
+			[0,1], [0,1], [0,1]
+		],
+		hair: [
+		],
+		beard: [
+		],
+		adornment: [
+		],
+		tattoo: [
+		],
+		armor: [
+		],
+	},
+	sunjinHumanMale: {
+		skin: [
+			[0,0], [0,0], [0,0]
+		],
+		hair: [
+		],
+		beard: [
+		],
+		adornment: [
+		],
+		tattoo: [
+		],
+		armor: [
+		],
+	},
+	sunjinHumanFemale: {
+		skin: [
+			[0,1], [0,1], [0,1]
+		],
+		hair: [
+		],
+		beard: [
+		],
+		adornment: [
 		],
 		tattoo: [
 		],
@@ -168,7 +263,7 @@ export var charMaps = {
 	elfMale: {
 		skin: [],
 		hair: [
-			[3,0], [2,-1], [1,0], [3,0], [2,0], [2,-1], [2,-2], [2,-2]
+			[3,0], [2,-1], [1,0], [3,0], [2,0], [2,-1]
 		],
 		beard: [
 			[5,6], [4,5], [4,5], [4,5]
@@ -245,6 +340,7 @@ export var charMaps = {
 			[0,0], [0,0], [0,0],
 		],
 		hair: [
+			[2,-2], [2,-2]
 		],
 		beard: [
 		],

@@ -299,50 +299,71 @@ let drawAmount = 0;
 
 // Generate all possible permutations of characters.
 function permute() {
-	//- Exclusions from the normal permutation.
-	for(let i = 0; i < celtonHumanMale[0].length; i++) {
-		for(let j = 0; j < celtonHumanMale[5].length; j++) {
-			for(let k = 0; k < celtonHumanMale[1].length; k++) {
-				for(let l = 0; l < celtonHumanMale[2].length; l++) {
 
-					let genChar = [];
+	console.log('Permutation Started.');
+	
+	function derp(raceGenderTemplate) {
+		for( let hairColorIndex = 0; hairColorIndex < Object.keys(hairColors).length; hairColorIndex++ ) {
+			for( let tattooColorIndex = 0; tattooColorIndex < Object.keys(tattooColors).length; tattooColorIndex++ ) {
 
-					genChar.push(celtonHumanMale[0][i]);
-					genChar.push(celtonHumanMale[5][j]);
-					genChar.push(celtonHumanMale[1][k]);
-					genChar.push(celtonHumanMale[2][l]);
+				for(let i = 0; i < raceGenderTemplate[0].length; i++) {
+					for(let j = 0; j < raceGenderTemplate[1].length; j++) {
+						for(let k = 0; k < raceGenderTemplate[2].length; k++) {
+							for(let l = 0; l < raceGenderTemplate[3].length; l++) {
+								for(let m = 0; m < raceGenderTemplate[4].length; m++) {
 
-					drawChar(genChar, 'celtonHumanMale' + i + k + l + 0 + 0 + j);
+									// let genChar = [];
 
-					drawAmount++;
-					document.getElementById("drawAmount").innerHTML = drawAmount + ' results.';
-				}
-			}
-		}
-	}
+									// let hairColorName = Object.keys(hairColors)[hairColorIndex];
+									// selectHairColor(hairColorName);
 
-	//- Permutation for all skin tones.
-	for(let i = 0; i < celtonHumanMale[0].length; i++) {
-		for(let j = 0; j < celtonHumanMale[1].length; j++) {
-			for(let k = 0; k < celtonHumanMale[2].length; k++) {
-				for(let l = 0; l < celtonHumanMale[3].length; l++) {
-					for(let m = 0; m < celtonHumanMale[4].length; m++) {
-							
-						let genChar = [];
+									// let tattooColorName = Object.keys(tattooColors)[tattooColorIndex];
+									// selectTattooColor(tattooColorName);
 
-						genChar.push(celtonHumanMale[0][i]);
-						genChar.push(celtonHumanMale[1][j]);
-						genChar.push(celtonHumanMale[2][k]);
-						genChar.push(celtonHumanMale[3][l]);
-						genChar.push(celtonHumanMale[4][m]);
+									// genChar.push(raceGenderTemplate[0][i]);
+									// genChar.push(raceGenderTemplate[1][j]);
+									// genChar.push(raceGenderTemplate[2][k]);
+									// genChar.push(raceGenderTemplate[3][l]);
+									// genChar.push(raceGenderTemplate[4][m]);
 
-						drawChar(genChar, 'celtonHumanMale' + i + j + k + l + m + 0);
+									// drawChar(genChar, 'racePrimary ' + 'race ' + padZeroes(i, 2) + padZeroes(k, 2) + padZeroes(l, 2) + padZeroes(j, 2) + padZeroes(m, 2) + padZeroes(hairColorIndex, 2) + padZeroes(tattooColorIndex, 2));
+
+									drawAmount++;
+									document.getElementById("drawAmount").innerHTML = drawAmount + ' results.';
+								}
+							}
+						}
 					}
 				}
+
 			}
 		}
 	}
+	
+	derp(raceGenderTemplateObject['human']['races']['celton']['genders']['male']['template']);
+	derp(raceGenderTemplateObject['human']['races']['celton']['genders']['female']['template']);
+	derp(raceGenderTemplateObject['human']['races']['halokr']['genders']['male']['template']);
+	derp(raceGenderTemplateObject['human']['races']['halokr']['genders']['female']['template']);
+	derp(raceGenderTemplateObject['human']['races']['norden']['genders']['male']['template']);
+	derp(raceGenderTemplateObject['human']['races']['norden']['genders']['female']['template']);
+	derp(raceGenderTemplateObject['human']['races']['gotharien']['genders']['male']['template']);
+	derp(raceGenderTemplateObject['human']['races']['gotharien']['genders']['female']['template']);
+	derp(raceGenderTemplateObject['human']['races']['sunjin']['genders']['male']['template']);
+	derp(raceGenderTemplateObject['human']['races']['sunjin']['genders']['female']['template']);
+
+	derp(raceGenderTemplateObject['elf']['races']['highelf']['genders']['male']['template']);
+	derp(raceGenderTemplateObject['elf']['races']['highelf']['genders']['female']['template']);
+	derp(raceGenderTemplateObject['elf']['races']['woodelf']['genders']['male']['template']);
+	derp(raceGenderTemplateObject['elf']['races']['woodelf']['genders']['female']['template']);
+	derp(raceGenderTemplateObject['elf']['races']['deepelf']['genders']['male']['template']);
+	derp(raceGenderTemplateObject['elf']['races']['deepelf']['genders']['female']['template']);
+
+	derp(raceGenderTemplateObject['halforc']['genders']['male']['template']);
+	derp(raceGenderTemplateObject['halforc']['genders']['female']['template']);
+	derp(raceGenderTemplateObject['dwarf']['genders']['male']['template']);
+	derp(raceGenderTemplateObject['dwarf']['genders']['female']['template']);
 }
+window.permute = permute;
 
 let raceGenderTemplateObject = {};
 
@@ -405,7 +426,7 @@ genCharUtilities(
 	{
 		male: {
 			colors: { hair: hairColors.yellow1, tattoo: tattooColors.green1 },
-			features: { skin: 2, hair: 0, beard: 1, adornment: 0, tattoo: 0 }
+			features: { skin: 2, hair: 7, beard: 3, adornment: 1, tattoo: 0 }
 		},
 		female: {
 			colors: { hair: hairColors.red1, tattoo: tattooColors.green1 },
@@ -424,10 +445,10 @@ genCharUtilities(
 	{
 		male: {
 			colors: { hair: hairColors.black2, tattoo: tattooColors.red1 },
-			features: { skin: 2, hair: 0, beard: 1, adornment: 0, tattoo: 0 }
+			features: { skin: 0, hair: 5, beard: 4, adornment: 1, tattoo: 0 }
 		},
 		female: {
-			colors: { hair: hairColors.black1, tattoo: tattooColors.red2 },
+			colors: { hair: hairColors.black2, tattoo: tattooColors.red2 },
 			features: { skin: 0, hair: 6, beard: 0, adornment: 1, tattoo: 0 }
 		}
 	}
@@ -461,12 +482,12 @@ genCharUtilities(
 	0,
 	{
 		male: {
-			colors: { hair: hairColors.yellow1, tattoo: tattooColors.gray1 },
-			features: { skin: 1, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
+			colors: { hair: hairColors.black2, tattoo: tattooColors.gray1 },
+			features: { skin: 1, hair: 10, beard: 6, adornment: 0, tattoo: 0 }
 		},
 		female: {
-			colors: { hair: hairColors.yellow3, tattoo: tattooColors.gray1 },
-			features: { skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
+			colors: { hair: hairColors.brown1, tattoo: tattooColors.gray1 },
+			features: { skin: 0, hair: 1, beard: 0, adornment: 0, tattoo: 0 }
 		}
 	}
 );
@@ -480,12 +501,12 @@ genCharUtilities(
 	0,
 	{
 		male: {
-			colors: { hair: hairColors.yellow1, tattoo: tattooColors.gray1 },
-			features: { skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
+			colors: { hair: hairColors.black1, tattoo: tattooColors.red1 },
+			features: { skin: 0, hair: 1, beard: 1, adornment: 0, tattoo: 0 }
 		},
 		female: {
-			colors: { hair: hairColors.yellow3, tattoo: tattooColors.gray1 },
-			features: { skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
+			colors: { hair: hairColors.black1, tattoo: tattooColors.red1 },
+			features: { skin: 0, hair: 2, beard: 0, adornment: 0, tattoo: 1 }
 		}
 	}
 );
@@ -541,8 +562,8 @@ genCharUtilities(
 			features: { skin: 2, hair: 2, beard: 2, adornment: 0, tattoo: 1 }
 		},
 		female: {
-			colors: { hair: hairColors.brown2, tattoo: tattooColors.blue1 },
-			features: { skin: 2, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
+			colors: { hair: hairColors.yellow3, tattoo: tattooColors.blue1 },
+			features: { skin: 2, hair: 1, beard: 0, adornment: 0, tattoo: 0 }
 		}
 	}
 );
@@ -560,8 +581,8 @@ genCharUtilities(
 			features: { skin: 0, hair: 1, beard: 4, adornment: 0, tattoo: 1 }
 		},
 		female: {
-			colors: { hair: hairColors.brown3, tattoo: tattooColors.green2 },
-			features: { skin: 2, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
+			colors: { hair: hairColors.brown2, tattoo: tattooColors.green1 },
+			features: { skin: 2, hair: 3, beard: 0, adornment: 0, tattoo: 4 }
 		}
 	}
 );
@@ -579,8 +600,8 @@ genCharUtilities(
 			features: { skin: 1, hair: 8, beard: 0, adornment: 0, tattoo: 2 }
 		},
 		female: {
-			colors: { hair: hairColors.gray1, tattoo: tattooColors.white1 },
-			features: { skin: 2, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
+			colors: { hair: hairColors.gray1, tattoo: tattooColors.red2 },
+			features: { skin: 2, hair: 0, beard: 0, adornment: 0, tattoo: 2 }
 		}
 	}
 );

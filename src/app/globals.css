@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@plugin "daisyui/theme" {
+  name: "scroll";
+  default: false;
+  color-scheme: light;
+  prefersdark: false;
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98% 0 0);
+  --color-base-300: oklch(95% 0 0);
+  --color-base-content: oklch(0.467 0.032 102.2);
+  --color-primary: oklch(0.467 0.032 102.2);
+  --color-primary-content: oklch(98% 0.026 102.212);
+  --color-secondary: oklch(98% 0.026 102.212);
+  --color-secondary-content: oklch(0.467 0.032 102.2);
+
+  /* Cards */
+  --card-fs: 1.125rem;
+  --cardtitle-fs: 2rem;
+
+  /* Base Sizes */
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.5rem;
+}

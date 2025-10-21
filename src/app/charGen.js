@@ -1,10 +1,23 @@
-import { charMaps } from './charMaps.js';
+import { charMaps } from '../data/charMaps.js';
 
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext('2d');
+let canvas = null;
+let ctx = null;
 
-ctx.scale(10, 10);
-ctx.imageSmoothingEnabled = false;
+function ensureCanvas() {
+  if (typeof document === 'undefined') return false;
+  if (canvas && ctx) return true;
+
+  const el = document.getElementById('canvas');
+  if (!el) return false;
+
+  canvas = el;
+  ctx = canvas.getContext('2d');
+  if (!ctx) return false;
+
+  ctx.scale(10, 10);
+  ctx.imageSmoothingEnabled = false;
+  return true;
+}
 
 let xOffset = 10;
 let yOffset = 12;
@@ -39,21 +52,19 @@ function createRaceGenderTemplate(racePrimary, race, gender, xOffsetRace, yOffse
 			if ( i === 0 ) {
 				propArrayObject = {
 					name: raceLowerCase + genderCap + index,
-					src: '../../assets/' + race + ' ' + racePrimary + genderCap + index + '.png',
+					src: '/assets/' + race + ' ' + racePrimary + genderCap + index + '.png',
 					x: xOffset + (map[prop][j][0]),
 					y: yOffset + (map[prop][j][1]),
 				}
 			}
 			else if ( i > 0 ) {
-
 				propArrayObject = {
 					name: raceLowerCase + genderCap + propCap + index,
-					src: '../../assets/' + race + ' ' + racePrimary + genderCap + ' ' + propCap + index + '.png',
+					src: '/assets/' + race + ' ' + racePrimary + genderCap + ' ' + propCap + index + '.png',
 					x: xOffset + (map[prop][j][0]),
 					y: yOffset + (map[prop][j][1]),
 				}
 			}
-
 			propArray.push(propArrayObject);
 		}
 
@@ -74,7 +85,7 @@ function createRaceGenderTemplate(racePrimary, race, gender, xOffsetRace, yOffse
 
 				propArrayObject = {
 					name: racePrimaryLowerCase + genderCap + propCap + index,
-					src: '../../assets/' + racePrimary + genderCap + ' ' + propCap + index + '.png',
+					src: '/assets/' + racePrimary + genderCap + ' ' + propCap + index + '.png',
 					x: xOffset + (mapPrimary[prop][j][0]) + xOffsetRace,
 					y: yOffset + (mapPrimary[prop][j][1]) + yOffsetRace
 				}
@@ -92,7 +103,7 @@ function createRaceGenderTemplate(racePrimary, race, gender, xOffsetRace, yOffse
 		if (i > 0) {
 			genTemplate[i].unshift({
 				name: race + genderCap + propCap + '_blank',
-				src: '../../assets/_blank.png',
+				src: '/assets/_blank.png',
 				x: 0,
 				y: 0
 			})
@@ -103,24 +114,36 @@ function createRaceGenderTemplate(racePrimary, race, gender, xOffsetRace, yOffse
 }
 
 let preload = function(imageArray, callback) {
+  let completed = 0;
+  let loadedImages = new Array(imageArray.length);
 
-	let imagesLoaded = 0;
-	let loadedImages = [];
+  for (let i = 0; i < imageArray.length; i++) {
+    const imgObj = new Image();
+    // same-origin assets served from /public, no crossOrigin needed; uncomment if using a CDN
+    // imgObj.crossOrigin = 'anonymous';
 
-	for (let i = 0; i < imageArray.length; i++) {
+    imgObj.onload = function() {
+      loadedImages[i] = imgObj;
+      completed++;
+      if (completed === imageArray.length) callback(loadedImages);
+    };
+    imgObj.onerror = function(ev) {
+      console.warn('[charGen] Failed to load image:', imageArray[i].src);
+      // Still advance so we don't hang forever; use a 1x1 transparent placeholder
+      const fallback = document.createElement('canvas');
+      fallback.width = canvas ? canvas.width : 1;
+      fallback.height = canvas ? canvas.height : 1;
+      const fimg = new Image();
+      // data URL for 1x1 transparent PNG
+      fimg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAp8B6j3pBV8AAAAASUVORK5CYII=';
+      loadedImages[i] = fimg;
+      completed++;
+      if (completed === imageArray.length) callback(loadedImages);
+    };
 
-		let imgObj = new Image();
-		imgObj.src = imageArray[i].src;
-		
-		loadedImages.push(imgObj);
-
-		imgObj.onload = function() {
-			imagesLoaded++
-			if(imagesLoaded === imageArray.length) {
-				callback(loadedImages);
-			}
-		};
-	}
+    // set src after handlers
+    imgObj.src = imageArray[i].src;
+  }
 }
 
 let hairColorIndex;
@@ -162,7 +185,12 @@ function genColorSwatches(colorObject, subject) {
 	let primaryColor, colorName, createdColorValue;
 
 	let subjectCap = subject.charAt(0).toUpperCase() + subject.slice(1);
-	document.getElementById(subject + 'ColorSwatches').innerHTML = '';
+	if (typeof document === 'undefined') return;
+	const swatchRoot = document.getElementById(subject + 'ColorSwatches');
+	if (!swatchRoot) return;
+	// Ensure container has wrap + gap
+	swatchRoot.classList.add('flex', 'flex-wrap', 'gap-4');
+	swatchRoot.innerHTML = '';
 	
 	function setPrimaryColor() {
 		if ( Array.isArray(colorObject[colorName])) {
@@ -190,8 +218,17 @@ function genColorSwatches(colorObject, subject) {
 		
 		let inputName = 'radio' + subjectCap + 'Color';
 
-		let colorSwatchComponent = '<div class="col-auto"><input class="btn-check shadow-none" id="' + inputName + i.toString() + '" type="radio" name="' + inputName + '" autocomplete="off"><label onclick=select' + subjectCap + 'Color(\"' + colorName + '\") class="btn swatch shadow-none" style="background-color: ' + primaryColor + '" for="' + inputName + i.toString() + '"></label></div>'
-		document.getElementById(subject + 'ColorSwatches').innerHTML += colorSwatchComponent;
+		let colorSwatchComponent =
+		  '<div class="w-7">' +
+			'<input class="sr-only peer" id="' + inputName + i.toString() + '" type="radio" name="' + inputName + '" autocomplete="off">' +
+			'<label onclick=select' + subjectCap + 'Color("' + colorName + '") ' +
+			  'class="block w-10 cursor-pointer rounded border border-2 border-base-300 p-1 hover:bg-base-300 transition' +
+					 'peer-checked:border-2 peer-checked:border-primary" ' +
+			  'for="' + inputName + i.toString() + '">' +
+				'<span class="block h-6 w-full rounded" style="background-color: ' + primaryColor + '"></span>' +
+			'</label>' +
+		  '</div>';
+		swatchRoot.innerHTML += colorSwatchComponent;
 	}
 
 	for( let i = 0; i < Object.keys(colorObject).length; i++ ) {
@@ -201,8 +238,8 @@ function genColorSwatches(colorObject, subject) {
 		let inputName = 'radio' + subjectCap + 'Color';
 
 		if( primaryColor === createdColorValue ) {
-			let selectedColorRadio = document.getElementById(inputName + i);
-			selectedColorRadio.checked = true;
+			const selectedColorRadio = document.getElementById(inputName + i);
+			if (selectedColorRadio) selectedColorRadio.checked = true;
 		}
 	}
 }
@@ -264,6 +301,7 @@ function applyTattooColor(data) {
 }
 
 function drawChar(imageArray, name, replace) {
+	if (!ensureCanvas()) return;
 	preload(imageArray, function(loadedImages){
 
 		for (let i = 0; i < imageArray.length; i++) {
@@ -282,12 +320,17 @@ function drawChar(imageArray, name, replace) {
 		}
 
 		let img = canvas.toDataURL("image/png");
-		let charGenComponent = '<div id="component_' + name + '" class="col-12 col-md-6"><div class="d-flex flex-column"><img id="img_' + name + '" src="' + img + '"/><a class="text-center text-truncate" href="' + img + '" download="' + name + '">Export \"' + name + '\"</a></div></div>';
+		let charGenComponent = '<div id="component_' + name + '" class="w-full md:w-1/2"><div class="flex flex-col items-center gap-2"><img id="img_' + name + '" src="' + img + '" class="mx-auto"/><a class="link text-center truncate" href="' + img + '" download="' + name + '">Export \"' + name + '\"</a></div></div>';
 
-		if(!replace) {
-			document.getElementById('charGen').innerHTML += charGenComponent;
-		} else {
-			document.getElementById('charGen').innerHTML = charGenComponent;
+		if (typeof document !== 'undefined') {
+			const cg = document.getElementById('charGen');
+			if (cg) {
+				if (!replace) {
+					cg.innerHTML += charGenComponent;
+				} else {
+					cg.innerHTML = charGenComponent;
+				}
+			}
 		}
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -329,7 +372,10 @@ function permute() {
 									// drawChar(genChar, 'racePrimary ' + 'race ' + padZeroes(i, 2) + padZeroes(k, 2) + padZeroes(l, 2) + padZeroes(j, 2) + padZeroes(m, 2) + padZeroes(hairColorIndex, 2) + padZeroes(tattooColorIndex, 2));
 
 									drawAmount++;
-									document.getElementById("drawAmount").innerHTML = drawAmount + ' results.';
+									if (typeof document !== 'undefined') {
+										const el = document.getElementById('drawAmount');
+										if (el) el.innerHTML = drawAmount + ' results.';
+									}
 								}
 							}
 						}
@@ -363,7 +409,6 @@ function permute() {
 	derp(raceGenderTemplateObject['dwarf']['genders']['male']['template']);
 	derp(raceGenderTemplateObject['dwarf']['genders']['female']['template']);
 }
-window.permute = permute;
 
 let raceGenderTemplateObject = {};
 
@@ -651,9 +696,11 @@ function randomChar() {
 
 	genRaceNameAndLore();
 
-	// check gender radio
-	let selectedGenderRadio = document.getElementById('genderRadio' + (genderIndex + 1));
-	selectedGenderRadio.checked = true;
+	// check gender radio (browser only)
+	if (typeof document !== 'undefined') {
+		const selectedGenderRadio = document.getElementById('genderRadio' + (genderIndex + 1));
+		if (selectedGenderRadio) selectedGenderRadio.checked = true;
+	}
 
 	function getRandomFeature(array) {
 		let randomInt = getRandomInt(array.length)
@@ -670,7 +717,10 @@ function randomChar() {
 	for(let i = 0; i < Object.keys(raceGenderFeaturePresets).length; i++) {
 		let prop = Object.keys(raceGenderFeaturePresets)[i];
 		raceGenderFeaturePresets[prop] = genIndex[i];
-		document.getElementById(prop + 'Value').innerHTML = genIndex[i];
+		if (typeof document !== 'undefined') {
+			const el = document.getElementById(prop + 'Value');
+			if (el) el.innerHTML = String(genIndex[i]);
+		}
 	}
 
 	// get random hair color.
@@ -720,8 +770,10 @@ function genCharPresets(raceGenderTemplate) {
 				featureIndex = 1;
 			}
 		}
-		
-		document.getElementById(prop + 'Value').innerHTML = featureIndex;
+		if (typeof document !== 'undefined') {
+			const el = document.getElementById(prop + 'Value');
+			if (el) el.innerHTML = String(featureIndex);
+		}
 	}
 
 	genName = racePrimaryIndex.toString() + (raceIndex ? raceIndex.toString() : '') + genderIndex.toString() + genName + padZeroes(hairColorIndex, 2) + padZeroes(tattooColorIndex, 2);
@@ -758,7 +810,6 @@ function selectFeaturePresets(feature, scale) {
 		}
 	}
 }
-window.selectFeaturePresets = selectFeaturePresets;
 
 // Apply feature presets as index
 function applyColorIndex() {
@@ -819,7 +870,6 @@ function selectGender(gender) {
 		}
 	}
 }
-window.selectGender = selectGender;
 
 // select primary race
 function selectRacePrimary(scale) {
@@ -869,7 +919,6 @@ function selectRacePrimary(scale) {
 		}
 	}
 }
-window.selectRacePrimary = selectRacePrimary;
 
 // select race
 function selectRace(scale) {
@@ -908,7 +957,6 @@ function selectRace(scale) {
 		}
 	}
 }
-window.selectRace = selectRace;
 
 // select hair color
 function selectHairColor(color) {
@@ -923,7 +971,6 @@ function selectHairColor(color) {
 	hairColorIndex = Object.keys(hairColors).indexOf(color);
 	genCharPresets(raceGenderTemplate);
 }
-window.selectHairColor = selectHairColor;
 
 // select tattoo color
 function selectTattooColor(color) {
@@ -938,43 +985,79 @@ function selectTattooColor(color) {
 	tattooColorIndex = Object.keys(tattooColors).indexOf(color);
 	genCharPresets(raceGenderTemplate);
 }
-window.selectTattooColor = selectTattooColor;
 
 function genRaceNameAndLore() {
-	
-	racePrimaryLore = raceGenderTemplateObject[racePrimaryName]['lore'];
+  if (typeof document === 'undefined') return;
+  racePrimaryLore = raceGenderTemplateObject[racePrimaryName]['lore'];
 
-	if( racePrimaryName.includes('halforc') ) {
-		document.getElementById('selectedRacePrimary').innerHTML = 'Half-orc';
-	} else {
+  const elPrimary = document.getElementById('selectedRacePrimary');
+  const elPrimaryLore = document.getElementById('selectedRacePrimaryLore');
+  const elRaceDom = document.getElementById('selectedRaceDom');
+  const elRace = document.getElementById('selectedRace');
+  const elRaceLore = document.getElementById('selectedRaceLore');
 
-		document.getElementById('selectedRacePrimary').innerHTML = racePrimaryName;
-	}
+  if (elPrimary) elPrimary.innerHTML = racePrimaryName.includes('halforc') ? 'Half-orc' : racePrimaryName;
+  if (elPrimaryLore) elPrimaryLore.innerHTML = racePrimaryLore || '';
 
-	document.getElementById('selectedRacePrimaryLore').innerHTML = racePrimaryLore;
+  if (raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
+    raceLore = raceGenderTemplateObject[racePrimaryName]['races'][raceName]['lore'];
+    if (elRaceDom) elRaceDom.classList.remove('hidden');
 
-	if(raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
-		raceLore = raceGenderTemplateObject[racePrimaryName]['races'][raceName]['lore'];
-		document.getElementById('selectedRaceDom').classList.remove('d-none');
+    let raceLabel = raceName;
+    if (raceName.includes('elf')) raceLabel = raceName.split('elf')[0] + ' Elf';
+    else if (raceName.includes('alokr')) raceLabel = "Halok'r";
 
-		if(raceName.includes('elf')) {
-			document.getElementById('selectedRace').innerHTML = raceName.split('elf')[0] + ' Elf';
-		}
-		else if(raceName.includes('alokr')) {
-			document.getElementById('selectedRace').innerHTML = 'Halok\'r';
-		}
-		else {
-			document.getElementById('selectedRace').innerHTML = raceName;
-		}
-
-		document.getElementById('selectedRaceLore').innerHTML = raceLore;
-		
-	} else {
-		document.getElementById('selectedRaceDom').classList.add('d-none');
-		document.getElementById('selectedRace').innerHTML = '';
-		document.getElementById('selectedRaceLore').innerHTML = '';
-	}
+    if (elRace) elRace.innerHTML = raceLabel;
+    if (elRaceLore) elRaceLore.innerHTML = raceLore || '';
+  } else {
+    if (elRaceDom) elRaceDom.classList.add('hidden');
+    if (elRace) elRace.innerHTML = '';
+    if (elRaceLore) elRaceLore.innerHTML = '';
+  }
 }
 
-window.randomChar = randomChar;
-randomChar();
+if (typeof window !== 'undefined') {
+  window.permute = permute;
+  window.selectFeaturePresets = selectFeaturePresets;
+  window.selectGender = selectGender;
+  window.selectRacePrimary = selectRacePrimary;
+  window.selectRace = selectRace;
+  window.selectHairColor = selectHairColor;
+  window.selectTattooColor = selectTattooColor;
+  window.randomChar = randomChar;
+
+  const run = () => {
+    if (!ensureCanvas()) return;
+    randomChar();
+  };
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(run, 0);
+  } else {
+    window.addEventListener('DOMContentLoaded', run, { once: true });
+  }
+}
+// ---- Named exports for React clients (safe guards for SSR) ----
+export const onRandom = () => {
+  if (typeof window !== 'undefined') randomChar();
+};
+
+export const onPermute = () => {
+  if (typeof window !== 'undefined') permute();
+};
+
+export const onFeatureChange = (category, dir) => {
+  if (typeof window !== 'undefined') selectFeaturePresets(category, dir);
+};
+
+export const onSelectGender = (g) => {
+  if (typeof window !== 'undefined') selectGender(g);
+};
+
+export const onSelectRacePrimary = (dir) => {
+  if (typeof window !== 'undefined') selectRacePrimary(dir);
+};
+
+export const onSelectRace = (dir) => {
+  if (typeof window !== 'undefined') selectRace(dir);
+};

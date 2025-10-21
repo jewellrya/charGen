@@ -1,29 +1,36 @@
 {
-  "name": "game",
-  "version": "1.0.0",
-  "description": "Game Development",
-  "main": "index.js",
+  "name": "ryanjewell.dev",
+  "version": "0.1.0",
   "type": "module",
+  "private": true,
   "scripts": {
-    "server": "live-server",
-    "watch": "./watch.sh",
-    "dev": "concurrently --kill-others \"npm run watch\" \"npm run server\""
+    "build:css": "npx @tailwindcss/cli -i app.css -o public/output.css",
+    "dev": "next dev",
+    "dev:turbo": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "keywords": [
-    "Game"
-  ],
-  "author": "Ryan Jewell",
-  "license": "ISC",
   "dependencies": {
-    "bootstrap": "^5.0.0-beta3",
-    "g": "^2.0.1",
-    "jquery": "^3.6.0",
-    "live-server": "^1.2.1",
-    "pixi.js": "^5.3.3",
-    "pug": "^3.0.2",
-    "sass": "^1.32.8"
+    "@fortawesome/fontawesome-svg-core": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/react-fontawesome": "^3.1.0",
+    "next": "^15.3.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "concurrently": "^6.0.1"
+    "@eslint/eslintrc": "^3",
+    "@parcel/css": "^1.14.0",
+    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "daisyui": "^5.0.43",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

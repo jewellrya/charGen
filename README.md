@@ -5,8 +5,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 First, run the development server:
 
 ```bash
+cd apps/web
 npm run dev
 # or
+cd apps/web
 npm run dev:turbo
 ```
 

@@ -1,4 +1,4 @@
-import { charMaps } from '../data/charMaps.js';
+import { charMaps } from '../../data/charMaps.js';
 
 let canvas = null;
 let ctx = null;

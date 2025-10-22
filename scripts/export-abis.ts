@@ -1,0 +1,1 @@
+// copy ABI → apps/web/src/lib/abi

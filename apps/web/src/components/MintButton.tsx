@@ -1,0 +1,1 @@
+// calls /api/mint then contract

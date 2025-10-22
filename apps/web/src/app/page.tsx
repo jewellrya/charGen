@@ -1,6 +1,6 @@
 'use client';
 import React from "react";
-import { onRandom, onPermute, onFeatureChange, onSelectGender, onSelectRacePrimary, onSelectRace } from "./charGen";
+import { onRandom, onPermute, onFeatureChange, onSelectGender, onSelectRacePrimary, onSelectRace } from "./app-logic/charGen";
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronRight, faChevronLeft } from '@fortawesome/free-solid-svg-icons';

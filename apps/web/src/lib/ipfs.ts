@@ -1,65 +1,48 @@
 // apps/web/src/lib/ipfs.ts
-import FormData from 'form-data';
 import axios from 'axios';
-
-const PINATA_API = 'https://api.pinata.cloud';
+import FormData from 'form-data';
 
 function getEnv() {
-  const jwt = process.env.PINATA_JWT;
-  if (!jwt) throw new Error('Missing env PINATA_JWT');
-  const gateway = process.env.PINATA_GATEWAY || 'https://gateway.pinata.cloud';
-  return { jwt, gateway };
+  const api = process.env.IPFS_API || 'http://127.0.0.1:5001';
+  const gateway = process.env.IPFS_GATEWAY || 'http://127.0.0.1:8080';
+  return { api, gateway };
 }
 
-export type PinFileResult = { IpfsHash: string; PinSize: number; Timestamp: string };
-export type PinJsonResult = { IpfsHash: string; PinSize: number; Timestamp: string };
+// Kubo (go-ipfs) returns this shape from /api/v0/add
+export type PinFileResult = { Hash: string; Name: string; Size: string };
+export type PinJsonResult = PinFileResult;
 
-export async function pinFile(buffer: Buffer, filename = 'image.png'): Promise<PinFileResult> {
-  const { jwt } = getEnv();
-
+export async function pinFile(buffer: Buffer, filename = 'image.png'): Promise<{ IpfsHash: string }> {
+  const { api } = getEnv();
   const form = new FormData();
-  // Ensure Pinata sees a real file part named "file"
   form.append('file', buffer, { filename, contentType: 'image/png' });
-  // These must be string (JSON), not File/Blob
-  form.append('pinataMetadata', JSON.stringify({ name: filename }));
-  form.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
 
-  const url = `${PINATA_API}/pinning/pinFileToIPFS`;
-
-  const res = await axios.post(url, form, {
-    headers: {
-      Authorization: `Bearer ${jwt}`,
-      ...form.getHeaders(),
-    },
+  const res = await axios.post(`${api}/api/v0/add`, form, {
+    headers: form.getHeaders(),
+    params: { pin: 'true', cidVersion: 1, wrapWithDirectory: false },
     maxBodyLength: Infinity,
   });
 
-  return res.data as PinFileResult;
+  // { Name, Hash, Size }
+  return { IpfsHash: res.data.Hash };
 }
 
-export async function pinJSON(json: unknown, name = 'metadata.json'): Promise<PinJsonResult> {
-  const { jwt } = getEnv();
+export async function pinJSON(json: unknown, name = 'metadata.json'): Promise<{ IpfsHash: string }> {
+  const { api } = getEnv();
+  const form = new FormData();
+  const buf = Buffer.from(JSON.stringify(json));
+  form.append('file', buf, { filename: name, contentType: 'application/json' });
 
-  const res = await fetch(`${PINATA_API}/pinning/pinJSONToIPFS`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${jwt}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      pinataMetadata: { name },
-      pinataContent: json,
-    }),
+  const res = await axios.post(`${api}/api/v0/add`, form, {
+    headers: form.getHeaders(),
+    params: { pin: 'true', cidVersion: 1, wrapWithDirectory: false },
+    maxBodyLength: Infinity,
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Pinata pinJSON failed: ${res.status} ${text}`);
-  }
-  return res.json();
+  return { IpfsHash: res.data.Hash };
 }
 
-// helper to turn a CID into a gateway URL for quick previews
+// Turn a CID (or ipfs://CID/...) into a gateway URL
 export function gatewayUrl(cidOrPath: string) {
   const { gateway } = getEnv();
   const clean = cidOrPath.replace(/^ipfs:\/\//, '');

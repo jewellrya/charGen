@@ -461,97 +461,22 @@ function genCharUtilities(racePrimary, race, racePrimaryLore, raceLore, xOffsetR
 let humanLore = 'Being versatile and ambitious, humans are the most diplomatic when bringing races of the Mortal Kingdoms together for multitudes of reasons. Although humans have a relatively young history, many of their kingdoms have made great progress in recent eras.';
 let elfLore = 'Elves are intelligent, dexterous, and highly perceptive creatures, giving them a preternaturally awareness of their surroundings. Although lacking in physical aptitude, Elves have an unparallel ability in spell weaving. Rumor has it that groups of secluded Elves still practice the ancient magics of their Ael\'falas ancestors.';
 
+
 genCharUtilities(
+	'',
 	'Human',
-	'Celton',
+	'',
 	humanLore,
-	'For what they lack in physical skill, the Celtons make up for it in their affinity for spell weaving, particularly with nature. Their tribes are led by kings and the druid-warrior aristocracy. Celton are natural mercantile folk, with a large commerce of ores and jewels, among other goods, across the Mortal Kingdoms.',
 	0,
 	0,
 	{
 		male: {
 			colors: { hair: hairColors.yellow1, tattoo: tattooColors.green1 },
-			features: { skin: 2, hair: 7, beard: 3, adornment: 1, tattoo: 0 }
+			features: { skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
 		},
 		female: {
 			colors: { hair: hairColors.red1, tattoo: tattooColors.green1 },
-			features: { skin: 2, hair: 1, beard: 0, adornment: 1, tattoo: 1 }
-		}
-	}
-);
-
-genCharUtilities(
-	'Human',
-	'Halokr',
-	humanLore,
-	'Halok\'r hail from the great desert province of Nazinthal. They are descended from a long line of warriors and mystic seers. Their pride and fierce independence of spirit makes them suitable as free ranging heroes and adventurers.',
-	0,
-	0,
-	{
-		male: {
-			colors: { hair: hairColors.black2, tattoo: tattooColors.red1 },
-			features: { skin: 0, hair: 5, beard: 4, adornment: 1, tattoo: 0 }
-		},
-		female: {
-			colors: { hair: hairColors.black2, tattoo: tattooColors.red2 },
-			features: { skin: 0, hair: 6, beard: 0, adornment: 1, tattoo: 0 }
-		}
-	}
-);
-
-genCharUtilities(
-	'Human',
-	'Norden',
-	humanLore,
-	'The Norden are fair-haired and pale-skinned humans known for their incredible resistance to cold and magical frost. They are enthusiastic warriors, and act as soldiers, mercenaries, merchants, and blacksmiths from all over the Mortal Kingdoms. Norden culture is about the quest for honor and glory whilst appeasing the ancient Norden ancestors. They yearn for an honorable death in battle, so they can live blissfully in the meadhalls of Valhalla.',
-	0,
-	0,
-	{
-		male: {
-			colors: { hair: hairColors.yellow1, tattoo: tattooColors.gray1 },
-			features: { skin: 1, hair: 4, beard: 2, adornment: 0, tattoo: 3 }
-		},
-		female: {
-			colors: { hair: hairColors.yellow3, tattoo: tattooColors.gray1 },
-			features: { skin: 0, hair: 1, beard: 0, adornment: 0, tattoo: 2 }
-		}
-	}
-);
-
-genCharUtilities(
-	'Human',
-	'Gotharien',
-	humanLore,
-	'Gotharien are known to be some of the most well-educated, wealthy, and well-spoken people. Their empire is robust, powerful, and influential in the heart of the Mortal Kingdoms. Gotharien cities of marble protect the great Cathedrals of the Divines where pilgrims across the land come to worship.',
-	0,
-	0,
-	{
-		male: {
-			colors: { hair: hairColors.black2, tattoo: tattooColors.gray1 },
-			features: { skin: 1, hair: 10, beard: 6, adornment: 0, tattoo: 0 }
-		},
-		female: {
-			colors: { hair: hairColors.brown1, tattoo: tattooColors.gray1 },
-			features: { skin: 0, hair: 1, beard: 0, adornment: 0, tattoo: 0 }
-		}
-	}
-);
-
-genCharUtilities(
-	'Human',
-	'Sunjin',
-	humanLore,
-	'Throughout their history, Sunjin empires have risen and fallen, leaving their forgotten secrets in the ruins of their once bustling cities. They now yearn for a simple life, asking only for peace and a safe home. They\'re known for their traditional fighting styles focusing on mobility, speed, and precision as well as stunning acrobatic tricks perfected through practice and meditation.',
-	0,
-	0,
-	{
-		male: {
-			colors: { hair: hairColors.black1, tattoo: tattooColors.red1 },
-			features: { skin: 0, hair: 1, beard: 1, adornment: 0, tattoo: 0 }
-		},
-		female: {
-			colors: { hair: hairColors.black1, tattoo: tattooColors.red1 },
-			features: { skin: 0, hair: 2, beard: 0, adornment: 0, tattoo: 1 }
+			features: { skin: 0, hair: 0, beard: 0, adornment: 0, tattoo: 0 }
 		}
 	}
 );

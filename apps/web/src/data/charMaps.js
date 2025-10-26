@@ -1,194 +1,51 @@
 
 export var charMaps = {
 	humanMale: {
-		skin: [],
+		skin: [
+			[0,0], [0,0], [0,0], // Celton
+			[0,0], [0,0], [0,0], // Halokr
+			[0,0], [0,0],       // Norden
+			[0,0], [0,0], [0,0], // Gotharien
+			[0,0], [0,0], [0,0]  // Sunjin
+		],
 		hair: [
-			[3,0], [3,0], [3,0], [3,0], [2,-1], [3,0], [2,0], [2,0], [3,0], [3,0], [2,0], [1,0], [3,0]
+			[3,0], [3,0], [3,0], [3,0], [2,-1], [3,0], [2,0], [2,0], [3,0], [3,0], [2,0], [1,0], [3,0], // existing Human
+			[2,0] // Sunjin male extra
 		],
 		beard: [
-			[3,4], [5,7], [4,5], [4,6], [3,4], [5,6], [5,6]
+			[3,4], [5,7], [4,5], [4,6], [3,4], [5,6], [5,6], // existing Human
+			[4,6], [4,5], [4,5], // Norden
+			[5,6] // Sunjin
 		],
-		adornment: [],
+		adornment: [
+			[1,1], // Celton
+			[4,8]  // Halokr
+		],
 		tattoo: [
-			[0,14], [0,12]
+			[0,14], [0,12], // existing Human
+			[5,2], [0,13],   // Halokr
+			[4,10], [4,3], [0,4] // Norden
 		],
 		armor: [],
 	},
 	humanFemale: {
-		skin: [],
+		skin: [
+			[0,1], [0,1], [0,1], [0,1], [0,1], [0,1], [0,1], [0,1], [0,1], [0,1], [0,1], [0,1],
+		],
 		hair: [
-			[0,1], [0,-2], [1,1], [0,-2], [2,1], [1,1], [2,1], [1,1], [2,1]
+			[0,1], [0,-2], [1,1], [0,-2], [2,1], [1,1], [2,1], [1,1], [2,1], // existing Human
+			[1,0], [0,0], // Halokr female
+			[2,1]        // Norden female
 		],
 		beard: [],
-		adornment: [],
+		adornment: [
+			[3,5], // Celton
+			[3,6], [4,9] // Halokr
+		],
 		tattoo: [
-			[0,12], [0,14]
+			[0,12], [0,14] // existing Human
 		],
 		armor: [],
-	},
-	celtonHumanMale: {
-		skin: [
-			[0,0], [0,0], [0,0]
-		],
-		hair: [
-		],
-		beard: [
-		],
-		adornment: [
-			[1,1]
-		],
-		tattoo: [
-		],
-		armor: [
-			[-4,1], [-1,8]
-		],
-	},
-	celtonHumanFemale: {
-		skin: [
-			[0,1], [0,1], [0,1]
-		],
-		hair: [
-		],
-		beard: [
-		],
-		adornment: [
-			[3,5]
-		],
-		tattoo: [
-		],
-		armor: [
-		],
-	},
-	halokrHumanMale: {
-		skin: [
-			[0,0], [0,0], [0,0]
-		],
-		hair: [
-		],
-		beard: [
-		],
-		adornment: [
-			[4,8]
-		],
-		tattoo: [
-			[5,2], [0,13]
-		],
-		armor: [
-		],
-	},
-	halokrHumanFemale: {
-		skin: [
-			[0,1], [0,1], [0,1]
-		],
-		hair: [
-			[1,0], [0,0]
-		],
-		beard: [
-		],
-		adornment: [
-			[3,6], [4,9]
-		],
-		tattoo: [
-		],
-		armor: [
-		],
-	},
-	nordenHumanMale: {
-		skin: [
-			[0,0], [0,0]
-		],
-		hair: [
-		],
-		beard: [
-			[4,6], [4,5], [4,5]
-		],
-		adornment: [
-		],
-		tattoo: [
-			[4,10], [4,3], [0,4]
-		],
-		armor: [
-		],
-	},
-	nordenHumanFemale: {
-		skin: [
-			[0,1], [0,1]
-		],
-		hair: [
-			[2,1]
-		],
-		beard: [
-		],
-		adornment: [
-		],
-		tattoo: [
-			[0,5], [4,4]
-		],
-		armor: [
-		],
-	},
-	gotharienHumanMale: {
-		skin: [
-			[0,0], [0,0], [0,0]
-		],
-		hair: [
-		],
-		beard: [
-		],
-		adornment: [
-		],
-		tattoo: [
-		],
-		armor: [
-		],
-	},
-	gotharienHumanFemale: {
-		skin: [
-			[0,1], [0,1], [0,1]
-		],
-		hair: [
-			[1,1]
-		],
-		beard: [
-		],
-		adornment: [
-		],
-		tattoo: [
-		],
-		armor: [
-		],
-	},
-	sunjinHumanMale: {
-		skin: [
-			[0,0], [0,0], [0,0]
-		],
-		hair: [
-			[2,0]
-		],
-		beard: [
-			[5,6]
-		],
-		adornment: [
-		],
-		tattoo: [
-		],
-		armor: [
-		],
-	},
-	sunjinHumanFemale: {
-		skin: [
-			[0,1], [0,1], [0,1]
-		],
-		hair: [
-		],
-		beard: [
-		],
-		adornment: [
-		],
-		tattoo: [
-		],
-		armor: [
-		],
 	},
 	halforcMale: {
 		skin: [

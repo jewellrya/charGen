@@ -1,6 +1,6 @@
 'use client';
 import React from "react";
-import { onRandom, onPermute, onFeatureChange, onSelectGender, onSelectRacePrimary, onSelectRace } from "./app-logic/charGen";
+import { onRandom, onPermute, onFeatureChange, onSelectGender, onSelectRacePrimary, onSelectRace, onSubscribeFeatures } from "./app-logic/charGen";
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronRight, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
@@ -49,6 +49,12 @@ export default function Home() {
   const [canvasDebug, setCanvasDebug] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
+  // dynamic feature slots discovered from filenames (hair, tool, etc.)
+  const [features, setFeatures] = useState<string[]>([]);
+  const [featureValues, setFeatureValues] = useState<Record<string, number>>({});
+  const [featureCounts, setFeatureCounts] = useState<Record<string, number>>({});
+  const [featureLabels, setFeatureLabels] = useState<Record<string, string>>({});
+
   const isRenderBlank = useCallback(() => {
     if (typeof document === 'undefined') return false; // can't check on SSR
 
@@ -75,15 +81,28 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true);
-    onRandom();
-    checkAndReportRender('initial random');
+    const t = setTimeout(() => {
+      checkAndReportRender('initial boot');
+    }, 300);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Subscribe to dynamic feature slots
+  useEffect(() => {
+    const unsub = onSubscribeFeatures?.((state: {features:string[], values:Record<string,number>, counts:Record<string,number>, labels?:Record<string,string>}) => {
+      setFeatures(state.features);
+      setFeatureValues(state.values);
+      setFeatureCounts(state.counts);
+      setFeatureLabels(state.labels || {});
+    });
+    return () => { if (typeof unsub === 'function') unsub(); };
+  }, []);
+
   // Local wrappers to call imported actions and then validate canvas output
-  const handleRandom = useCallback(() => {
+  const handleRandom = useCallback(async () => {
     setLoading(true);
-    onRandom();
+    await onRandom();
     checkAndReportRender('Random');
   }, [checkAndReportRender]);
 
@@ -199,7 +218,7 @@ export default function Home() {
                     const names = ['Aren', 'Belira', 'Cador', 'Darin', 'Elandra', 'Faren', 'Garin', 'Helira', 'Isen', 'Jora', 'Kael', 'Lirien', 'Maren', 'Naris', 'Orin', 'Pelyn', 'Quara', 'Rhen', 'Sorin', 'Talia'];
                     const randomName = names[Math.floor(Math.random() * names.length)];
                     const nameInput = document.getElementById('charName');
-                    if (nameInput && 'value' in nameInput) nameInput.value = randomName;
+                    if (nameInput && 'value' in nameInput) (nameInput as HTMLInputElement).value = randomName;
                   }}
                 >
                   Random
@@ -282,32 +301,23 @@ export default function Home() {
 
           {/* Right column */}
           <div className="col-span-12 md:col-span-3">
-            <FeatureSelector category="skin" onChange={handleFeatureChange} />
-            <FeatureSelector category="hair" onChange={handleFeatureChange} />
-            <FeatureSelector category="beard" onChange={handleFeatureChange} />
-
-            <div className="mb-6">
-              <p className="font-bold mb-2">Hair Color</p>
-              <div
-                id="hairColorSwatches"
-                className="mt-2 mb-4 flex flex-wrap gap-2"
-                role="group"
-                aria-label="Hair color"
+            {/* Dynamic feature slots discovered from filenames */}
+            {features.map((cat) => (
+              <FeatureSelector
+                key={cat}
+                category={cat}
+                onChange={handleFeatureChange}
+                valueText={featureLabels[cat] ?? ((featureValues[cat] ?? 0) === 0 ? 'none' : String(featureValues[cat]))}
               />
-            </div>
+            ))}
 
-            <FeatureSelector category="adornment" onChange={handleFeatureChange} />
-            <FeatureSelector category="tattoo" onChange={handleFeatureChange} />
+            {/* Hair Color */}
+            <p className="m-0 text-base font-bold mb-2">Hair Color</p>
+            <div id="hairColorSwatches" className="mb-6" />
 
-            <div className="mb-6">
-              <p className="font-bold mb-2">Tattoo Color</p>
-              <div
-                id="tattooColorSwatches"
-                className="mt-2 mb-4 flex flex-wrap gap-2"
-                role="group"
-                aria-label="Tattoo color"
-              />
-            </div>
+            {/* Tattoo Color */}
+            <p className="m-0 text-base font-bold mb-2">Tattoo Color</p>
+            <div id="tattooColorSwatches" className="mb-6" />
           </div>
         </div>
       </div>

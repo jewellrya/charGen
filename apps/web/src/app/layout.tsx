@@ -29,7 +29,7 @@ export default function RootLayout({
       >
         <header className="flex items-start justify-between gap-6 py-8 md:py-12">
           <div className="flex flex-col">
-            <h1 className="text-2xl md:text-3xl font-semibold leading-tight">charGen</h1>
+            <h1 className="text-2xl md:text-3xl font-semibold leading-tight">The Trials of Nral</h1>
           </div>
         </header>
         {children}

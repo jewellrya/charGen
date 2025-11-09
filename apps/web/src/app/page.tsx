@@ -155,6 +155,46 @@ export default function Home() {
           >
             <span className="hidden sm:inline">Permute</span>
           </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={async () => {
+              const img = document.querySelector<HTMLImageElement>('#charGen img');
+              if (!img || !img.complete || img.naturalWidth === 0) {
+                alert('No image yet');
+                return;
+              }
+              // Mirror <img> into an offscreen canvas (natural size)
+              const c = document.createElement('canvas');
+              c.width = img.naturalWidth;
+              c.height = img.naturalHeight;
+              const ctx = c.getContext('2d', { willReadFrequently: true });
+              if (!ctx) return;
+              ctx.imageSmoothingEnabled = false;
+              ctx.drawImage(img, 0, 0);
+
+              const id = ctx.getImageData(0, 0, c.width, c.height);
+              const d = id.data;
+              const counts = new Map<number, number>();
+              for (let i = 0; i < d.length; i += 4) {
+                if (d[i + 3] === 0) continue; // skip fully transparent
+                const key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+                counts.set(key, (counts.get(key) || 0) + 1);
+              }
+              const toHex = (k: number) => '#' + k.toString(16).padStart(6, '0');
+              const rows = Array.from(counts.entries())
+                .map(([k, v]) => ({ hex: toHex(k), count: v }))
+                .sort((a, b) => b.count - a.count);
+
+              // Console output for quick inspection
+              // eslint-disable-next-line no-console
+              console.table(rows);
+            }}
+            aria-label="Dump Hex Palette"
+            title="Dump Hex Palette"
+          >
+            <span className="hidden sm:inline">Hexes</span>
+          </button>
 
           <button
             className="btn btn-sm"

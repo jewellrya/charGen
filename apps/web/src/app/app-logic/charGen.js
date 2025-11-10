@@ -188,6 +188,8 @@ async function initFromSprites() {
     // --- Discover additional feature slots from filenames ---
     // Collect all png paths we can find.
     const assetPaths = new Set();
+    const raceBackgrounds = new Map();      // rpKey -> background png path
+    const subraceBackgrounds = new Map();   // `${rpKey}:${subrace}` -> background png path
     if (Array.isArray(json.files)) json.files.forEach((p) => assetPaths.add(p));
     (function walk(x) {
       if (!x) return;
@@ -215,31 +217,63 @@ async function initFromSprites() {
       node.__slotBuffers[slot].push(obj);
     }
 
-    // Parse filenames: <race(+subrace)+gender>_<slot>+id<idx>.png OR <race(+subrace)+gender>_<slot>.png (no id, e.g. underwear)
+    // Parse filenames: <race(+subrace)+gender>_<slot>[+extra...]+id<idx>.png OR <race(+subrace)+gender>_<slot>[+extra...].png (no id, e.g. underwear)
     // Examples:
     //   human+male_hair+id1.png
     //   elf+deepelf+female_tool+id2.png
     //   human+male_underwear.png
-    const RE_ID = /^(?<chain>[^/_]+)_(?<slot>[a-z0-9]+)\+id(?<id>\d+)\.png$/i;
-    const RE_SINGLE = /^(?<chain>[^/_]+)_(?<slot>[a-z0-9]+)\.png$/i; // e.g., human+male_underwear.png
+    //   human+male_legs+cloth+id1.png
+    //   human+male_legs+cloth.png
+    // Allow extra detail tokens between slot and id, e.g. human+male_legs+cloth+id1
+    const RE_ID = /^(?<chain>[^/_]+)_(?<slot>[a-z0-9]+)(?<rest>(?:\+[a-z0-9]+)*)\+id(?<id>\d+)\.png$/i;
+    // Also allow extra tokens on no-id files, e.g. human+male_underwear or human+male_legs+cloth.png
+    const RE_SINGLE = /^(?<chain>[^/_]+)_(?<slot>[a-z0-9]+)(?<rest>(?:\+[a-z0-9]+)*)\.png$/i;
     for (const p of assetPaths) {
       const fname = decodeURIComponent(p.split('/').pop() || '');
+
+      // Detect race/subrace background: e.g., human_background.png or elf+highelf_background.png
+      const bgm = fname.match(/^(?<chain>[^/_]+)_background\.png$/i);
+      if (bgm) {
+        const chain = (bgm.groups.chain || '').toLowerCase();
+        const parts = chain.split('+').filter(Boolean); // [racePrimary, (subrace)]
+        const rp = canonRace(parts[0] || '');
+        const sub = parts[1] || null;
+        if (rp) {
+          if (sub) {
+            subraceBackgrounds.set(`${rp}:${sub}`, p);
+          } else {
+            raceBackgrounds.set(rp, p);
+          }
+        }
+        continue; // skip slot parsing for background assets
+      }
+
       let m = fname.match(RE_ID);
       let id = 0;
       let slot = '';
       let chain = '';
+      let detailFirst = null; // first token after slot, e.g. "cloth" from legs+cloth+id1
 
       if (m) {
         slot = (m.groups.slot || '').toLowerCase();
         id = parseInt(m.groups.id, 10) || 0;
         chain = m.groups.chain || '';
+        const rest = (m.groups.rest || ''); // like "+cloth+leather"
+        if (rest) {
+          const extras = rest.split('+').filter(Boolean); // ["cloth","leather"]
+          detailFirst = extras[0] ? extras[0].toLowerCase() : null;
+        }
       } else {
         m = fname.match(RE_SINGLE);
         if (!m) continue;
         slot = (m.groups.slot || '').toLowerCase();
         chain = m.groups.chain || '';
-        // If no explicit id, treat it as id=1 so it sorts after the blank
-        id = 1;
+        id = 1; // If no explicit id, treat it as id=1 so it sorts after the blank
+        const rest = (m.groups.rest || '');
+        if (rest) {
+          const extras = rest.split('+').filter(Boolean);
+          detailFirst = extras[0] ? extras[0].toLowerCase() : null;
+        }
       }
 
       const parts = chain.split('+'); // [race, (subrace), gender]
@@ -258,7 +292,7 @@ async function initFromSprites() {
       }
       if (!target) continue;
 
-      pushSlot(target, slot, { name: `${slot}${id}`, src: p, x: 0, y: 0, _id: id });
+      pushSlot(target, slot, { name: `${slot}${id}`, src: p, x: 0, y: 0, _id: id, _detail: detailFirst });
     }
 
     // Finalize slot buffers into template arrays + presets (with a blank first option)
@@ -318,6 +352,25 @@ async function initFromSprites() {
         });
       } else if (rp.genders) {
         Object.values(rp.genders).forEach(finalizeSlots);
+      }
+    });
+
+    // Attach backgrounds. Prefer subrace background (e.g., elf+highelf_background.png), else fallback to primary
+    Object.entries(out).forEach(([rpKey, rpNode]) => {
+      const primaryBg = raceBackgrounds.get(rpKey) || null;
+      if (rpNode.races) {
+        Object.entries(rpNode.races).forEach(([subKey, rNode]) => {
+          const subBg = subraceBackgrounds.get(`${rpKey}:${subKey.toLowerCase()}`) || primaryBg;
+          if (!subBg) return;
+          Object.values(rNode.genders).forEach((gNode) => {
+            gNode._backgroundSrc = subBg;
+          });
+        });
+      } else if (rpNode.genders) {
+        if (!primaryBg) return;
+        Object.values(rpNode.genders).forEach((gNode) => {
+          gNode._backgroundSrc = primaryBg;
+        });
       }
     });
 
@@ -1066,8 +1119,8 @@ function drawChar(imageArray, name, replace) {
     // Recolor only the relevant layer
     const lname = (meta.name || '').toLowerCase();
     
-    // Base layer (index 0): apply HSL skin filter for supported races
-    if (i === 0) {
+    // Base layer: apply skin filter for supported races (identified by _isBase flag)
+    if (meta && meta._isBase) {
       const node = getCurrentNode();
       const filters = getSkinFiltersForNode(node);
       if (filters) {
@@ -1092,7 +1145,6 @@ function drawChar(imageArray, name, replace) {
           window.__onceSkinStats = true;
         }
 
-        // Unified pipeline: default is modern perceptual. A filter can set `{ mode: 'safe' }` to opt-in.
         applySkinFilter(id.data, skinIdx, filters);
         octx.putImageData(id, 0, 0);
       }
@@ -1300,14 +1352,21 @@ function randomChar() {
 }
 
 // Generate Selected Character with current presets (base + feature slots)
-function genCharPresets(raceGenderTemplate) {
+  function genCharPresets(raceGenderTemplate) {
   let genChar = [];
   const node = getCurrentNode();
   const base = raceGenderTemplate?.[0]?.[0] ?? null;
   if (!base || !node) return;
 
-  genChar.push(base); // base/skin always first
+  // Background (if present) must be bottom-most
+  if (node._backgroundSrc) {
+    genChar.push({ name: '_background', src: node._backgroundSrc, x: 0, y: 0, _slot: 'background' });
+  }
 
+  // Base/skin next (mark so recolor logic can find it regardless of index)
+  const baseLayer = { ...base, _isBase: true };
+    genChar.push(baseLayer);
+    
   // Add each feature layer in the node's order
   const { features, order } = node.presets;
   const orderedSlots = Object.keys(features)

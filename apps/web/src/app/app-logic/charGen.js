@@ -1245,7 +1245,7 @@ function drawChar(imageArray, name, replace) {
       const d = id.data;
       for (let i2 = 0; i2 < d.length; i2 += 4) {
         if (d[i2 + 3] === 0) continue; // keep fully transparent pixels as-is
-        d[i2 + 3] = Math.round(d[i2 + 3] * 0.6);
+        d[i2 + 3] = Math.round(d[i2 + 3] * 0.7);
       }
       octx.putImageData(id, 0, 0);
     }

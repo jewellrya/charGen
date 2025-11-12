@@ -1,6 +1,6 @@
 'use client';
 import React from "react";
-import { onRandom, onPermute, onFeatureChange, onSelectGender, onSelectRacePrimary, onSelectRace, onSubscribeFeatures } from "./app-logic/charGen";
+import { onRandom, onPermute, onFeatureChange, onSelectGender, onSelectRacePrimary, onSelectRace, onSubscribeFeatures, onRandomizeFeatures } from "./app-logic/charGen";
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronRight, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
@@ -129,6 +129,12 @@ export default function Home() {
   const handleSelectRace = useCallback((dir: Dir) => {
     onSelectRace(dir);
     checkAndReportRender(`Race ${dir}`);
+  }, [checkAndReportRender]);
+
+  const handleRandomizeFeatures = useCallback(async () => {
+    setLoading(true);
+    await onRandomizeFeatures();
+    checkAndReportRender('Randomize features');
   }, [checkAndReportRender]);
 
   return (
@@ -341,6 +347,17 @@ export default function Home() {
 
           {/* Right column */}
           <div className="col-span-12 md:col-span-3">
+            <div className="mb-4">
+              <button
+                type="button"
+                className="btn btn-sm w-full"
+                onClick={handleRandomizeFeatures}
+                aria-label="Randomize Features"
+                title="Randomize Features"
+              >
+                Randomize Features
+              </button>
+            </div>
             {/* Dynamic feature slots discovered from filenames */}
             {features.map((cat) => (
               <FeatureSelector

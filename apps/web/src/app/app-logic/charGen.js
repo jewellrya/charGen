@@ -12,9 +12,9 @@ const TRANSPARENT_PX =
 // to a bottom-first rank so we can draw base first, then tattoo → … → shoulder last.
 const SLOT_DRAW_ORDER_TOP_FIRST = [
   'shoulder',
+  'beard',
   'helmet',
   'hair',
-  'beard',
   'hands',
   'chest',
   'feet',
@@ -90,6 +90,69 @@ function canonRace(s) {
   const tnorm = t.replace(/[-_]/g, '');
   if (tnorm === 'halforc') return 'halforc';
   return t;
+}
+
+function hairColorShouldBeDisabled(node) {
+  const hairSel  = ((node?.presets?.features?.hair)  ?? 0) | 0;
+  const hasBeard = typeof node?.presets?.order?.beard === 'number';
+  const beardSel = hasBeard ? (((node?.presets?.features?.beard) ?? 0) | 0) : null;
+
+  if (hasBeard) {
+    return hairSel === 0 && beardSel === 0; // disable only if BOTH are none
+  }
+  return hairSel === 0; // no beard slot → fall back to hair only
+}
+
+// --- Defaults & randomization helpers (module scope) ---
+function snapshotDefaults(node) {
+  if (!node || node._defaults) return;
+  node._defaults = { presets: JSON.parse(JSON.stringify(node.presets)) };
+}
+
+function resetNodeToDefaults(node) {
+  if (!node || !node._defaults) return;
+  try {
+    node.presets = JSON.parse(JSON.stringify(node._defaults.presets));
+  } catch {}
+}
+
+function randomizeNodeSelections(node) {
+  if (!node) return;
+  // 1) Skin index (if supported)
+  const filters = getSkinFiltersForNode(node);
+  if (filters && filters.length) {
+    node.presets.features.skin = Math.floor(Math.random() * filters.length);
+  }
+  // 2) Feature slots (exclude 'skin')
+  const order = node.presets.order || {};
+  for (const slot of Object.keys(order)) {
+    if (slot === 'skin') continue;
+    const ti = order[slot];
+    const arr = node.template[ti] || [];
+    node.presets.features[slot] = (arr.length <= 1) ? 0 : Math.floor(Math.random() * arr.length);
+  }
+
+  // 3) Hair & tattoo color palettes (hair color disabled iff BOTH hair & beard are none when beard exists)
+  const disabled = hairColorShouldBeDisabled(node);
+  if (disabled) {
+    if (!node._lastHairPalette && node.presets?.colors?.hair) {
+      node._lastHairPalette = node.presets.colors.hair;
+    }
+    node.presets.colors.hair = null;
+  } else {
+    const hairKeys = Object.keys(hairColors);
+    if (hairKeys.length) {
+      const hk = hairKeys[Math.floor(Math.random() * hairKeys.length)];
+      node.presets.colors.hair = node._lastHairPalette || hairColors[hk];
+    }
+  }
+
+  // 4) Tattoo
+  const tattooKeys = Object.keys(tattooColors);
+  if (tattooKeys.length) {
+    const tk = tattooKeys[Math.floor(Math.random() * tattooKeys.length)];
+    node.presets.colors.tattoo = tattooColors[tk];
+  }
 }
 
 async function initFromSprites() {
@@ -341,6 +404,14 @@ async function initFromSprites() {
 
         node.presets.features[slot] = defaultIndex;
       }
+
+      // Seed last known hair palette for restore when hair is toggled off/on
+      if (!node._lastHairPalette && node.presets?.colors?.hair) {
+        node._lastHairPalette = node.presets.colors.hair;
+      }
+
+      // Capture pristine copy of presets for reset
+      snapshotDefaults(node);
       delete node.__slotBuffers;
     }
 
@@ -483,7 +554,6 @@ const SKIN_FILTERS_DWARF = [
   { s: -30, l: -20, c: +30 },
   { s: -5, l: -20, c: +40 },
   { s: -30, l: -30, c: +40 },
-  { s: -30, l: -40, c: +75 },
 ];
 
 const SKIN_FILTERS_HALFORC = [
@@ -494,7 +564,6 @@ const SKIN_FILTERS_HALFORC = [
   null,
   { b: -40 },
   { b: -25, s: -60 },
-  { b: -100 },
 ];
 
 const SKIN_FILTERS_ELF_HIGH = [
@@ -524,7 +593,6 @@ const SKIN_FILTERS_ELF_DEEP = [
   { s: +10, l: -15, c: +5 },
   { s: +25, l: -20, c: +10 },
   { s: +60, l: -30, c: +30 },
-  { s: +75, l: -50, c: +40 },
 ];
 
 /**
@@ -582,25 +650,26 @@ function genColorSwatches(colorObject, subject) {
   swatchRoot.classList.add('flex', 'flex-wrap', 'gap-4');
   swatchRoot.innerHTML = '';
 
+  const node = getCurrentNode();
+  const hairDisabled = (subject === 'hair') && hairColorShouldBeDisabled(node);
+
+  if (hairDisabled) {
+    swatchRoot.classList.add('opacity-25', 'pointer-events-none');
+  } else {
+    swatchRoot.classList.remove('opacity-25', 'pointer-events-none');
+  }
+  swatchRoot.setAttribute('aria-disabled', hairDisabled ? 'true' : 'false');
+
   function setPrimaryColor() {
     if (Array.isArray(colorObject[colorName])) {
       primaryColor = colorObject[colorName][0];
-
-      if (raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
-        createdColorValue =
-          raceGenderTemplateObject[racePrimaryName]['races'][raceName]['genders'][genderName]['presets']['colors'][subject][0];
-      } else {
-        createdColorValue = raceGenderTemplateObject[racePrimaryName]['genders'][genderName]['presets']['colors'][subject][0];
-      }
     } else {
       primaryColor = colorObject[colorName];
-      if (raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
-        createdColorValue =
-          raceGenderTemplateObject[racePrimaryName]['races'][raceName]['genders'][genderName]['presets']['colors'][subject];
-      } else {
-        createdColorValue = raceGenderTemplateObject[racePrimaryName]['genders'][genderName]['presets']['colors'][subject];
-      }
     }
+    // Current selection from presets (may be null when hair is none)
+    const selNode = getCurrentNode();
+    const sel = selNode?.presets?.colors?.[subject] ?? null;
+    createdColorValue = Array.isArray(sel) ? sel[0] : sel;
   }
 
   for (let i = 0; i < Object.keys(colorObject).length; i++) {
@@ -620,6 +689,18 @@ function genColorSwatches(colorObject, subject) {
       '</label>' +
       '</div>';
     swatchRoot.innerHTML += colorSwatchComponent;
+  }
+
+  // Disable/enable radios based on hairDisabled (apply after swatches are built)
+  {
+    const inputs = swatchRoot.querySelectorAll('input[type="radio"]');
+    inputs.forEach((inp) => {
+      if (hairDisabled) {
+        inp.setAttribute('disabled', 'true');
+      } else {
+        inp.removeAttribute('disabled');
+      }
+    });
   }
 
   for (let i = 0; i < Object.keys(colorObject).length; i++) {
@@ -1061,13 +1142,16 @@ function applySkinFilterModernOKLab(data, filter) {
 
 // Based on #ad926e #867155 #6e5c46 base sprites.
 function applyHairColor(imageData) {
-  // Get selected hair palette
+  // Get selected hair palette for the current node
   let selected;
   if (raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
     selected = raceGenderTemplateObject[racePrimaryName]['races'][raceName]['genders'][genderName]['presets']['colors'].hair;
   } else {
     selected = raceGenderTemplateObject[racePrimaryName]['genders'][genderName]['presets']['colors'].hair;
   }
+
+  // If hair is disabled or palette is null, keep sprite defaults
+  if (!selected) return;
 
   // Ensure we have a [light, mid, dark] array
   const light = Array.isArray(selected) ? selected[0] : selected;
@@ -1078,8 +1162,8 @@ function applyHairColor(imageData) {
   const DEFAULT_MID   = '#867155';
   const DEFAULT_DARK  = '#6e5c46';
 
-  const TOL = 8;
-  const MIN_A = 1;
+  const TOL = 8;   // raise to 12–16 if your authored base tones drifted a bit
+  const MIN_A = 1; // skip only fully transparent
 
   replaceColor(imageData, DEFAULT_LIGHT, light, TOL, MIN_A);
   replaceColor(imageData, DEFAULT_MID,   mid,   TOL, MIN_A);
@@ -1157,6 +1241,12 @@ function drawChar(imageArray, name, replace) {
     } else if (lname.startsWith('tattoo')) {
       const id = octx.getImageData(0, 0, off.width, off.height);
       applyTattooColor(id.data);
+      // Reduce tattoo layer opacity to 80%
+      const d = id.data;
+      for (let i2 = 0; i2 < d.length; i2 += 4) {
+        if (d[i2 + 3] === 0) continue; // keep fully transparent pixels as-is
+        d[i2 + 3] = Math.round(d[i2 + 3] * 0.6);
+      }
       octx.putImageData(id, 0, 0);
     }
 
@@ -1333,8 +1423,16 @@ function randomChar() {
     if (el) el.innerHTML = String(skinIdx + 1);
   }
 
+  // Randomize all features & colors for this starting character (keep presets for template switching)
+  const activeNode = getCurrentNode();
+  if (activeNode) {
+    randomizeNodeSelections(activeNode);
+  }
 
-  // Populate swatch UIs based on current presets (no randomization)
+  // Ensure indices reflect randomized color choices
+  applyColorIndex();
+
+  // Populate swatch UIs based on current presets (now randomized)
   genColorSwatches(hairColors, 'hair');
   genColorSwatches(tattooColors, 'tattoo');
 
@@ -1349,6 +1447,22 @@ function randomChar() {
 
   // Render with current presets (includes default hair index if present)
   genCharPresets(raceGenderTemplate);
+}
+
+// Randomize only the current node's features/colors (keep selected race/gender)
+function randomizeCurrentFeatures() {
+  const node = getCurrentNode();
+  if (!node) return;
+  // Randomize this node's feature indices and color palettes
+  randomizeNodeSelections(node);
+  // Sync indices used by UI labels and name seed
+  applyColorIndex();
+  // Rebuild color swatch UIs to reflect new presets
+  genColorSwatches(hairColors, 'hair');
+  genColorSwatches(tattooColors, 'tattoo');
+  // Redraw character with current template + randomized selections
+  genCharPresets(node.template);
+  notifyFeatures();
 }
 
 // Generate Selected Character with current presets (base + feature slots)
@@ -1418,8 +1532,26 @@ function selectFeaturePresets(feature, scale) {
   } else if (scale === 'decrease') {
     node.presets.features[feature] = (cur - 1 + max) % max;
   }
+
   raceGenderFeaturePresets = node.presets.features;
+
+  if (feature === 'hair' || feature === 'beard') {
+    const disabled = hairColorShouldBeDisabled(node);
+    if (disabled) {
+      if (!node._lastHairPalette && node.presets?.colors?.hair) {
+        node._lastHairPalette = node.presets.colors.hair;
+      }
+      node.presets.colors.hair = null;
+    } else {
+      if (!node.presets?.colors?.hair) {
+        node.presets.colors.hair =
+          node._lastHairPalette || getDefaultHairPalette(node?._meta?.racePrimary, node?._meta?.subrace);
+      }
+    }
+  }
+  
   genCharPresets(node.template);
+  genColorSwatches(hairColors, 'hair'); // update disabled/enabled state & selection
   notifyFeatures();
 }
 
@@ -1432,10 +1564,12 @@ function applyColorIndex() {
   }
 
   for (let i = 0; i < Object.keys(hairColors).length; i++) {
-    let hairColorName = Object.keys(hairColors)[i];
-    if (hairColors[hairColorName][0] === raceGenderColorPresets.hair[0]) {
-      hairColorIndex = i;
-    }
+    const hairColorName = Object.keys(hairColors)[i];
+    const cur = raceGenderColorPresets?.hair;
+    if (!cur) continue; // keep previous index when hair disabled
+    const palette0 = Array.isArray(hairColors[hairColorName]) ? hairColors[hairColorName][0] : hairColors[hairColorName];
+    const cur0 = Array.isArray(cur) ? cur[0] : cur;
+    if (palette0 === cur0) hairColorIndex = i;
   }
 
   for (let i = 0; i < Object.keys(tattooColors).length; i++) {
@@ -1564,7 +1698,11 @@ function selectRace(scale) {
 
 // select hair color
 function selectHairColor(color) {
-  let selectedHairColor = hairColors[color];
+  const node = getCurrentNode();
+  // If BOTH hair and (existing) beard are none, ignore color picks
+  if (node && hairColorShouldBeDisabled(node)) return;
+
+  const selectedHairColor = hairColors[color];
 
   if (raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
     raceGenderTemplateObject[racePrimaryName]['races'][raceName]['genders'][genderName]['presets']['colors'].hair =
@@ -1572,6 +1710,9 @@ function selectHairColor(color) {
   } else {
     raceGenderTemplateObject[racePrimaryName]['genders'][genderName]['presets']['colors'].hair = selectedHairColor;
   }
+
+  // cache last palette for restore when hair toggled off/on
+  if (node) node._lastHairPalette = selectedHairColor;
 
   hairColorIndex = Object.keys(hairColors).indexOf(color);
   genCharPresets(raceGenderTemplate);
@@ -1633,6 +1774,7 @@ if (typeof window !== 'undefined') {
   window.selectHairColor = selectHairColor;
   window.selectTattooColor = selectTattooColor;
   window.randomChar = randomChar;
+  window.randomizeCurrentFeatures = randomizeCurrentFeatures;
 
   const run = async () => {
     if (!ensureCanvas()) return;
@@ -1689,3 +1831,12 @@ export const onSubscribeFeatures = (cb) => {
 
 // Export skin filter name getter (index-aligned)
 export const skinFilterNameAt = (i) => getSkinFilterName(i);
+
+export const onRandomizeFeatures = async () => {
+  if (typeof window === 'undefined') return;
+  if (!ensureCanvas()) return;
+  if (!raceGenderTemplateObject || Object.keys(raceGenderTemplateObject).length === 0) {
+    await initFromSprites();
+  }
+  randomizeCurrentFeatures();
+};

@@ -426,6 +426,77 @@ async function initFromSprites() {
       }
     });
 
+    // --- Apply user-defined defaults per race/subrace/gender ---
+    (function applyCustomDefaults() {
+      function setFeature(node, slot, idx) {
+        if (!node || typeof idx !== 'number') return;
+        const ti = node.presets?.order?.[slot];
+        if (typeof ti !== 'number') return;
+        const arr = node.template?.[ti] || [];
+        const max = Math.max(0, (arr.length - 1)); // account for blank at 0
+        if (max <= 0) return; // no real options
+        const clamped = Math.max(0, Math.min(idx, max));
+        node.presets.features[slot] = clamped;
+      }
+      function setHairColor(node, name) {
+        if (!node || !name) return;
+        const pal = hairColors?.[name];
+        if (pal) {
+          node.presets.colors.hair = pal;
+          node._lastHairPalette = pal;
+        }
+      }
+      function setTattooColor(node, name) {
+        if (!node || !name) return;
+        const col = tattooColors?.[name];
+        if (col) node.presets.colors.tattoo = col;
+      }
+
+      // Elf subraces
+      const elf = out.elf && out.elf.races ? out.elf.races : null;
+      if (elf) {
+        // wood elf male: tattoo 1, adornment 2, beard 4, tattoo color orange1
+        const woodMale = elf.woodelf?.genders?.male;
+        if (woodMale) {
+          setFeature(woodMale, 'tattoo', 1);
+          setFeature(woodMale, 'adornment', 2);
+          setFeature(woodMale, 'beard', 4);
+          setTattooColor(woodMale, 'orange1');
+        }
+        // deep elf male: tattoo 6, hair 12, adornment 3, beard 6, tattoo color red2
+        const deepMale = elf.deepelf?.genders?.male;
+        if (deepMale) {
+          setFeature(deepMale, 'tattoo', 6);
+          setFeature(deepMale, 'hair', 12);
+          setFeature(deepMale, 'adornment', 3);
+          setFeature(deepMale, 'beard', 6);
+          setTattooColor(deepMale, 'red2');
+        }
+        // high elf male: adornment 2, tattoo color blue1
+        const highMale = elf.highelf?.genders?.male;
+        if (highMale) {
+          setFeature(highMale, 'adornment', 2);
+          setTattooColor(highMale, 'blue1');
+        }
+      }
+
+      // human male: hair color brown3, tattoo color orange1
+      const humanMale = out.human?.genders?.male;
+      if (humanMale) {
+        setHairColor(humanMale, 'brown3');
+        setTattooColor(humanMale, 'orange1');
+      }
+
+      // dwarf male: hair color red1, adornment 3, beard 6, tattoo color orange1
+      const dwarfMale = out.dwarf?.genders?.male;
+      if (dwarfMale) {
+        setHairColor(dwarfMale, 'red1');
+        setFeature(dwarfMale, 'adornment', 3);
+        setFeature(dwarfMale, 'beard', 6);
+        setTattooColor(dwarfMale, 'orange1');
+      }
+    })();
+
     // Attach backgrounds. Prefer subrace background (e.g., elf+highelf_background.png), else fallback to primary
     Object.entries(out).forEach(([rpKey, rpNode]) => {
       const primaryBg = raceBackgrounds.get(rpKey) || null;
@@ -1428,6 +1499,15 @@ function randomChar() {
   if (activeNode) {
     randomizeNodeSelections(activeNode);
   }
+  // Force a fresh random hair palette for full random-character as well
+  if (activeNode && !hairColorShouldBeDisabled(activeNode)) {
+    const keys = Object.keys(hairColors);
+    if (keys.length) {
+      const k = keys[Math.floor(Math.random() * keys.length)];
+      activeNode.presets.colors.hair = hairColors[k];
+      activeNode._lastHairPalette = activeNode.presets.colors.hair;
+    }
+  }
 
   // Ensure indices reflect randomized color choices
   applyColorIndex();
@@ -1455,6 +1535,15 @@ function randomizeCurrentFeatures() {
   if (!node) return;
   // Randomize this node's feature indices and color palettes
   randomizeNodeSelections(node);
+  // Force a fresh random hair palette (independent of _lastHairPalette) when enabled
+  if (!hairColorShouldBeDisabled(node)) {
+    const keys = Object.keys(hairColors);
+    if (keys.length) {
+      const k = keys[Math.floor(Math.random() * keys.length)];
+      node.presets.colors.hair = hairColors[k];
+      node._lastHairPalette = node.presets.colors.hair;
+    }
+  }
   // Sync indices used by UI labels and name seed
   applyColorIndex();
   // Rebuild color swatch UIs to reflect new presets

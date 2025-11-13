@@ -3,7 +3,7 @@ import React from "react";
 import { onRandom, onPermute, onFeatureChange, onSelectGender, onSelectRacePrimary, onSelectRace, onSubscribeFeatures, onRandomizeFeatures } from "./app-logic/charGen";
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronRight, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faChevronRight, faChevronLeft, faDice } from '@fortawesome/free-solid-svg-icons';
 
 // Types
 type Dir = 'increase' | 'decrease';
@@ -149,7 +149,10 @@ export default function Home() {
             aria-label="Random Character"
             title="Random Character"
           >
-            <span className="hidden sm:inline">Random</span>
+            <span className="hidden sm:inline">
+              <FontAwesomeIcon icon={faDice} className="me-2" />
+              Random Character
+            </span>
           </button>
 
           <button
@@ -350,12 +353,12 @@ export default function Home() {
             <div className="mb-4">
               <button
                 type="button"
-                className="btn btn-sm w-full"
+                className="btn btn-sm"
                 onClick={handleRandomizeFeatures}
                 aria-label="Randomize Features"
                 title="Randomize Features"
               >
-                Randomize Features
+                <FontAwesomeIcon icon={faDice} />
               </button>
             </div>
             {/* Dynamic feature slots discovered from filenames */}

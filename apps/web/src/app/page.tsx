@@ -155,96 +155,92 @@ export default function Home() {
   return (
     <>
       <div className="max-w-6xl mx-auto">
-        {/* Toolbar */}
-        <div className="flex items-center gap-2 mb-8 pb-6 border-b border-base-300">
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={handleRandom}
-            aria-label="Random Character"
-            title="Random Character"
-          >
-            <span className="hidden sm:inline">
-              <FontAwesomeIcon icon={faDice} className="me-2" />
-              Random Character
-            </span>
-          </button>
+        <header className="flex items-start justify-between gap-6 pt-8 pb-4 mb-4 md:pt-12 md:pb-6 md:mb-6 border-b border-base-300">
+          <div className="flex flex-col">
+            <h1 className="text-2xl md:text-3xl font-semibold leading-tight">The Trials of Nral</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={async () => {
+                const img = document.querySelector<HTMLImageElement>('#charGen img');
+                if (!img || !img.complete || img.naturalWidth === 0) {
+                  alert('No image yet');
+                  return;
+                }
+                // Mirror <img> into an offscreen canvas (natural size)
+                const c = document.createElement('canvas');
+                c.width = img.naturalWidth;
+                c.height = img.naturalHeight;
+                const ctx = c.getContext('2d', { willReadFrequently: true });
+                if (!ctx) return;
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(img, 0, 0);
 
-          <button
-            type="button"
-            className="btn btn-sm ms-auto"
-            onClick={handlePermute}
-            aria-label="Permute"
-            title="Permute"
-          >
-            <span className="hidden sm:inline">Permute</span>
-          </button>
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={async () => {
-              const img = document.querySelector<HTMLImageElement>('#charGen img');
-              if (!img || !img.complete || img.naturalWidth === 0) {
-                alert('No image yet');
-                return;
-              }
-              // Mirror <img> into an offscreen canvas (natural size)
-              const c = document.createElement('canvas');
-              c.width = img.naturalWidth;
-              c.height = img.naturalHeight;
-              const ctx = c.getContext('2d', { willReadFrequently: true });
-              if (!ctx) return;
-              ctx.imageSmoothingEnabled = false;
-              ctx.drawImage(img, 0, 0);
+                const id = ctx.getImageData(0, 0, c.width, c.height);
+                const d = id.data;
+                const counts = new Map<number, number>();
+                for (let i = 0; i < d.length; i += 4) {
+                  if (d[i + 3] === 0) continue; // skip fully transparent
+                  const key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+                  counts.set(key, (counts.get(key) || 0) + 1);
+                }
+                const toHex = (k: number) => '#' + k.toString(16).padStart(6, '0');
+                const rows = Array.from(counts.entries())
+                  .map(([k, v]) => ({ hex: toHex(k), count: v }))
+                  .sort((a, b) => b.count - a.count);
 
-              const id = ctx.getImageData(0, 0, c.width, c.height);
-              const d = id.data;
-              const counts = new Map<number, number>();
-              for (let i = 0; i < d.length; i += 4) {
-                if (d[i + 3] === 0) continue; // skip fully transparent
-                const key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
-                counts.set(key, (counts.get(key) || 0) + 1);
-              }
-              const toHex = (k: number) => '#' + k.toString(16).padStart(6, '0');
-              const rows = Array.from(counts.entries())
-                .map(([k, v]) => ({ hex: toHex(k), count: v }))
-                .sort((a, b) => b.count - a.count);
+                // eslint-disable-next-line no-console
+                console.table(rows);
+              }}
+              aria-label="Dump Hex Palette"
+              title="Dump Hex Palette"
+            >
+              <span className="hidden sm:inline">Hexes</span>
+            </button>
 
-              // Console output for quick inspection
-              // eslint-disable-next-line no-console
-              console.table(rows);
-            }}
-            aria-label="Dump Hex Palette"
-            title="Dump Hex Palette"
-          >
-            <span className="hidden sm:inline">Hexes</span>
-          </button>
-
-          <button
-            className="btn btn-sm"
-            onClick={async () => {
-              const img = document.querySelector<HTMLImageElement>('#charGen img');
-              if (!img) return alert('No image yet');
-              const dataURL = img.src;
-              const res = await fetch('/api/pin', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ dataURL, name: 'nral-test.png' })
-              });
-              const json = await res.json();
-              console.log(json);
-              if (!res.ok) return alert(`Pin failed: ${json.error || res.status}`);
-              window.open(json.url, '_blank');
-            }}
-          >
-            <span className="hidden sm:inline">Pin Test</span>
-          </button>
-        </div>
+            <button
+              className="btn btn-sm"
+              onClick={async () => {
+                const img = document.querySelector<HTMLImageElement>('#charGen img');
+                if (!img) return alert('No image yet');
+                const dataURL = img.src;
+                const res = await fetch('/api/pin', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ dataURL, name: 'nral-test.png' })
+                });
+                const json = await res.json();
+                console.log(json);
+                if (!res.ok) return alert(`Pin failed: ${json.error || res.status}`);
+                window.open(json.url, '_blank');
+              }}
+              aria-label="Pin Test"
+              title="Pin Test"
+            >
+              <span className="hidden sm:inline">Pin Test</span>
+            </button>
+          </div>
+        </header>
 
         {/* Main grid */}
         <div className="grid grid-cols-12 gap-6">
           {/* Left column */}
           <div className="col-span-12 md:col-span-3">
+            {/* Random Character (moved here) */}
+            <div className="mb-6">
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={handleRandom}
+                aria-label="Random Character"
+                title="Random Character"
+              >
+                <FontAwesomeIcon icon={faDice} className="me-2" />
+                <span className="hidden sm:inline">Random Character</span>
+              </button>
+            </div>
             {/* Gender Toggle (DaisyUI button radios) */}
             <div className="join w-full mb-6">
               <input

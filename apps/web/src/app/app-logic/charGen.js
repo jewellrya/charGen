@@ -123,7 +123,7 @@ function setClassLabel() {
 }
 // --- Class → ArmorType mapping (auto-equips if sprites exist) ---
 const CLASS_TO_ARMOR = {
-  sorceror: 'cloth', sorcerer: 'cloth', cleric: 'cloth', warlock: 'cloth',
+  sorceror: 'cloth', cleric: 'cloth', warlock: 'cloth',
   ranger: 'leather', druid: 'leather', shaman: 'leather',
   fighter: 'mail', paladin: 'mail'
 };
@@ -161,10 +161,56 @@ function applyArmorForClassToNode(node) {
   }
 }
 
+// --- Class → Weapon mapping (selects weapon/tool slot by id; clears if missing) ---
+const CLASS_TO_WEAPON = {
+  sorceror: 2, sorcerer: 2, cleric: 2, warlock: 2, shaman: 2, druid: 2,
+  fighter: 1, paladin: 1,
+  ranger: 3,
+  rogue: 4,
+};
+
+function getSelectedWeaponId() {
+  const cls = (getCurrentClass() || '').toLowerCase();
+  const id = CLASS_TO_WEAPON[cls];
+  return (typeof id === 'number' && id > 0) ? id : null;
+}
+
+function applyWeaponForClassToNode(node) {
+  if (!node) return;
+  const wantId = getSelectedWeaponId();
+
+  const hasWeapon = (typeof node?.presets?.order?.weapon === 'number');
+  const hasTool   = (typeof node?.presets?.order?.tool === 'number');
+
+  // Prefer 'weapon' if both exist; clear the other to avoid double draw
+  let targetSlot = null;
+  if (hasWeapon) targetSlot = 'weapon';
+  else if (hasTool) targetSlot = 'tool';
+  if (!targetSlot) return;
+
+  if (hasWeapon && hasTool) {
+    const other = (targetSlot === 'weapon') ? 'tool' : 'weapon';
+    node.presets.features[other] = 0;
+  }
+
+  const ti  = node.presets.order[targetSlot];
+  const arr = node.template?.[ti] || [];
+
+  if (!wantId || arr.length <= 1) {
+    node.presets.features[targetSlot] = 0; // no mapping or no options → none
+    return;
+  }
+
+  // arrays were sorted by _id and got a blank at [0], so index == id (when present)
+  const maxId = arr.length - 1;
+  node.presets.features[targetSlot] = (wantId <= maxId) ? wantId : 0;
+}
+
 function applyClassArmorAndRedraw() {
   const node = getCurrentNode();
   if (!node) return;
   applyArmorForClassToNode(node);
+  applyWeaponForClassToNode(node);
   genCharPresets(node.template);
   notifyFeatures();
 }
@@ -1560,7 +1606,7 @@ function notifyFeatures() {
     const node = getCurrentNode();
     if (!node) return;
     const all = Object.keys(node.presets.features);
-    const features = all.filter((f) => f !== 'underwear'); // hide underwear from UI
+    const features = all.filter((f) => !['underwear', 'chest', 'legs', 'feet', 'weapon'].includes(f)); // hide underwear, armor, and weapon (class-controlled)
     const values = {};
     const counts = {};
     const labels = {};
@@ -1701,6 +1747,7 @@ function randomChar() {
 
   // Apply class-driven armor (if matching sprites exist)
   applyArmorForClassToNode(activeNode);
+  applyWeaponForClassToNode(activeNode);
 
   // Ensure indices reflect randomized color choices
   applyColorIndex();
@@ -1756,6 +1803,7 @@ function genCharPresets(raceGenderTemplate) {
 
   // Enforce class→armor choice at draw time as well (race/gender switches)
   applyArmorForClassToNode(node);
+  applyWeaponForClassToNode(node);
 
   // Background (if present) must be bottom-most
   if (node._backgroundSrc) {

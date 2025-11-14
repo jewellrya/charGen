@@ -106,7 +106,6 @@ function canonRace(s) {
   return t;
 }
 
-// --- Arbitrary RPG Classes (UI-only for now) ---
 const CLASS_OPTIONS = [
   'Fighter', 'Ranger', 'Rogue', 'Sorceror', 'Cleric', 'Warlock', 'Paladin', 'Druid', 'Shaman'
 ];
@@ -163,7 +162,7 @@ function applyArmorForClassToNode(node) {
 
 // --- Class → Weapon mapping (selects weapon/tool slot by id; clears if missing) ---
 const CLASS_TO_WEAPON = {
-  sorceror: 2, sorcerer: 2, cleric: 2, warlock: 2, shaman: 2, druid: 2,
+  sorceror: 2, cleric: 2, warlock: 2, shaman: 2, druid: 2,
   fighter: 1, paladin: 1,
   ranger: 3,
   rogue: 4,
@@ -204,6 +203,176 @@ function applyWeaponForClassToNode(node) {
   // arrays were sorted by _id and got a blank at [0], so index == id (when present)
   const maxId = arr.length - 1;
   node.presets.features[targetSlot] = (wantId <= maxId) ? wantId : 0;
+}
+
+// --- Class → Armor Filters (H/S/L/B/C). Use numbers or null to skip a channel.
+const CLASS_ARMOR_FILTERS = {
+  sorceror: { h: null, s: null, l: null, b: null, c: null },
+  cleric:   { h: null, s: -40, l: null, b: +40, c: +30 },
+  warlock:  { h: -125, s: null, l: null, b: null, c: null },
+  shaman:   { h: null, s: null, l: null, b: null, c: null },
+  druid:    { h: null, s: null, l: null, b: null, c: null },
+  fighter:  { h: null, s: null, l: null, b: null, c: null },
+  paladin:  { h: null, s: null, l: null, b: null, c: null },
+  ranger:   { h: null, s: null, l: null, b: null, c: null },
+  rogue:    { h: null, s: null, l: null, b: null, c: null },
+};
+
+function getSelectedArmorFilterSpec() {
+  const cls = (getCurrentClass() || '').toLowerCase();
+  return CLASS_ARMOR_FILTERS[cls] || null;
+}
+
+// ---- Armor filter mask helpers ----
+function _armorFilterHasAnyChannel(spec) {
+  if (!spec) return false;
+  return ['h','s','l','b','c'].some((k) => typeof spec[k] === 'number');
+}
+
+// Apply class armor filter per pixel using the SAME OKLab pipeline as skin filters
+function _applyArmorFilterPixelOKLab(r, g, b, spec) {
+  // read deltas (numbers or 0)
+  const rawH = (typeof spec.h === 'number') ? spec.h : 0; // degrees
+  const rawS = (typeof spec.s === 'number') ? spec.s : 0; // percent
+  const rawL = (typeof spec.l === 'number') ? spec.l : 0; // percent
+  const rawB = (typeof spec.b === 'number') ? spec.b : 0; // PS brightness (−150..+150)
+  const rawC = (typeof spec.c === 'number') ? spec.c : 0; // PS contrast   (−100..+100)
+
+  const pureHue = (rawH !== 0) && (rawS === 0) && (rawL === 0) && (rawB === 0) && (rawC === 0);
+  const pureMul = (rawH === 0) && (rawS === 0) && (rawC === 0) && (rawL !== 0 || rawB !== 0);
+  const hRad = (rawH * Math.PI) / 180;
+
+  // helper: OKLab -> sRGB8 with gamut test (same as skin pipeline)
+  const toSRGBUnclamped = (Lx, Ax, Bx) => {
+    const l_ = Lx + 0.3963377774 * Ax + 0.2158037573 * Bx;
+    const m_ = Lx - 0.1055613458 * Ax - 0.0638541728 * Bx;
+    const s_ = Lx - 0.0894841775 * Ax - 1.2914855480 * Bx;
+    const l = l_ * l_ * l_;
+    const m = m_ * m_ * m_;
+    const s = s_ * s_ * s_;
+    let rLin = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+    let gLin = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+    let bLin = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+    const inGamut = (rLin >= 0 && rLin <= 1) && (gLin >= 0 && gLin <= 1) && (bLin >= 0 && bLin <= 1);
+    const to8 = (vLin) => {
+      let v = vLin <= 0.0031308 ? vLin * 12.92 : 1.055 * Math.pow(vLin, 1/2.4) - 0.055;
+      if (v < 0) v = 0; else if (v > 1) v = 1;
+      return Math.round(v * 255);
+    };
+    return { inGamut, nr: to8(rLin), ng: to8(gLin), nb: to8(bLin) };
+  };
+
+  // 1) brightness/lightness only → pure RGB multiply (hue preserved exactly)
+  if (pureMul) {
+    const mul = (1
+      + (rawL / 100) * 0.60
+      + (rawB / 150) * 0.30
+    );
+    const m = Math.max(0.5, Math.min(1.5, mul));
+    const R = Math.max(0, Math.min(255, Math.round(r * m)));
+    const G = Math.max(0, Math.min(255, Math.round(g * m)));
+    const B = Math.max(0, Math.min(255, Math.round(b * m)));
+    return [R, G, B];
+  }
+
+  // 2) pure hue rotation in OKLab; keep chroma, reduce only if out-of-gamut
+  if (pureHue) {
+    let [L, A, B_] = srgbToOklab(r, g, b);
+    const C0 = Math.hypot(A, B_);
+    if (C0 === 0) return [r, g, b];
+    let angle = Math.atan2(B_, A) + hRad;
+    let scale = 1.0, tries = 0, out;
+    do {
+      const A1 = (C0 * scale) * Math.cos(angle);
+      const B1 = (C0 * scale) * Math.sin(angle);
+      out = toSRGBUnclamped(L, A1, B1);
+      if (out.inGamut) break;
+      scale *= 0.96; // shave chroma until in gamut
+      tries++;
+    } while (tries < 16);
+    return [out.nr, out.ng, out.nb];
+  }
+
+  // 3) general case (only apply channels you provided)
+  let [L, A, B_] = srgbToOklab(r, g, b);
+  const C0 = Math.hypot(A, B_);
+  let angle = Math.atan2(B_, A) + hRad; // rotate only if H requested (0 adds nothing)
+
+  const sScale = (rawS === 0) ? 1 : (1 + rawS / 100);
+  const lDelta = (rawL / 100) * 0.50;
+  const bDelta = (rawB / 150) * 0.35;
+  const cScale = (rawC === 0) ? 1 : (1 + (rawC / 100) * 0.85);
+
+  // Lightness path
+  let L1 = L + lDelta + bDelta;
+  if (cScale !== 1) {
+    const mid = 0.5; // same mid as skin
+    L1 = (L1 - mid) * cScale + mid;
+  }
+  if (L1 < 0) L1 = 0; else if (L1 > 1) L1 = 1;
+
+  // Chroma path
+  let C1 = C0 * sScale; // only scale if S requested
+  if (rawS > 0) {
+    const CHROMA_ABS_CAP = 0.40;
+    const CHROMA_REL_CAP = C0 * 1.30;
+    if (C1 > CHROMA_ABS_CAP) C1 = CHROMA_ABS_CAP;
+    if (C1 > CHROMA_REL_CAP) C1 = CHROMA_REL_CAP;
+  }
+
+  let scale = (C0 === 0) ? 0 : (C1 / C0);
+  let tries = 0, out;
+  do {
+    const A1 = (C0 * scale) * Math.cos(angle);
+    const B1 = (C0 * scale) * Math.sin(angle);
+    out = toSRGBUnclamped(L1, A1, B1);
+    if (out.inGamut) break;
+    scale *= 0.96; // keep hue/lightness, just pull chroma in
+    tries++;
+  } while (tries < 16);
+
+  return [out.nr, out.ng, out.nb];
+}
+
+// Build an armor mask from the already-loaded layer images, and apply the
+// class-selected armor filter only where mask alpha > 0.
+function applyArmorFilterMaskOnCanvas(canvas, metas, imgs) {
+  const spec = getSelectedArmorFilterSpec();
+  if (!spec || !_armorFilterHasAnyChannel(spec)) return;
+  if (!canvas || !canvas.getContext) return;
+  const ctx0 = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx0) return;
+
+  // 1) Build mask of current armor (chest/legs/feet) by re-drawing those layers
+  const mask = document.createElement('canvas');
+  mask.width = canvas.width; mask.height = canvas.height;
+  const mctx = mask.getContext('2d', { willReadFrequently: true });
+  if (!mctx) return;
+  mctx.imageSmoothingEnabled = false;
+
+  for (let i = 0; i < metas.length; i++) {
+    const meta = (metas[i] || {});
+    const nm = String(meta.name || '').toLowerCase();
+    const isArmor = nm.startsWith('chest') || nm.startsWith('legs') || nm.startsWith('feet');
+    const isBlank = nm.startsWith('._') || nm.startsWith('_'); // our blank placeholder naming
+    if (!isArmor || isBlank) continue;
+    const img = imgs[i];
+    if (!img) continue;
+    try { mctx.drawImage(img, 0, 0, mask.width, mask.height); } catch(_) {}
+  }
+
+  // 2) Read pixels and apply filter where mask alpha > 0
+  const id = ctx0.getImageData(0, 0, canvas.width, canvas.height);
+  const md = mctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = id.data, m = md.data;
+  for (let p = 0; p < d.length; p += 4) {
+    if (m[p + 3] === 0) continue; // only affect armor pixels
+    if (d[p + 3] !== 255) continue; // and only fully opaque ones
+    const r = d[p], g = d[p + 1], b = d[p + 2];
+    const [rr, gg, bb] = _applyArmorFilterPixelOKLab(r, g, b, spec);
+    d[p] = rr; d[p + 1] = gg; d[p + 2] = bb; // keep original alpha
+  }
+  ctx0.putImageData(id, 0, 0);
 }
 
 function applyClassArmorAndRedraw() {
@@ -1211,7 +1380,7 @@ function applySkinFilterPaletteSafe(data, filter) {
   const map = new Map();
   for (let i = 0; i < data.length; i += 4) {
     const a = data[i + 3];
-    if (a === 0) continue; // skip only fully transparent; include semi‑transparent
+    if (a !== 255) continue;
     const r = data[i], g = data[i + 1], b = data[i + 2];
     const key = (r << 16) | (g << 8) | b;
     if (map.has(key)) continue;
@@ -1254,7 +1423,7 @@ function applySkinFilterPaletteSafe(data, filter) {
 
   // Second pass: apply mapping to all but fully transparent texels
   for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] === 0) continue; // apply to semi‑transparent too; skip only fully transparent
+    if (data[i + 3] !== 255) continue;
     const key = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2];
     const out = map.get(key);
     if (out) {
@@ -1324,7 +1493,7 @@ function applySkinFilterModernOKLab(data, filter) {
     );
     const m = Math.max(0.5, Math.min(1.5, mul));
     for (let i = 0; i < data.length; i += 4) {
-      if (data[i + 3] === 0) continue;
+      if (data[i + 3] !== 255) continue;
       data[i]     = Math.max(0, Math.min(255, Math.round(data[i]     * m)));
       data[i + 1] = Math.max(0, Math.min(255, Math.round(data[i + 1] * m)));
       data[i + 2] = Math.max(0, Math.min(255, Math.round(data[i + 2] * m)));
@@ -1336,7 +1505,7 @@ function applySkinFilterModernOKLab(data, filter) {
   if (pureHue) {
     for (let i = 0; i < data.length; i += 4) {
       const a = data[i + 3];
-      if (a === 0) continue;
+      if (a !== 255) continue;
       const r = data[i], g = data[i + 1], b = data[i + 2];
 
       let [L, A, B_] = srgbToOklab(r, g, b);
@@ -1369,7 +1538,7 @@ function applySkinFilterModernOKLab(data, filter) {
 
   for (let i = 0; i < data.length; i += 4) {
     const a = data[i + 3];
-    if (a === 0) continue;
+    if (a !== 255) continue;
     const r = data[i], g = data[i + 1], b = data[i + 2];
 
     let [L, A, B_] = srgbToOklab(r, g, b);
@@ -1463,88 +1632,104 @@ function drawChar(imageArray, name, replace) {
   if (!ensureCanvas()) return;
   preload(imageArray, function (loadedImages) {
     for (let i = 0; i < imageArray.length; i++) {
-    const meta = imageArray[i] || {};
-    const img = loadedImages[i];
+      const meta = imageArray[i] || {};
+      const img = loadedImages[i];
 
-    // Draw into an offscreen canvas (so recolor affects only this layer)
-    const off = document.createElement('canvas');
-    off.width = canvas.width;
-    off.height = canvas.height;
-    const octx = off.getContext('2d', { willReadFrequently: true });
-    if (!octx) continue;
-    octx.imageSmoothingEnabled = false;
+      // Draw into an offscreen canvas (so recolor affects only this layer)
+      const off = document.createElement('canvas');
+      off.width = canvas.width;
+      off.height = canvas.height;
+      const octx = off.getContext('2d', { willReadFrequently: true });
+      if (!octx) continue;
+      octx.imageSmoothingEnabled = false;
 
-    octx.drawImage(img, 0, 0, off.width, off.height);
+      octx.drawImage(img, 0, 0, off.width, off.height);
 
-    // Recolor only the relevant layer
-    const lname = (meta.name || '').toLowerCase();
-    
-    // Base layer: apply skin filter for supported races (identified by _isBase flag)
-    if (meta && meta._isBase) {
-      const node = getCurrentNode();
-      const filters = getSkinFiltersForNode(node);
-      if (filters) {
-        const skinIdx = node?.presets?.features?.skin ?? getDefaultSkinIndexForNode(node);
-        const id = octx.getImageData(0, 0, off.width, off.height);
+      // Recolor only the relevant layer
+      const lname = (meta.name || '').toLowerCase();
 
-        if (!window.__onceSkinStats) {
-          const d = id.data; let minA = 255, maxA = 0; let uniq = 0;
-          let semi = 0, opaque = 0, transparent = 0;
-          const seen = new Set();
-          for (let i2 = 0; i2 < d.length; i2 += 4) {
-            const a = d[i2 + 3];
-            if (a < minA) minA = a;
-            if (a > maxA) maxA = a;
-            if (a === 0) transparent++;
-            else if (a === 255) opaque++;
-            else semi++;
-            const k = (d[i2] << 16) | (d[i2 + 1] << 8) | d[i2 + 2];
-            if (!seen.has(k)) { seen.add(k); uniq++; }
+      // Base layer: apply skin filter for supported races (identified by _isBase flag)
+      if (meta && meta._isBase) {
+        const node = getCurrentNode();
+        const filters = getSkinFiltersForNode(node);
+        if (filters) {
+          const skinIdx = node?.presets?.features?.skin ?? getDefaultSkinIndexForNode(node);
+          const id = octx.getImageData(0, 0, off.width, off.height);
+
+          if (!window.__onceSkinStats) {
+            const d = id.data; let minA = 255, maxA = 0; let uniq = 0;
+            let semi = 0, opaque = 0, transparent = 0;
+            const seen = new Set();
+            for (let i2 = 0; i2 < d.length; i2 += 4) {
+              const a = d[i2 + 3];
+              if (a < minA) minA = a;
+              if (a > maxA) maxA = a;
+              if (a === 0) transparent++;
+              else if (a === 255) opaque++;
+              else semi++;
+              const k = (d[i2] << 16) | (d[i2 + 1] << 8) | d[i2 + 2];
+              if (!seen.has(k)) { seen.add(k); uniq++; }
+            }
+            console.log('[skin/base stats]', { minA, maxA, uniqueColors: uniq, semiAlpha: semi > 0, semiCount: semi, opaque, transparent });
+            window.__onceSkinStats = true;
           }
-          console.log('[skin/base stats]', { minA, maxA, uniqueColors: uniq, semiAlpha: semi > 0, semiCount: semi, opaque, transparent });
-          window.__onceSkinStats = true;
-        }
 
-        applySkinFilter(id.data, skinIdx, filters);
+          applySkinFilter(id.data, skinIdx, filters);
+          octx.putImageData(id, 0, 0);
+        }
+      }
+
+      if (lname.startsWith('hair') || lname.startsWith('beard')) {
+        const id = octx.getImageData(0, 0, off.width, off.height);
+        applyHairColor(id.data);
+        octx.putImageData(id, 0, 0);
+      } else if (lname.startsWith('tattoo')) {
+        const id = octx.getImageData(0, 0, off.width, off.height);
+        applyTattooColor(id.data);
+        // Reduce tattoo layer opacity to 80%
+        const d = id.data;
+        for (let i2 = 0; i2 < d.length; i2 += 4) {
+          if (d[i2 + 3] === 0) continue; // keep fully transparent pixels as-is
+          d[i2 + 3] = Math.round(d[i2 + 3] * 0.7);
+        }
         octx.putImageData(id, 0, 0);
       }
-    }
-      
-    if (lname.startsWith('hair') || lname.startsWith('beard')) {
-      const id = octx.getImageData(0, 0, off.width, off.height);
-      applyHairColor(id.data);
-      octx.putImageData(id, 0, 0);
-    } else if (lname.startsWith('tattoo')) {
-      const id = octx.getImageData(0, 0, off.width, off.height);
-      applyTattooColor(id.data);
-      // Reduce tattoo layer opacity to 80%
-      const d = id.data;
-      for (let i2 = 0; i2 < d.length; i2 += 4) {
-        if (d[i2 + 3] === 0) continue; // keep fully transparent pixels as-is
-        d[i2 + 3] = Math.round(d[i2 + 3] * 0.7);
+      else if (lname.startsWith('chest') || lname.startsWith('legs') || lname.startsWith('feet')) {
+        const spec = getSelectedArmorFilterSpec();
+        if (spec && _armorFilterHasAnyChannel(spec)) {
+          const id = octx.getImageData(0, 0, off.width, off.height);
+          const d = id.data;
+          for (let i2 = 0; i2 < d.length; i2 += 4) {
+            if (d[i2 + 3] !== 255) continue; // operate only on fully opaque texels of the sprite
+            const r0 = d[i2], g0 = d[i2 + 1], b0 = d[i2 + 2];
+            const [rr, gg, bb] = _applyArmorFilterPixelOKLab(r0, g0, b0, spec);
+            d[i2] = rr; d[i2 + 1] = gg; d[i2 + 2] = bb; // keep alpha as‑is
+          }
+          octx.putImageData(id, 0, 0);
+        }
       }
-      octx.putImageData(id, 0, 0);
+
+      // Composite processed layer onto main canvas
+      ctx.drawImage(off, 0, 0);
     }
 
-    // Composite processed layer onto main canvas
-    ctx.drawImage(off, 0, 0);
-  }
 
-  let img = canvas.toDataURL('image/png');
-  let charGenComponent =
-    '<div id="component_' +
-    name +
-    '" class="w-full md:w-1/2"><div class="flex flex-col items-center gap-2"><img id="img_' +
-    name +
-    '" src="' +
-    img +
-    '" class="mx-auto"/><a class="link text-center truncate" href="' +
-    img +
-    '" download="' +
-    name +
-    '">Export "' +
-    name +
-    '"</a></div></div>';
+
+    let img = canvas.toDataURL('image/png');
+    let charGenComponent =
+      '<div id="component_' +
+      name +
+      '" class="w-full md:w-1/2"><div class="flex flex-col items-center gap-2"><img id="img_' +
+      name +
+      '" src="' +
+      img +
+      '" class="mx-auto"/><a class="link text-center truncate" href="' +
+      img +
+      '" download="' +
+      name +
+      '">Export "' +
+      name +
+      '"</a></div></div>';
 
     if (typeof document !== 'undefined') {
       const cg = document.getElementById('charGen');

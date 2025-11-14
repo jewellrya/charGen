@@ -1,6 +1,11 @@
 'use client';
 import React from "react";
-import { onRandom, onPermute, onFeatureChange, onSelectGender, onSelectRacePrimary, onSelectRace, onSubscribeFeatures, onRandomizeFeatures } from "./app-logic/charGen";
+import {
+  onRandom, onPermute, onFeatureChange,
+  onSelectGender, onSelectRacePrimary, onSelectRace,
+  onSubscribeFeatures, onRandomizeFeatures,
+  onSelectClass, onInitClassUI
+} from "./app-logic/charGen";
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronRight, faChevronLeft, faDice } from '@fortawesome/free-solid-svg-icons';
@@ -89,6 +94,10 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    onInitClassUI?.();
+  }, []);
+
   // Subscribe to dynamic feature slots
   useEffect(() => {
     const unsub = onSubscribeFeatures?.((state: {features:string[], uiOrder?:string[], values:Record<string,number>, counts:Record<string,number>, labels?:Record<string,string>}) => {
@@ -132,6 +141,10 @@ export default function Home() {
     onSelectRace(dir);
     checkAndReportRender(`Race ${dir}`);
   }, [checkAndReportRender]);
+
+  const handleSelectClass = useCallback((dir: Dir) => {
+    onSelectClass(dir);
+  }, []);
 
   const handleRandomizeFeatures = useCallback(async () => {
     setLoading(true);
@@ -280,7 +293,7 @@ export default function Home() {
             {/* Select Race */}
             <p className="mb-2 text-base font-bold">Race</p>
           
-            <div className="mb-4">
+            <div className="mb-6">
               {/* Primary race selector */}
               <div className="flex items-center gap-2">
                 <button
@@ -324,12 +337,28 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Class select */}
+            <p className="mb-2 text-base font-bold">Class</p>
             <div className="mb-4">
-              <p id="selectedRacePrimaryLore" className="m-0 text-sm text-base-content/60" />
-            </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => handleSelectClass("decrease")}
+                >
+                  <FontAwesomeIcon icon={faChevronLeft} />
+                </button>
 
-            <div className="mb-4">
-              <p id="selectedRaceLore" className="m-0 text-sm text-base-content/60" />
+                <div id="selectedClass" className="flex-1 text-primary capitalize text-center" />
+
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => handleSelectClass("increase")}
+                >
+                  <FontAwesomeIcon icon={faChevronRight} />
+                </button>
+              </div>
             </div>
           </div>
 

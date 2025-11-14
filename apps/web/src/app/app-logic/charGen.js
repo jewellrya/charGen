@@ -106,6 +106,86 @@ function canonRace(s) {
   return t;
 }
 
+// --- Arbitrary RPG Classes (UI-only for now) ---
+const CLASS_OPTIONS = [
+  'Fighter', 'Ranger', 'Rogue', 'Sorceror', 'Cleric', 'Warlock', 'Paladin', 'Druid', 'Shaman'
+];
+let classIndex = -1; // start unset; initial render shows nothing until randomChar picks one
+
+function getCurrentClass() {
+  if (classIndex < 0 || !Array.isArray(CLASS_OPTIONS) || CLASS_OPTIONS.length === 0) return '';
+  return CLASS_OPTIONS[classIndex];
+}
+function setClassLabel() {
+  if (typeof document === 'undefined') return;
+  const el = document.getElementById('selectedClass');
+  if (el) el.textContent = getCurrentClass();
+}
+// --- Class → ArmorType mapping (auto-equips if sprites exist) ---
+const CLASS_TO_ARMOR = {
+  sorceror: 'cloth', sorcerer: 'cloth', cleric: 'cloth', warlock: 'cloth',
+  ranger: 'leather', druid: 'leather', shaman: 'leather',
+  fighter: 'mail', paladin: 'mail'
+};
+
+function getSelectedArmorType() {
+  const cls = (getCurrentClass() || '').toLowerCase();
+  return CLASS_TO_ARMOR[cls] || null;
+}
+
+function applyArmorForClassToNode(node) {
+  if (!node) return;
+  const armor = getSelectedArmorType();
+  const slots = ['chest', 'legs', 'feet'];
+
+  for (const slot of slots) {
+    const ti = node?.presets?.order?.[slot];
+    if (typeof ti !== 'number') continue; // slot not present for this race/gender
+    const arr = node.template?.[ti] || [];
+
+    // If no armor for this class, or there are no entries in this slot, hard clear
+    if (!armor || arr.length <= 1) {
+      node.presets.features[slot] = 0; // none
+      continue;
+    }
+
+    // Find first entry whose `_detail` equals the armor type (e.g., 'cloth')
+    let match = -1;
+    for (let i = 1; i < arr.length; i++) {
+      const det = (arr[i]?._detail || '').toLowerCase();
+      if (det === armor) { match = i; break; }
+    }
+
+    // Apply match or clear when not found
+    node.presets.features[slot] = (match > 0) ? match : 0;
+  }
+}
+
+function applyClassArmorAndRedraw() {
+  const node = getCurrentNode();
+  if (!node) return;
+  applyArmorForClassToNode(node);
+  genCharPresets(node.template);
+  notifyFeatures();
+}
+
+function selectClass(dir) {
+  if (!Array.isArray(CLASS_OPTIONS) || CLASS_OPTIONS.length === 0) return;
+  if (classIndex < 0) {
+    classIndex = (dir === 'decrease') ? (CLASS_OPTIONS.length - 1) : 0;
+  } else if (dir === 'increase') {
+    classIndex = (classIndex + 1) % CLASS_OPTIONS.length;
+  } else if (dir === 'decrease') {
+    classIndex = (classIndex - 1 + CLASS_OPTIONS.length) % CLASS_OPTIONS.length;
+  }
+  setClassLabel();
+  applyClassArmorAndRedraw();
+}
+function setClassByName(name) {
+  const i = CLASS_OPTIONS.indexOf(name);
+  if (i >= 0) { classIndex = i; setClassLabel(); applyClassArmorAndRedraw(); }
+}
+
 function hairColorShouldBeDisabled(node) {
   const hairSel  = ((node?.presets?.features?.hair)  ?? 0) | 0;
   const hasBeard = typeof node?.presets?.order?.beard === 'number';
@@ -762,6 +842,22 @@ function getSkinFiltersForNode(node) {
 function getDefaultSkinIndexForNode(node) {
   const filters = getSkinFiltersForNode(node) || SKIN_FILTERS_HUMAN;
   return getDefaultSkinIndex(filters);
+}
+
+// After React renders the swatch containers, rebuild hair/tattoo swatches on the next tick
+function refreshColorSwatchesDeferred() {
+  if (typeof document === 'undefined') return;
+  const run = () => {
+    try {
+      genColorSwatches(hairColors, 'hair');
+      genColorSwatches(tattooColors, 'tattoo');
+    } catch {}
+  };
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => setTimeout(run, 0));
+  } else {
+    setTimeout(run, 0);
+  }
 }
 
 function genColorSwatches(colorObject, subject) {
@@ -1567,6 +1663,12 @@ function randomChar() {
 
   genRaceNameAndLore();
 
+  // Randomize class (UI-only; not part of randomizeFeatures)
+  if (Array.isArray(CLASS_OPTIONS) && CLASS_OPTIONS.length > 0) {
+    classIndex = Math.floor(Math.random() * CLASS_OPTIONS.length);
+    setClassLabel();
+  }
+
   // check gender radio (browser only)
   if (typeof document !== 'undefined') {
     const selectedGenderRadio = document.getElementById('genderRadio' + (genderIndex + 1));
@@ -1596,6 +1698,9 @@ function randomChar() {
       activeNode._lastHairPalette = activeNode.presets.colors.hair;
     }
   }
+
+  // Apply class-driven armor (if matching sprites exist)
+  applyArmorForClassToNode(activeNode);
 
   // Ensure indices reflect randomized color choices
   applyColorIndex();
@@ -1643,11 +1748,14 @@ function randomizeCurrentFeatures() {
 }
 
 // Generate Selected Character with current presets (base + feature slots)
-  function genCharPresets(raceGenderTemplate) {
+function genCharPresets(raceGenderTemplate) {
   let genChar = [];
   const node = getCurrentNode();
   const base = raceGenderTemplate?.[0]?.[0] ?? null;
   if (!base || !node) return;
+
+  // Enforce class→armor choice at draw time as well (race/gender switches)
+  applyArmorForClassToNode(node);
 
   // Background (if present) must be bottom-most
   if (node._backgroundSrc) {
@@ -1656,8 +1764,8 @@ function randomizeCurrentFeatures() {
 
   // Base/skin next (mark so recolor logic can find it regardless of index)
   const baseLayer = { ...base, _isBase: true };
-    genChar.push(baseLayer);
-    
+  genChar.push(baseLayer);
+
   // Add each feature layer in the node's order
   const { features, order } = node.presets;
   const orderedSlots = Object.keys(features)
@@ -1685,6 +1793,7 @@ function randomizeCurrentFeatures() {
   )}${padZeroes(tattooColorIndex, 2)}`;
   drawChar(genChar, genName, true);
   notifyFeatures();
+  refreshColorSwatchesDeferred();
 }
 
 // Select character features (increase/decrease per discovered slot).
@@ -2017,6 +2126,16 @@ export const onSelectRacePrimary = (dir) => {
 export const onSelectRace = (dir) => {
   if (typeof window !== 'undefined') selectRace(dir);
 };
+
+export function onSelectClass(dir) {
+  selectClass(dir);
+}
+export function onInitClassUI() {
+  setClassLabel();
+}
+export function onSetClass(name) {
+  setClassByName(name);
+}
 
 // Let React subscribe to live feature list / values
 export const onSubscribeFeatures = (cb) => {

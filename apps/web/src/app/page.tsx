@@ -54,6 +54,7 @@ export default function Home() {
   const [featureValues, setFeatureValues] = useState<Record<string, number>>({});
   const [featureCounts, setFeatureCounts] = useState<Record<string, number>>({});
   const [featureLabels, setFeatureLabels] = useState<Record<string, string>>({});
+  const [uiOrder, setUiOrder] = useState<string[]>([]);
 
   const isRenderBlank = useCallback(() => {
     if (typeof document === 'undefined') return false; // can't check on SSR
@@ -90,8 +91,9 @@ export default function Home() {
 
   // Subscribe to dynamic feature slots
   useEffect(() => {
-    const unsub = onSubscribeFeatures?.((state: {features:string[], values:Record<string,number>, counts:Record<string,number>, labels?:Record<string,string>}) => {
+    const unsub = onSubscribeFeatures?.((state: {features:string[], uiOrder?:string[], values:Record<string,number>, counts:Record<string,number>, labels?:Record<string,string>}) => {
       setFeatures(state.features);
+      setUiOrder(Array.isArray(state.uiOrder) ? state.uiOrder : state.features);
       setFeatureValues(state.values);
       setFeatureCounts(state.counts);
       setFeatureLabels(state.labels || {});
@@ -361,23 +363,34 @@ export default function Home() {
                 <FontAwesomeIcon icon={faDice} />
               </button>
             </div>
-            {/* Dynamic feature slots discovered from filenames */}
-            {features.map((cat) => (
-              <FeatureSelector
-                key={cat}
-                category={cat}
-                onChange={handleFeatureChange}
-                valueText={featureLabels[cat] ?? ((featureValues[cat] ?? 0) === 0 ? 'none' : String(featureValues[cat]))}
-              />
-            ))}
 
-            {/* Hair Color */}
-            <p className="m-0 text-base font-bold mb-2">Hair Color</p>
-            <div id="hairColorSwatches" className="mb-6" />
-
-            {/* Tattoo Color */}
-            <p className="m-0 text-base font-bold mb-2">Tattoo Color</p>
-            <div id="tattooColorSwatches" className="mb-6" />
+            {(uiOrder.length ? uiOrder : features).map((key) => {
+              if (key === 'hairColor') {
+                return (
+                  <div key="hairColor-block" className="mb-6">
+                    <p className="m-0 text-base font-bold mb-2">Hair Color</p>
+                    <div id="hairColorSwatches" />
+                  </div>
+                );
+              }
+              if (key === 'tattooColor') {
+                return (
+                  <div key="tattooColor-block" className="mb-6">
+                    <p className="m-0 text-base font-bold mb-2">Tattoo Color</p>
+                    <div id="tattooColorSwatches" />
+                  </div>
+                );
+              }
+              // Default: feature selector row
+              return (
+                <FeatureSelector
+                  key={key}
+                  category={key}
+                  onChange={handleFeatureChange}
+                  valueText={featureLabels[key] ?? ((featureValues[key] ?? 0) === 0 ? 'none' : String(featureValues[key]))}
+                />
+              );
+            })}
           </div>
         </div>
       </div>

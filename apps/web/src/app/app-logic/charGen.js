@@ -14,15 +14,29 @@ const SLOT_DRAW_ORDER_TOP_FIRST = [
   'shoulder',
   'beard',
   'helmet',
+  'adornment',
   'hair',
   'hands',
   'chest',
   'feet',
   'legs',
-  'adornment',
   'underwear',
   'tattoo',
   'base' // note: base is handled separately; included here for completeness
+];
+
+// Right‑panel feature & color UI order (top → bottom). Items not listed here
+// will appear afterward in their existing discovery order. Special tokens:
+//   - 'hairColor'   → Hair color swatch block
+//   - 'tattooColor' → Tattoo color swatch block
+const FEATURE_PANEL_ORDER_TOP_FIRST = [
+  'skin',
+  'hair',
+  'beard',
+  'hairColor',
+  'tattoo',
+  'tattooColor',
+  'adornment',
 ];
 
 // Map each known slot to a bottom-first rank (0 = closest to base). Unknown slots get 1000+
@@ -103,6 +117,11 @@ function hairColorShouldBeDisabled(node) {
   return hairSel === 0; // no beard slot → fall back to hair only
 }
 
+function tattooColorShouldBeDisabled(node) {
+  const tattooSel = ((node?.presets?.features?.tattoo) ?? 0) | 0;
+  return tattooSel === 0; // disable when no tattoo selected
+}
+
 // --- Defaults & randomization helpers (module scope) ---
 function snapshotDefaults(node) {
   if (!node || node._defaults) return;
@@ -147,11 +166,20 @@ function randomizeNodeSelections(node) {
     }
   }
 
-  // 4) Tattoo
-  const tattooKeys = Object.keys(tattooColors);
-  if (tattooKeys.length) {
-    const tk = tattooKeys[Math.floor(Math.random() * tattooKeys.length)];
-    node.presets.colors.tattoo = tattooColors[tk];
+  // 4) Tattoo color respects tattoo presence
+  const tattooDisabled = tattooColorShouldBeDisabled(node);
+  if (tattooDisabled) {
+    if (!node._lastTattooColor && node.presets?.colors?.tattoo) {
+      node._lastTattooColor = node.presets.colors.tattoo;
+    }
+    node.presets.colors.tattoo = null;
+  } else {
+    const tattooKeys = Object.keys(tattooColors);
+    if (tattooKeys.length) {
+      const tk = tattooKeys[Math.floor(Math.random() * tattooKeys.length)];
+      node.presets.colors.tattoo = node._lastTattooColor || tattooColors[tk];
+      node._lastTattooColor = node.presets.colors.tattoo;
+    }
   }
 }
 
@@ -455,7 +483,7 @@ async function initFromSprites() {
       // Elf subraces
       const elf = out.elf && out.elf.races ? out.elf.races : null;
       if (elf) {
-        // wood elf male: tattoo 1, adornment 2, beard 4, tattoo color orange1
+        // wood elf male
         const woodMale = elf.woodelf?.genders?.male;
         if (woodMale) {
           setFeature(woodMale, 'tattoo', 1);
@@ -463,15 +491,23 @@ async function initFromSprites() {
           setFeature(woodMale, 'beard', 4);
           setTattooColor(woodMale, 'orange1');
         }
-        // deep elf male: tattoo 6, hair 12, adornment 3, beard 6, tattoo color red2
+
+        // deep elf
         const deepMale = elf.deepelf?.genders?.male;
         if (deepMale) {
           setFeature(deepMale, 'tattoo', 6);
+          setHairColor(deepMale, 'gray2');
           setFeature(deepMale, 'hair', 12);
           setFeature(deepMale, 'adornment', 3);
           setFeature(deepMale, 'beard', 6);
           setTattooColor(deepMale, 'red2');
         }
+        const deepFemale = elf.deepelf?.genders?.female;
+        if (deepFemale) {
+          setHairColor(deepFemale, 'black1');
+          setTattooColor(deepFemale, 'red2');
+        }
+
         // high elf male: adornment 2, tattoo color blue1
         const highMale = elf.highelf?.genders?.male;
         if (highMale) {
@@ -480,20 +516,38 @@ async function initFromSprites() {
         }
       }
 
-      // human male: hair color brown3, tattoo color orange1
+      // human male
       const humanMale = out.human?.genders?.male;
       if (humanMale) {
         setHairColor(humanMale, 'brown3');
         setTattooColor(humanMale, 'orange1');
       }
 
-      // dwarf male: hair color red1, adornment 3, beard 6, tattoo color orange1
+      // dwarf
       const dwarfMale = out.dwarf?.genders?.male;
       if (dwarfMale) {
         setHairColor(dwarfMale, 'red1');
         setFeature(dwarfMale, 'adornment', 3);
         setFeature(dwarfMale, 'beard', 6);
         setTattooColor(dwarfMale, 'orange1');
+      }
+
+      const dwarfFemale = out.dwarf?.genders?.female;
+      if (dwarfFemale) {
+        setFeature(dwarfFemale, 'hair', 2);
+        setHairColor(dwarfFemale, 'red1');
+        setFeature(dwarfFemale, 'adornment', 4);
+        setTattooColor(dwarfFemale, 'orange1');
+      }
+
+      // halforc male
+      const halforcMale = out.halforc?.genders?.male;
+      if (halforcMale) {
+        setHairColor(halforcMale, 'brown1');
+        setFeature(halforcMale, 'adornment', 3);
+        setFeature(halforcMale, 'hair', 9);
+        setFeature(halforcMale, 'beard', 1);
+        setTattooColor(halforcMale, 'white1');
       }
     })();
 
@@ -722,14 +776,18 @@ function genColorSwatches(colorObject, subject) {
   swatchRoot.innerHTML = '';
 
   const node = getCurrentNode();
-  const hairDisabled = (subject === 'hair') && hairColorShouldBeDisabled(node);
+  const swatchDisabled = (subject === 'hair')
+    ? hairColorShouldBeDisabled(node)
+    : (subject === 'tattoo')
+      ? tattooColorShouldBeDisabled(node)
+      : false;
 
-  if (hairDisabled) {
+  if (swatchDisabled) {
     swatchRoot.classList.add('opacity-25', 'pointer-events-none');
   } else {
     swatchRoot.classList.remove('opacity-25', 'pointer-events-none');
   }
-  swatchRoot.setAttribute('aria-disabled', hairDisabled ? 'true' : 'false');
+  swatchRoot.setAttribute('aria-disabled', swatchDisabled ? 'true' : 'false');
 
   function setPrimaryColor() {
     if (Array.isArray(colorObject[colorName])) {
@@ -762,12 +820,15 @@ function genColorSwatches(colorObject, subject) {
     swatchRoot.innerHTML += colorSwatchComponent;
   }
 
-  // Disable/enable radios based on hairDisabled (apply after swatches are built)
+  // Disable/enable radios based on swatchDisabled (apply after swatches are built)
   {
     const inputs = swatchRoot.querySelectorAll('input[type="radio"]');
     inputs.forEach((inp) => {
-      if (hairDisabled) {
+      if (swatchDisabled) {
         inp.setAttribute('disabled', 'true');
+        // Ensure no selection is visually/semantically active when disabled
+        inp.checked = false;
+        inp.removeAttribute('checked');
       } else {
         inp.removeAttribute('disabled');
       }
@@ -778,11 +839,12 @@ function genColorSwatches(colorObject, subject) {
     colorName = Object.keys(colorObject)[i];
     setPrimaryColor();
 
-    let inputName = 'radio' + subjectCap + 'Color';
-
-    if (primaryColor === createdColorValue) {
+    const inputName = 'radio' + subjectCap + 'Color';
+    if (!swatchDisabled && primaryColor === createdColorValue) {
       const selectedColorRadio = document.getElementById(inputName + i);
-      if (selectedColorRadio) selectedColorRadio.checked = true;
+      if (selectedColorRadio && 'checked' in selectedColorRadio) {
+        (selectedColorRadio).checked = true;
+      }
     }
   }
 }
@@ -1251,6 +1313,7 @@ function applyTattooColor(imageData) {
     color = raceGenderTemplateObject[racePrimaryName]['genders'][genderName]['presets']['colors'].tattoo;
   }
 
+  if (!color) return; // disabled → keep sprite defaults
   replaceColor(imageData, '#8a4646', color);
 }
 
@@ -1439,7 +1502,32 @@ function notifyFeatures() {
       labels[f] = label;
     }
 
-    featureSubscribers.forEach((fn) => fn({ features, values, counts, labels }));
+    // Build UI order: start with explicit FEATURE_PANEL_ORDER_TOP_FIRST, then add remaining features
+    const setListed = new Set();
+    const ordered = [];
+
+    for (const key of FEATURE_PANEL_ORDER_TOP_FIRST) {
+      if (key === 'hairColor' || key === 'tattooColor') {
+        ordered.push(key);
+        setListed.add(key);
+        continue;
+      }
+      if (features.includes(key)) {
+        ordered.push(key);
+        setListed.add(key);
+      }
+    }
+    for (const f of features) {
+      if (!setListed.has(f)) ordered.push(f);
+    }
+
+    featureSubscribers.forEach((fn) => fn({
+      features,          // raw feature keys (back‑compat)
+      uiOrder: ordered,  // preferred UI order including color tokens
+      values,
+      counts,
+      labels,
+    }));
   } catch {};
 }
 
@@ -1638,9 +1726,25 @@ function selectFeaturePresets(feature, scale) {
       }
     }
   }
+
+  if (feature === 'tattoo') {
+    const disabled = tattooColorShouldBeDisabled(node);
+    if (disabled) {
+      if (!node._lastTattooColor && node.presets?.colors?.tattoo) {
+        node._lastTattooColor = node.presets.colors.tattoo;
+      }
+      node.presets.colors.tattoo = null;
+    } else {
+      if (!node.presets?.colors?.tattoo) {
+        const keys = Object.keys(tattooColors);
+        node.presets.colors.tattoo = node._lastTattooColor || (keys.length ? tattooColors[keys[0]] : null);
+      }
+    }
+  }
   
   genCharPresets(node.template);
-  genColorSwatches(hairColors, 'hair'); // update disabled/enabled state & selection
+  genColorSwatches(hairColors, 'hair');
+  genColorSwatches(tattooColors, 'tattoo');
   notifyFeatures();
 }
 
@@ -1662,10 +1766,10 @@ function applyColorIndex() {
   }
 
   for (let i = 0; i < Object.keys(tattooColors).length; i++) {
-    let tattooColorName = Object.keys(tattooColors)[i];
-    if (tattooColors[tattooColorName] === raceGenderColorPresets.tattoo) {
-      tattooColorIndex = i;
-    }
+    const name = Object.keys(tattooColors)[i];
+    const cur = raceGenderColorPresets?.tattoo;
+    if (!cur) continue;
+    if (tattooColors[name] === cur) tattooColorIndex = i;
   }
 }
 
@@ -1810,6 +1914,9 @@ function selectHairColor(color) {
 
 // select tattoo color
 function selectTattooColor(color) {
+  const node = getCurrentNode();
+  if (node && tattooColorShouldBeDisabled(node)) return;
+
   let selectedTattooColor = tattooColors[color];
 
   if (raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {
@@ -1818,6 +1925,9 @@ function selectTattooColor(color) {
   } else {
     raceGenderTemplateObject[racePrimaryName]['genders'][genderName]['presets']['colors'].tattoo = selectedTattooColor;
   }
+
+  // cache last palette for restore when tattoo toggled off/on
+  if (node) node._lastTattooColor = selectedTattooColor;
 
   tattooColorIndex = Object.keys(tattooColors).indexOf(color);
   genCharPresets(raceGenderTemplate);

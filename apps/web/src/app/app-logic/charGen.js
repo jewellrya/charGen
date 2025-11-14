@@ -209,7 +209,7 @@ function applyWeaponForClassToNode(node) {
 const CLASS_ARMOR_FILTERS = {
   sorceror: { h: null, s: null, l: null, b: null, c: null },
   cleric:   { h: null, s: -40, l: null, b: +40, c: +30 },
-  warlock:  { h: -125, s: null, l: null, b: null, c: null },
+  warlock:  { h: -125, s: -30, l: null, b: null, c: null },
   shaman:   { h: null, s: null, l: null, b: null, c: null },
   druid:    { h: null, s: null, l: null, b: null, c: null },
   fighter:  { h: null, s: null, l: null, b: null, c: null },

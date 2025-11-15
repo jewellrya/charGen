@@ -123,7 +123,7 @@ function setClassLabel() {
 // --- Class → ArmorType mapping (auto-equips if sprites exist) ---
 const CLASS_TO_ARMOR = {
   sorceror: 'cloth', cleric: 'cloth', warlock: 'cloth',
-  ranger: 'leather', druid: 'leather', shaman: 'leather',
+  ranger: 'leather', druid: 'leather', shaman: 'leather', rogue: 'leather',
   fighter: 'mail', paladin: 'mail'
 };
 
@@ -208,14 +208,14 @@ function applyWeaponForClassToNode(node) {
 // --- Class → Armor Filters (H/S/L/B/C). Use numbers or null to skip a channel.
 const CLASS_ARMOR_FILTERS = {
   sorceror: { h: null, s: null, l: null, b: null, c: null },
-  cleric:   { h: null, s: -40, l: null, b: +40, c: +30 },
-  warlock:  { h: -125, s: -30, l: null, b: null, c: null },
-  shaman:   { h: null, s: null, l: null, b: null, c: null },
-  druid:    { h: null, s: null, l: null, b: null, c: null },
+  cleric:   { h: null, s: -80, l: null, b: +20, c: +30 },
+  warlock:  { h: -125, s: -30, l: null, b: -120, c: +50 },
+  shaman:   { h: -20, s: -30, l: null, b: -80, c: -20 },
+  druid:    { h: +55, s: -30, l: null, b: -40, c: +40 },
   fighter:  { h: null, s: null, l: null, b: null, c: null },
-  paladin:  { h: null, s: null, l: null, b: null, c: null },
+  paladin:  { h: +30, s: +120, l: null, b: +80, c: null },
   ranger:   { h: null, s: null, l: null, b: null, c: null },
-  rogue:    { h: null, s: null, l: null, b: null, c: null },
+  rogue:    { h: null, s: -80, l: null, b: -60, c: null },
 };
 
 function getSelectedArmorFilterSpec() {

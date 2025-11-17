@@ -9,6 +9,9 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronRight, faChevronLeft, faDice } from '@fortawesome/free-solid-svg-icons';
+import MintButton from "../components/MintButton";
+import OpenseaPreviewButton from "../components/OpenseaPreviewButton";
+
 
 // Types
 type Dir = 'increase' | 'decrease';
@@ -221,6 +224,9 @@ export default function Home() {
             >
               <span className="hidden sm:inline">Pin Test</span>
             </button>
+            
+            <OpenseaPreviewButton />
+            <MintButton />
           </div>
         </header>
 

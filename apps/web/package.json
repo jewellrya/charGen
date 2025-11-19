@@ -5,8 +5,7 @@
   "private": true,
   "scripts": {
     "build:css": "npx @tailwindcss/cli -i app.css -o public/output.css",
-    "dev": "next dev",
-    "dev:turbo": "next dev --turbopack",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

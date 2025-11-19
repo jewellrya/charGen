@@ -2,31 +2,23 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Start
 
-First, run the development server:
+First, run the development server using turbo bundler:
 
 ```bash
 cd apps/web
 npm run dev
-# or
-cd apps/web
-npm run dev:turbo
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## Development
 
-To learn more about Next.js, take a look at the following resources:
+Emulate an OpenSea preview with or without an IFPS pin test.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Metamask wallet is integrated. Characters can be minted using the Mint button. This is currently on the Sepolia testnet chain and only cost gas.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The Hex button logs a table of pixel color data for the current canvas image. This is for sprite filter testing.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The UI is a just a temporary AI wireframe right now.

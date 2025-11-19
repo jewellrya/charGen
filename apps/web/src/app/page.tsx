@@ -202,28 +202,6 @@ export default function Home() {
             >
               <span className="hidden sm:inline">Hexes</span>
             </button>
-
-            <button
-              className="btn btn-sm"
-              onClick={async () => {
-                const img = document.querySelector<HTMLImageElement>('#charGen img');
-                if (!img) return alert('No image yet');
-                const dataURL = img.src;
-                const res = await fetch('/api/pin', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ dataURL, name: 'nral-test.png' })
-                });
-                const json = await res.json();
-                console.log(json);
-                if (!res.ok) return alert(`Pin failed: ${json.error || res.status}`);
-                window.open(json.url, '_blank');
-              }}
-              aria-label="Pin Test"
-              title="Pin Test"
-            >
-              <span className="hidden sm:inline">Pin Test</span>
-            </button>
             
             <PreviewButton />
             <MintButton />

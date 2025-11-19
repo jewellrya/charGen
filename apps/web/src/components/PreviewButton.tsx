@@ -4,7 +4,7 @@
 "use client";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
+import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 import React, { useEffect, useRef, useState } from "react";
 
 function grabPngDataURL(): string {
@@ -27,6 +27,22 @@ function resolveIpfs(uri: string, gateway = "https://ipfs.io/ipfs/") {
 }
 
 type Attr = { trait_type: string; value: string | number | boolean };
+
+// Friendlier error text when the pin routes cannot reach IPFS
+function friendlyPinError(e: any, httpStatus?: number) {
+  const raw = String(e?.message || e || "");
+  if (
+    /fetch failed|Failed to fetch|ECONNREFUSED|connection refused|ENOTFOUND|ECONNRESET|The user aborted a request/i.test(
+      raw
+    )
+  ) {
+    return "IPFS is offline. Start IPFS Desktop or run `ipfs daemon`, then try again.";
+  }
+  if (httpStatus && httpStatus >= 500) {
+    return "Pin service returned a server error. Is the IPFS node running?";
+  }
+  return raw || "Pin failed";
+}
 
 function htmlTemplate({
   metadata,
@@ -93,9 +109,8 @@ function htmlTemplate({
     </div>
   </div>
   <script>
-    const attrs = ${JSON.stringify(({} as any).attributes || [])};
-    const grid = document.getElementById("attrs");
     const inputAttrs = ${JSON.stringify(([] as Attr[]) || [])};
+    const grid = document.getElementById("attrs");
     const show = Array.isArray(inputAttrs) ? inputAttrs : [];
     if (show.length) {
       show.forEach(a => {
@@ -132,21 +147,36 @@ export default function PreviewButton() {
       // 1) Capture current sprite
       const dataURL = grabPngDataURL();
 
-      // 2) Pin PNG to IPFS (same API you use for mint flow)
-      const imgRes = await fetch("/api/pin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dataURL, name: `nral-preview-${Date.now()}.png` }),
-      });
-      const imgJson = await imgRes.json().catch(() => ({}));
-      if (!imgRes.ok) throw new Error(imgJson?.error || "Pin image failed");
+      // Short timeout so it doesn’t hang forever
+      const ac = new AbortController();
+      const t = setTimeout(() => ac.abort(), 15000);
+
+      // 2) Pin PNG to IPFS
+      let imgRes: Response;
+      try {
+        imgRes = await fetch("/api/pin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dataURL, name: `nral-preview-${Date.now()}.png` }),
+          signal: ac.signal,
+        });
+      } catch (e) {
+        alert(friendlyPinError(e));
+        return;
+      } finally {
+        clearTimeout(t);
+      }
+
+      const imgJson = (await imgRes.json().catch(() => ({}))) as any;
+      if (!imgRes.ok) {
+        throw new Error(imgJson?.error || friendlyPinError(null, imgRes.status));
+      }
       const imageIpfs =
-        (imgJson?.ipfsUri as string) ||
-        (imgJson?.cid ? `ipfs://${imgJson.cid}` : null);
+        (imgJson?.ipfsUri as string) || (imgJson?.cid ? `ipfs://${imgJson.cid}` : null);
       if (!imageIpfs) throw new Error("Pin image failed (no CID)");
 
-      // 3) Build metadata (emulate ERC-721 tokenURI payload)
-      const attributes: Attr[] = []; // wire your real traits here
+      // 3) Build metadata
+      const attributes: Attr[] = []; // wire real traits here
       const metadata = {
         name: `Nral Preview #${Date.now()}`,
         description: "Preview of what OpenSea will render for this sprite",
@@ -154,17 +184,25 @@ export default function PreviewButton() {
         attributes,
       };
 
-      // 4) Pin metadata JSON too
-      const metaRes = await fetch("/api/pin-json", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ json: metadata, name: "nral-preview.json" }),
-      });
-      const metaJson = await metaRes.json().catch(() => ({}));
-      if (!metaRes.ok) throw new Error(metaJson?.error || "Pin metadata failed");
+      // 4) Pin metadata JSON
+      let metaRes: Response;
+      try {
+        metaRes = await fetch("/api/pin-json", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ json: metadata, name: "nral-preview.json" }),
+        });
+      } catch (e) {
+        alert(friendlyPinError(e));
+        return;
+      }
+
+      const metaJson = (await metaRes.json().catch(() => ({}))) as any;
+      if (!metaRes.ok) {
+        throw new Error(metaJson?.error || friendlyPinError(null, metaRes.status));
+      }
       const tokenURI =
-        (metaJson?.ipfsUri as string) ||
-        (metaJson?.cid ? `ipfs://${metaJson.cid}` : null);
+        (metaJson?.ipfsUri as string) || (metaJson?.cid ? `ipfs://${metaJson.cid}` : null);
       if (!tokenURI) throw new Error("Pin metadata failed (no CID)");
 
       const gatewayMeta = resolveIpfs(tokenURI);
@@ -191,6 +229,8 @@ export default function PreviewButton() {
         );
         await navigator.clipboard.writeText([gatewayMeta, gatewayImage].join("\n"));
       } catch {}
+    } catch (e: any) {
+      alert(friendlyPinError(e));
     } finally {
       setBusy(false);
       setOpen(false);
@@ -200,10 +240,8 @@ export default function PreviewButton() {
   async function previewEmulatedNoPin() {
     setBusy(true);
     try {
-      // 1) Capture current sprite
       const dataURL = grabPngDataURL();
 
-      // Convert dataURL to Blob (for object URLs)
       function dataUrlToBlob(url: string) {
         const [head, b64] = url.split(",");
         const mime = head.split(":")[1].split(";")[0] || "image/png";
@@ -215,13 +253,12 @@ export default function PreviewButton() {
       const imgBlob = dataUrlToBlob(dataURL);
       const imgURL = URL.createObjectURL(imgBlob);
 
-      // Fake ipfs:// identifiers (dev-only)
       const fakeImgCid = `dev-img-${Date.now()}`;
       const fakeMetaCid = `dev-meta-${Date.now()}`;
       const imageIpfs = `ipfs://${fakeImgCid}`;
       const tokenURI = `ipfs://${fakeMetaCid}`;
 
-      const attributes: Attr[] = []; // wire your real traits here
+      const attributes: Attr[] = [];
       const metadata = {
         name: `Nral Preview #${Date.now()}`,
         description: "Preview (emulated, not pinned)",
@@ -229,16 +266,14 @@ export default function PreviewButton() {
         attributes,
       };
 
-      // Create a Blob URL for metadata JSON so links are clickable
       const metaBlob = new Blob([JSON.stringify(metadata, null, 2)], {
         type: "application/json",
       });
       const metaURL = URL.createObjectURL(metaBlob);
 
-      const gatewayMeta = metaURL;   // in-memory "gateway"
-      const gatewayImage = imgURL;   // in-memory "gateway"
+      const gatewayMeta = metaURL;
+      const gatewayImage = imgURL;
 
-      // 2) Open preview tab with the exact same layout
       const w = window.open("", "_blank");
       if (!w) throw new Error("Popup blocked");
       w.document.open();
@@ -259,6 +294,8 @@ export default function PreviewButton() {
           })
         );
       } catch {}
+    } catch (e: any) {
+      alert(e?.message || "Preview failed");
     } finally {
       setBusy(false);
       setOpen(false);
@@ -275,9 +312,9 @@ export default function PreviewButton() {
         aria-expanded={open}
       >
         {busy ? "Working…" : "Preview"}
-        {!busy &&
+        {!busy && (
           <FontAwesomeIcon icon={open ? faCaretUp : faCaretDown} size="sm" className="mb-1" />
-        }
+        )}
       </button>
 
       {open && (
@@ -318,10 +355,7 @@ export default function PreviewButton() {
               Upload image + metadata to IPFS (dev pin) and render preview
             </div>
           </button>
-          <div
-            style={{ height: 1, background: "rgba(255,255,255,0.06)" }}
-            aria-hidden="true"
-          />
+          <div style={{ height: 1, background: "rgba(255,255,255,0.06)" }} aria-hidden="true" />
           <button
             role="menuitem"
             className="menuItem"
@@ -344,13 +378,8 @@ export default function PreviewButton() {
         </div>
       )}
       <style jsx>{`
-        .menuItem {
-          background: #fff;
-          transition: background 0.2s ease;
-        }
-        .menuItem:hover {
-          background: #f3f4f6;
-        }
+        .menuItem { background: #fff; transition: background 0.2s ease; }
+        .menuItem:hover { background: #f3f4f6; }
       `}</style>
     </div>
   );

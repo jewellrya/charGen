@@ -1,10 +1,11 @@
 'use client';
 import React from "react";
 import {
-  onRandom, onPermute, onFeatureChange,
+  onRandom, onFeatureChange,
   onSelectGender, onSelectRacePrimary, onSelectRace,
   onSubscribeFeatures, onRandomizeFeatures,
-  onSelectClass, onInitClassUI
+  onSelectClass, onInitClassUI,
+  getImmutableTraitsSnapshot
 } from "./app-logic/charGen";
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,6 +13,7 @@ import { faChevronRight, faChevronLeft, faDice } from '@fortawesome/free-solid-s
 import MintButton from "../components/MintButton";
 import PreviewButton from "../components/PreviewButton";
 
+import type { ImmutableTraits } from "@/lib/metadata";
 
 // Types
 type Dir = 'increase' | 'decrease';
@@ -113,47 +115,65 @@ export default function Home() {
     return () => { if (typeof unsub === 'function') unsub(); };
   }, []);
 
+  const [immutableTraits, setImmutableTraits] = useState<ImmutableTraits | null>(null);
+
+  const refreshImmutableTraits = useCallback(() => {
+    try {
+      const snap = getImmutableTraitsSnapshot?.();
+      if (snap) setImmutableTraits(snap);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("[page] failed to snapshot traits", e);
+    }
+  }, []);
+
   // Local wrappers to call imported actions and then validate canvas output
   const handleRandom = useCallback(async () => {
     setLoading(true);
     await onRandom();
     checkAndReportRender('Random');
-  }, [checkAndReportRender]);
-
-  const handlePermute = useCallback(() => {
-    onPermute();
-    checkAndReportRender('Permute');
-  }, [checkAndReportRender]);
+    refreshImmutableTraits();
+  }, [checkAndReportRender, refreshImmutableTraits]);
 
   const handleFeatureChange = useCallback((category: string, dir: Dir) => {
     onFeatureChange(category, dir);
     checkAndReportRender(`Change ${category} ${dir}`);
-  }, [checkAndReportRender]);
+    refreshImmutableTraits();
+  }, [checkAndReportRender, refreshImmutableTraits]);
 
   const handleSelectGender = useCallback((g: 'male' | 'female') => {
     onSelectGender(g);
     checkAndReportRender(`Select gender ${g}`);
-  }, [checkAndReportRender]);
+    refreshImmutableTraits();
+  }, [checkAndReportRender, refreshImmutableTraits]);
 
   const handleSelectRacePrimary = useCallback((dir: Dir) => {
     onSelectRacePrimary(dir);
     checkAndReportRender(`Race primary ${dir}`);
-  }, [checkAndReportRender]);
+    refreshImmutableTraits();
+  }, [checkAndReportRender, refreshImmutableTraits]);
 
   const handleSelectRace = useCallback((dir: Dir) => {
     onSelectRace(dir);
     checkAndReportRender(`Race ${dir}`);
-  }, [checkAndReportRender]);
+    refreshImmutableTraits();
+  }, [checkAndReportRender, refreshImmutableTraits]);
 
   const handleSelectClass = useCallback((dir: Dir) => {
     onSelectClass(dir);
-  }, []);
+    refreshImmutableTraits();
+  }, [refreshImmutableTraits]);
 
   const handleRandomizeFeatures = useCallback(async () => {
     setLoading(true);
     await onRandomizeFeatures();
     checkAndReportRender('Randomize features');
-  }, [checkAndReportRender]);
+    refreshImmutableTraits();
+  }, [checkAndReportRender, refreshImmutableTraits]);
+
+  useEffect(() => {
+    refreshImmutableTraits();
+  }, [refreshImmutableTraits]);
 
   return (
     <>
@@ -203,8 +223,8 @@ export default function Home() {
               <span className="hidden sm:inline">Hexes</span>
             </button>
             
-            <PreviewButton />
-            <MintButton />
+            <PreviewButton traits={immutableTraits} />
+            <MintButton traits={immutableTraits} />
           </div>
         </header>
 
@@ -254,6 +274,7 @@ export default function Home() {
                   id="charName"
                   type="text"
                   className="input flex-1"
+                  onBlur={refreshImmutableTraits}
                 />
                 <button
                   type="button"
@@ -263,6 +284,7 @@ export default function Home() {
                     const randomName = names[Math.floor(Math.random() * names.length)];
                     const nameInput = document.getElementById('charName');
                     if (nameInput && 'value' in nameInput) (nameInput as HTMLInputElement).value = randomName;
+                    refreshImmutableTraits();
                   }}
                 >
                   Random

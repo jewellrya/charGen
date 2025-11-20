@@ -6,6 +6,8 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 import React, { useEffect, useRef, useState } from "react";
+import type { ImmutableTraits } from "@/lib/metadata";
+import { buildAttributesFromTraits } from "@/lib/metadata";
 
 function grabPngDataURL(): string {
   const img = document.querySelector<HTMLImageElement>("#charGen img");
@@ -49,11 +51,13 @@ function htmlTemplate({
   tokenURI,
   gatewayMeta,
   gatewayImage,
+  attributes,
 }: {
   metadata: any;
   tokenURI: string;
   gatewayMeta: string;
   gatewayImage: string;
+  attributes: Attr[];
 }) {
   return `<!doctype html>
 <html lang="en">
@@ -109,7 +113,7 @@ function htmlTemplate({
     </div>
   </div>
   <script>
-    const inputAttrs = ${JSON.stringify(([] as Attr[]) || [])};
+    const inputAttrs = ${JSON.stringify(attributes)};
     const grid = document.getElementById("attrs");
     const show = Array.isArray(inputAttrs) ? inputAttrs : [];
     if (show.length) {
@@ -127,7 +131,11 @@ function htmlTemplate({
 </html>`;
 }
 
-export default function PreviewButton() {
+type PreviewButtonProps = {
+  traits?: ImmutableTraits | null;
+};
+
+export default function PreviewButton({ traits }: PreviewButtonProps) {
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -144,6 +152,7 @@ export default function PreviewButton() {
   async function previewWithPinnedIpfs() {
     setBusy(true);
     try {
+      
       // 1) Capture current sprite
       const dataURL = grabPngDataURL();
 
@@ -176,7 +185,7 @@ export default function PreviewButton() {
       if (!imageIpfs) throw new Error("Pin image failed (no CID)");
 
       // 3) Build metadata
-      const attributes: Attr[] = []; // wire real traits here
+      const attributes: Attr[] = buildAttributesFromTraits(traits);
       const metadata = {
         name: `Nral Preview #${Date.now()}`,
         description: "Preview of what OpenSea will render for this sprite",
@@ -213,7 +222,7 @@ export default function PreviewButton() {
       if (!w) throw new Error("Popup blocked");
       w.document.open();
       w.document.write(
-        htmlTemplate({ metadata, tokenURI, gatewayMeta, gatewayImage })
+        htmlTemplate({ metadata, tokenURI, gatewayMeta, gatewayImage, attributes })
       );
       w.document.close();
 
@@ -258,7 +267,7 @@ export default function PreviewButton() {
       const imageIpfs = `ipfs://${fakeImgCid}`;
       const tokenURI = `ipfs://${fakeMetaCid}`;
 
-      const attributes: Attr[] = [];
+      const attributes: Attr[] = buildAttributesFromTraits(traits);
       const metadata = {
         name: `Nral Preview #${Date.now()}`,
         description: "Preview (emulated, not pinned)",
@@ -278,7 +287,7 @@ export default function PreviewButton() {
       if (!w) throw new Error("Popup blocked");
       w.document.open();
       w.document.write(
-        htmlTemplate({ metadata, tokenURI, gatewayMeta, gatewayImage })
+        htmlTemplate({ metadata, tokenURI, gatewayMeta, gatewayImage, attributes })
       );
       w.document.close();
 

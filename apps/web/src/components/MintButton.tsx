@@ -3,6 +3,8 @@
 // uses viem helpers in src/lib/nral721.ts to mint
 import React, { useState } from "react";
 import { mintNft, requestAccount, readNextId, readOwner, readTokenURI, resolveIpfs } from "@/lib/nral721";
+import type { ImmutableTraits } from "@/lib/metadata";
+import { buildMetadataForImage } from "@/lib/metadata";
 
 const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NRAL721_ADDRESS as string;
@@ -64,7 +66,11 @@ function humanError(e: any): string {
   return msg;
 }
 
-export default function MintButton() {
+type MintButtonProps = {
+  traits?: ImmutableTraits | null;
+};
+
+export default function MintButton({ traits }: MintButtonProps) {
   const [busy, setBusy] = useState(false);
 
   const onClick = async () => {
@@ -90,13 +96,8 @@ export default function MintButton() {
       const imageIpfs = (imgJson?.ipfsUri as string) || (imgJson?.cid ? `ipfs://${imgJson.cid}` : null);
       if (!imageIpfs) throw new Error("Pin image failed (no CID)");
 
-      // 4) Build metadata + pin
-      const metadata = {
-        name: `Nral Test #${Date.now()}`,
-        description: "Trials of Nral test mint",
-        image: imageIpfs,
-        attributes: [],
-      };
+      // 4) Build metadata + pin (include immutable traits)
+      const metadata = buildMetadataForImage(imageIpfs, traits);
       const metaRes = await fetch("/api/pin-json", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

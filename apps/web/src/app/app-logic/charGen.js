@@ -2391,3 +2391,103 @@ export const onRandomizeFeatures = async () => {
   }
   randomizeCurrentFeatures();
 };
+
+// ... keep existing code above
+
+function findHairKeyForNode(node) {
+  const pal = node?.presets?.colors?.hair;
+  if (!pal) return null;
+  if (!Array.isArray(pal)) return null;
+
+  for (const [key, value] of Object.entries(hairColors)) {
+    if (!Array.isArray(value)) continue;
+    if (value.length !== pal.length) continue;
+    let same = true;
+    for (let i = 0; i < value.length; i++) {
+      if (value[i] !== pal[i]) { same = false; break; }
+    }
+    if (same) return key;
+  }
+  return null;
+}
+
+function findTattooKeyForNode(node) {
+  const col = node?.presets?.colors?.tattoo;
+  if (!col) return null;
+  for (const [key, value] of Object.entries(tattooColors)) {
+    if (value === col) return key;
+  }
+  return null;
+}
+
+/**
+ * Snapshot the current immutable-ish builder state so React/metadata can use it.
+ * This is intentionally "display facing": uses the same labels as the UI where possible.
+ */
+export function getImmutableTraitsSnapshot() {
+  if (typeof document === 'undefined') return null;
+
+  const node = getCurrentNode ? getCurrentNode() : null;
+  if (!node) return null;
+
+  // Name from input
+  let name = null;
+  const nameEl = document.getElementById('charName');
+  if (nameEl && 'value' in nameEl) {
+    const v = nameEl.value.trim();
+    if (v) name = v;
+  }
+
+  // Race label: prefer subrace label when subrace DOM is visible
+  let raceLabel = null;
+  const primaryEl = document.getElementById('selectedRacePrimary');
+  const domEl = document.getElementById('selectedRaceDom');
+  const subEl = document.getElementById('selectedRace');
+  if (domEl && !domEl.classList.contains('hidden') && subEl && subEl.textContent) {
+    raceLabel = subEl.textContent.trim(); // e.g. "High Elf"
+  } else if (primaryEl && primaryEl.textContent) {
+    raceLabel = primaryEl.textContent.trim(); // e.g. "Human"
+  }
+
+  // Class label
+  let classLabel = null;
+  const classEl = document.getElementById('selectedClass');
+  if (classEl && classEl.textContent) {
+    const v = classEl.textContent.trim();
+    if (v) classLabel = v;
+  }
+
+  // Gender from node meta (fallback to DOM later if needed)
+  const meta = node._meta || {};
+  let genderLabel = null;
+  if (meta.gender) {
+    const g = String(meta.gender);
+    genderLabel = g.charAt(0).toUpperCase() + g.slice(1);
+  }
+
+  const feats = (node.presets && node.presets.features) || {};
+  const colors = (node.presets && node.presets.colors) || {};
+
+  const skin = (typeof feats.skin === 'number') ? feats.skin : null;
+  const hair = (typeof feats.hair === 'number') ? feats.hair : null;
+  const beard = (typeof feats.beard === 'number') ? feats.beard : null;
+  const tattoo = (typeof feats.tattoo === 'number') ? feats.tattoo : null;
+  const adornment = (typeof feats.adornment === 'number') ? feats.adornment : null;
+
+  const hairColorKey = findHairKeyForNode(node);
+  const tattooColorKey = findTattooKeyForNode(node);
+
+  return {
+    name,
+    gender: genderLabel,
+    race: raceLabel,
+    className: classLabel,
+    skin,
+    hair,
+    hairColor: hairColorKey,
+    beard,
+    tattoo,
+    tattooColor: tattooColorKey,
+    adornment,
+  };
+}

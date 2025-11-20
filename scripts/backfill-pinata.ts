@@ -1,1 +1,0 @@
-// batch pin images/metadata to Pinata

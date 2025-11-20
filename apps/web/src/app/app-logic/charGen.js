@@ -75,13 +75,13 @@ function getDefaultHairPalette(racePrimary, subrace) {
   const rp = (racePrimary || '').toLowerCase();
   const sr = (subrace || '').toLowerCase();
 
-  // Human: yellow1
+  // Human
   if (rp === 'human') return hairColors.yellow1;
 
-  // Dwarf: red2
+  // Dwarf
   if (rp === 'dwarf') return hairColors.red2;
 
-  // Halforc: brown1
+  // Halforc
   if (rp === 'halforc') return hairColors.brown1;
 
   // Elf subraces
@@ -907,19 +907,20 @@ let preload = function (imageArray, callback) {
 let hairColorIndex;
 let hairColors = {
   // three targets: [light, mid, dark]; if you authored palettes as 2 tones before, we duplicate the second
-  black1: ['#4b4d59', '#25262c', '#1b1c20'],
-  black2: ['#4a4839', '#25251b', '#1c1b14'],
+  black1: ['#424247', '#232326', '#0e0e0f'],
+  black2: ['#4b453e', '#302a24', '#14110f'],
   brown1: ['#51403a', '#362b27', '#241b18'],
   brown2: ['#5f4148', '#4e373d', '#3a292e'],
   brown3: ['#7a6966', '#574845', '#3f3533'],
   brown4: ['#a0815c', '#7e6648', '#5e4b36'],
-  yellow1: ['#b9a088', '#a58f79', '#8e7764'],
-  yellow2: ['#dbc6ad', '#c7b39d', '#a7927c'],
-  yellow3: ['#f6dec2', '#dfc9b0', '#c2ae98'],
+  blonde1: ['#b9a088', '#a58f79', '#8e7764'],
+  blonde2: ['#dbc6ad', '#c7b39d', '#a7927c'],
+  blonde3: ['#f6dec2', '#dfc9b0', '#c2ae98'],
   red1: ['#9e6246', '#84523a', '#6c432f'],
   red2: ['#ab4438', '#8f392e', '#712d25'],
   gray1: ['#8a8a8a', '#787878', '#5f5f5f'],
-  gray2: ['#c5c5c5', '#a6a6a6', '#8a8a8a'],
+  gray2: ['#acacac', '#909090', '#7a7a7a'],
+  gray3: ['#c4c4c4', '#acacac', '#959595'],
   white1: ['#e4e4e4', '#d2d2d2', '#bdbdbd'],
 };
 

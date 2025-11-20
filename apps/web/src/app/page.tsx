@@ -425,7 +425,7 @@ export default function Home() {
           <div className="col-span-12 md:col-span-6">
             
             <canvas id="canvas" width={360} height={600} className="hidden" />
-            <div id="drawAmount" className="mb-2 text-sm text-base-content/70" />
+            <div id="drawAmount" className="text-sm text-base-content/70" />
             {loading && (
               <div className="flex flex-col items-center py-8 text-base-content/70" aria-live="polite" aria-busy="true">
                 <span className="loading loading-spinner loading-md mb-2"></span>

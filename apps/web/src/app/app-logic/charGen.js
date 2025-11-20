@@ -1731,11 +1731,11 @@ function drawChar(imageArray, name, replace) {
     let charGenComponent =
       '<div id="component_' +
       name +
-      '" class="w-full md:w-1/2"><div class="flex flex-col items-center gap-2"><img id="img_' +
+      '" class="w-full md:w-3/4 lg:w-7/10"><div class="flex flex-col items-center gap-2"><img id="img_' +
       name +
       '" src="' +
       img +
-      '" class="mx-auto"/><a class="link text-center truncate" href="' +
+      '" class="w-full mx-auto"/><a class="link text-center truncate" href="' +
       img +
       '" download="' +
       name +

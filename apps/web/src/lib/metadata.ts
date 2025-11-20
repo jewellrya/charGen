@@ -1,5 +1,3 @@
-// apps/web/src/lib/metadata.ts
-
 export type ImmutableTraits = {
   name?: string | null;
   gender?: string | null;

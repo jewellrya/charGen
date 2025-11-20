@@ -1,8 +1,4 @@
-// Opens a new tab that emulates an OpenSea asset page using either
-// (A) real pinned IPFS (current behavior) or
-// (B) a local emulation without pinning (dev-only). No mint occurs.
 "use client";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 import React, { useEffect, useRef, useState } from "react";

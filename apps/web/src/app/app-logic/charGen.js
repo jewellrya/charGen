@@ -1,8 +1,5 @@
-// import { charMaps } from '../../data/charMaps.js';
-
 let canvas = null;
 let ctx = null;
-
 
 // 1x1 transparent pixel for “blank” slot entries
 const TRANSPARENT_PX =

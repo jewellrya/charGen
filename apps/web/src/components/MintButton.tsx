@@ -1,6 +1,4 @@
-// calls /api/pin + /api/pin-json then contract.mint(to, tokenURI)
 "use client";
-// uses viem helpers in src/lib/nral721.ts to mint
 import React, { useState } from "react";
 import { mintNft, requestAccount, readNextId, readOwner, readTokenURI, resolveIpfs } from "@/lib/nral721";
 import type { ImmutableTraits } from "@/lib/metadata";

@@ -3,9 +3,12 @@ import React, { useState } from "react";
 import { mintNft, requestAccount, readNextId, readOwner, readTokenURI, resolveIpfs } from "@/lib/nral721";
 import type { ImmutableTraits } from "@/lib/metadata";
 import { buildMetadataForImage } from "@/lib/metadata";
+import { getHideEquipment, setHideEquipment, applyClassArmorAndRedraw } from "@/app/app-logic/charGen";
 
 const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NRAL721_ADDRESS as string;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function ensureSepolia(): Promise<void> {
   const eth = (window as any).ethereum;
@@ -80,7 +83,19 @@ export default function MintButton({ traits }: MintButtonProps) {
       await ensureSepolia();
       const to = await requestAccount();
 
-      // 2) Export current sprite
+      // If equipment is hidden, confirm and then turn it off permanently before mint
+      try {
+        const isHidden = typeof getHideEquipment === "function" ? !!getHideEquipment() : false;
+        if (isHidden) {
+          const ok = confirm("Hide equipment is ON. For minting, armor must be shown. We'll turn off 'Hide equipment' and keep it off. Continue?");
+          if (!ok) { setBusy(false); return; }
+          setHideEquipment(false);
+          try { applyClassArmorAndRedraw(); } catch {}
+          await sleep(140);
+        }
+      } catch {}
+
+      // 2) Export current sprite (with armor visible)
       const dataURL = grabPngDataURL();
 
       // 3) Pin PNG to IPFS

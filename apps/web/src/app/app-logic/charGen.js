@@ -1,6 +1,19 @@
 let canvas = null;
 let ctx = null;
 
+// Global toggle for showing/hiding equipment across all characters.
+// Default false; controlled from the React UI.
+let __hideEquipment = false;
+export function setHideEquipment(v) {
+  __hideEquipment = !!v;
+  try {
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('nral:hide-eq-changed', { detail: { value: __hideEquipment } }));
+    }
+  } catch {}
+}
+export function getHideEquipment() { return !!__hideEquipment; }
+
 // 1x1 transparent pixel for “blank” slot entries
 const TRANSPARENT_PX =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAp8B6j3pBV8AAAAASUVORK5CYII=';
@@ -139,8 +152,8 @@ function applyArmorForClassToNode(node) {
     if (typeof ti !== 'number') continue; // slot not present for this race/gender
     const arr = node.template?.[ti] || [];
 
-    // If no armor for this class, or there are no entries in this slot, hard clear
-    if (!armor || arr.length <= 1) {
+    // If no armor for this class, or there are no entries in this slot, or if hideEquipment is on, hard clear
+    if (!armor || arr.length <= 1 || __hideEquipment) {
       node.presets.features[slot] = 0; // none
       continue;
     }
@@ -192,7 +205,7 @@ function applyWeaponForClassToNode(node) {
   const ti  = node.presets.order[targetSlot];
   const arr = node.template?.[ti] || [];
 
-  if (!wantId || arr.length <= 1) {
+  if (!wantId || arr.length <= 1 || __hideEquipment) {
     node.presets.features[targetSlot] = 0; // no mapping or no options → none
     return;
   }
@@ -372,9 +385,10 @@ function applyArmorFilterMaskOnCanvas(canvas, metas, imgs) {
   ctx0.putImageData(id, 0, 0);
 }
 
-function applyClassArmorAndRedraw() {
+export function applyClassArmorAndRedraw() {
   const node = getCurrentNode();
   if (!node) return;
+
   applyArmorForClassToNode(node);
   applyWeaponForClassToNode(node);
   genCharPresets(node.template);

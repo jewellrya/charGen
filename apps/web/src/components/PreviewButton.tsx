@@ -4,6 +4,7 @@ import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 import React, { useEffect, useRef, useState } from "react";
 import type { ImmutableTraits } from "@/lib/metadata";
 import { buildAttributesFromTraits } from "@/lib/metadata";
+import { getHideEquipment, setHideEquipment, applyClassArmorAndRedraw } from "@/app/app-logic/charGen";
 
 function grabPngDataURL(): string {
   const img = document.querySelector<HTMLImageElement>("#charGen img");
@@ -23,6 +24,8 @@ function grabPngDataURL(): string {
 function resolveIpfs(uri: string, gateway = "https://ipfs.io/ipfs/") {
   return uri?.startsWith("ipfs://") ? gateway + uri.slice(7) : uri;
 }
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 type Attr = { trait_type: string; value: string | number | boolean };
 
@@ -148,8 +151,18 @@ export default function PreviewButton({ traits }: PreviewButtonProps) {
   async function previewWithPinnedIpfs() {
     setBusy(true);
     try {
-      
-      // 1) Capture current sprite
+      // If equipment is currently hidden, confirm and then turn it off permanently
+      try {
+        const isHidden = typeof getHideEquipment === "function" ? !!getHideEquipment() : false;
+        if (isHidden) {
+          const ok = confirm("Hide equipment is ON. To preview correctly, armor will be shown. We'll turn off 'Hide equipment' and keep it off. Continue?");
+          if (!ok) { setBusy(false); setOpen(false); return; }
+          setHideEquipment(false);
+          try { applyClassArmorAndRedraw(); } catch {}
+          await sleep(140);
+        }
+      } catch {}
+      // 1) Capture current sprite (with armor visible)
       const dataURL = grabPngDataURL();
 
       // Short timeout so it doesn’t hang forever
@@ -245,6 +258,16 @@ export default function PreviewButton({ traits }: PreviewButtonProps) {
   async function previewEmulatedNoPin() {
     setBusy(true);
     try {
+      try {
+        const isHidden = typeof getHideEquipment === "function" ? !!getHideEquipment() : false;
+        if (isHidden) {
+          const ok = confirm("Hide equipment is ON. To preview correctly, armor will be shown. We'll turn off 'Hide equipment' and keep it off. Continue?");
+          if (!ok) { setBusy(false); setOpen(false); return; }
+          setHideEquipment(false);
+          try { applyClassArmorAndRedraw(); } catch {}
+          await sleep(140);
+        }
+      } catch {}
       const dataURL = grabPngDataURL();
 
       function dataUrlToBlob(url: string) {

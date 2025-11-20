@@ -5,7 +5,8 @@ import {
   onSelectGender, onSelectRacePrimary, onSelectRace,
   onSubscribeFeatures, onRandomizeFeatures,
   onSelectClass, onInitClassUI,
-  getImmutableTraitsSnapshot
+  getImmutableTraitsSnapshot,
+  setHideEquipment, getHideEquipment, applyClassArmorAndRedraw
 } from "./app-logic/charGen";
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -65,6 +66,9 @@ export default function Home() {
   const [featureCounts, setFeatureCounts] = useState<Record<string, number>>({});
   const [featureLabels, setFeatureLabels] = useState<Record<string, string>>({});
   const [uiOrder, setUiOrder] = useState<string[]>([]);
+
+  // Global equipment visibility toggle (does not change draw yet; logs only)
+  const [hideEquipment, setHideEquipmentState] = useState<boolean>(false);
 
   const isRenderBlank = useCallback(() => {
     if (typeof document === 'undefined') return false; // can't check on SSR
@@ -142,24 +146,61 @@ export default function Home() {
   }, [checkAndReportRender, refreshImmutableTraits]);
 
   const handleSelectGender = useCallback((g: 'male' | 'female') => {
+    // If Hide equipment is ON, turn it off when switching gender
+    try {
+      if (typeof getHideEquipment === 'function' && getHideEquipment()) {
+        setHideEquipment(false);
+        setHideEquipmentState(false);
+        try { applyClassArmorAndRedraw(); } catch {}
+      }
+    } catch {}
+
     onSelectGender(g);
     checkAndReportRender(`Select gender ${g}`);
     refreshImmutableTraits();
   }, [checkAndReportRender, refreshImmutableTraits]);
 
   const handleSelectRacePrimary = useCallback((dir: Dir) => {
+    // If Hide equipment is ON, turn it off when switching primary race
+    try {
+      if (typeof getHideEquipment === 'function' && getHideEquipment()) {
+        setHideEquipment(false);
+        setHideEquipmentState(false);
+        try { applyClassArmorAndRedraw(); } catch {}
+      }
+    } catch {}
+
     onSelectRacePrimary(dir);
     checkAndReportRender(`Race primary ${dir}`);
     refreshImmutableTraits();
   }, [checkAndReportRender, refreshImmutableTraits]);
 
   const handleSelectRace = useCallback((dir: Dir) => {
+    // If Hide equipment is ON, turn it off when switching subrace/domain
+    try {
+      if (typeof getHideEquipment === 'function' && getHideEquipment()) {
+        setHideEquipment(false);
+        setHideEquipmentState(false);
+        try { applyClassArmorAndRedraw(); } catch {}
+      }
+    } catch {}
+
     onSelectRace(dir);
     checkAndReportRender(`Race ${dir}`);
     refreshImmutableTraits();
   }, [checkAndReportRender, refreshImmutableTraits]);
 
   const handleSelectClass = useCallback((dir: Dir) => {
+    // If Hide equipment is ON, turn it off when switching class
+    try {
+      if (typeof getHideEquipment === 'function' && getHideEquipment()) {
+        setHideEquipment(false);
+        setHideEquipmentState(false);
+        // Class selection will re-apply armor internally, but force a redraw just in case
+        try { applyClassArmorAndRedraw(); } catch {}
+      }
+    } catch {}
+
     onSelectClass(dir);
     refreshImmutableTraits();
   }, [refreshImmutableTraits]);
@@ -174,6 +215,22 @@ export default function Home() {
   useEffect(() => {
     refreshImmutableTraits();
   }, [refreshImmutableTraits]);
+
+  // Sync hideEquipment checkbox when changed from outside
+  useEffect(() => {
+    function onHideChanged(e: any) {
+      const v = e?.detail?.value;
+      if (typeof v === 'boolean') {
+        setHideEquipmentState(v);
+      } else {
+        try { setHideEquipmentState(!!getHideEquipment()); } catch {}
+      }
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('nral:hide-eq-changed', onHideChanged);
+      return () => document.removeEventListener('nral:hide-eq-changed', onHideChanged);
+    }
+  }, []);
 
   return (
     <>
@@ -383,7 +440,7 @@ export default function Home() {
 
           {/* Right column */}
           <div className="col-span-12 md:col-span-3">
-            <div className="mb-4">
+            <div className="mb-4 flex items-center gap-3">
               <button
                 type="button"
                 className="btn btn-sm"
@@ -393,6 +450,23 @@ export default function Home() {
               >
                 <FontAwesomeIcon icon={faDice} />
               </button>
+
+              {/* Hide equipment toggle (logs only for now) */}
+              <label className="label cursor-pointer flex items-center gap-2 m-0 ms-auto">
+                <input
+                  type="checkbox"
+                  className="toggle toggle-sm"
+                  checked={hideEquipment}
+                  onChange={(e) => {
+                    const next = e.target.checked;
+                    setHideEquipmentState(next);
+                    try { setHideEquipment(next); } catch {}
+                    // Trigger a redraw path so `applyClassArmorAndRedraw()` logs the value.
+                    try { applyClassArmorAndRedraw(); } catch {}
+                  }}
+                />
+                <span className="label-text text-sm">Hide equipment</span>
+              </label>
             </div>
 
             {(uiOrder.length ? uiOrder : features).map((key) => {

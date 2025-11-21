@@ -18,18 +18,23 @@ export function getHideEquipment() { return !!__hideEquipment; }
 const TRANSPARENT_PX =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAp8B6j3pBV8AAAAASUVORK5CYII=';
 
-// Slot draw order provided by user (from TOP-most to BOTTOM). We'll convert this
-// to a bottom-first rank so we can draw base first, then tattoo → … → shoulder last.
+// Slot draw order provided by user (from TOP-most to BOTTOM).
+// Supports composite overrides like "adornment+chest" or "adornment+neck".
+// We'll convert this to a bottom-first rank so we can draw base first,
+// then tattoo → … → shoulder last.
 const SLOT_DRAW_ORDER_TOP_FIRST = [
   'shoulder',
-  'beard',
   'helmet',
-  'adornment',
+  'adornment+head',
+  'beard',
   'hair',
+  'adornment+neck',
   'hands',
   'chest',
+  'adornment+chest',
   'feet',
   'legs',
+  'adornment',
   'underwear',
   'tattoo',
   'base' // note: base is handled separately; included here for completeness
@@ -605,13 +610,21 @@ async function initFromSprites() {
     })(manifest);
 
     // Attach slot arrays like "hair", "tool"… to a specific gender node.
-    function ensureSlot(node, slot) {
+    function ensureSlot(node, slotKey) {
       if (!node.__slotBuffers) node.__slotBuffers = {};
-      if (!node.__slotBuffers[slot]) node.__slotBuffers[slot] = [];
+      if (!node.__slotBuffers[slotKey]) node.__slotBuffers[slotKey] = [];
     }
-    function pushSlot(node, slot, obj) {
-      ensureSlot(node, slot);
-      node.__slotBuffers[slot].push(obj);
+    // If a composite "slot+detail" is present in SLOT_DRAW_ORDER_TOP_FIRST, group by that composite
+    // so we can control layer z‑order for specific variants (e.g., "adornment+chest") without
+    // losing the plain base slot (e.g., "adornment").
+    function pushSlot(node, slot, detailFirst, obj) {
+      const composite = (detailFirst ? `${slot}+${detailFirst}` : null);
+      const useComposite = !!(composite && SLOT_DRAW_ORDER_TOP_FIRST.includes(composite));
+      const slotKey = useComposite ? composite : slot;
+      ensureSlot(node, slotKey);
+      // Preserve base slot and detail on each entry for downstream consumers
+      const enriched = { ...obj, _slotBase: slot, _detail: detailFirst || null };
+      node.__slotBuffers[slotKey].push(enriched);
     }
 
     // Parse filenames: <race(+subrace)+gender>_<slot>[+extra...]+id<idx>.png OR <race(+subrace)+gender>_<slot>[+extra...].png (no id, e.g. underwear)
@@ -689,7 +702,7 @@ async function initFromSprites() {
       }
       if (!target) continue;
 
-      pushSlot(target, slot, { name: `${slot}${id}`, src: p, x: 0, y: 0, _id: id, _detail: detailFirst });
+      pushSlot(target, slot, detailFirst, { name: `${slot}${id}`, src: p, x: 0, y: 0, _id: id });
     }
 
     // Finalize slot buffers into template arrays + presets (with a blank first option)
@@ -704,10 +717,10 @@ async function initFromSprites() {
       for (const slot of slotNames) {
         const arr = node.__slotBuffers[slot]
           .sort((a, b) => (a._id || 0) - (b._id || 0))
-          .map(({ _id, ...rest }) => rest);
+          .map(({ _id, ...rest }) => ({ ...rest, id: (_id || 0) }));
 
         // prepend blank
-        arr.unshift({ name: `_${slot}_blank`, src: TRANSPARENT_PX, x: 0, y: 0 });
+        arr.unshift({ name: `_${slot}_blank`, src: TRANSPARENT_PX, x: 0, y: 0, id: 0 });
 
         node.template.push(arr);
         const idx = node.template.length - 1;

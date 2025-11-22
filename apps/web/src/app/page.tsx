@@ -6,7 +6,8 @@ import {
   onSubscribeFeatures, onRandomizeFeatures,
   onSelectClass, onInitClassUI,
   getImmutableTraitsSnapshot,
-  setHideEquipment, getHideEquipment, applyClassArmorAndRedraw
+  setHideEquipment, getHideEquipment, applyClassArmorAndRedraw,
+  isExcludedFeatureBase
 } from "./app-logic/charGen";
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -212,6 +213,25 @@ export default function Home() {
     refreshImmutableTraits();
   }, [checkAndReportRender, refreshImmutableTraits]);
 
+  // Title-case helper for names like "derp" => "Derp", "john doe" => "John Doe"
+  const toTitleCase = (s: string) =>
+    (s || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .split(' ')
+      .map(w => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ''))
+      .join(' ');
+
+  const handleNameBlur = useCallback(() => {
+    const el = (typeof document !== 'undefined')
+      ? (document.getElementById('charName') as HTMLInputElement | null)
+      : null;
+    if (!el) return;
+    const formatted = toTitleCase(el.value || '');
+    if (formatted !== el.value) el.value = formatted;
+    refreshImmutableTraits();
+  }, [refreshImmutableTraits]);
+
   useEffect(() => {
     refreshImmutableTraits();
   }, [refreshImmutableTraits]);
@@ -331,7 +351,7 @@ export default function Home() {
                   id="charName"
                   type="text"
                   className="input flex-1"
-                  onBlur={refreshImmutableTraits}
+                  onBlur={handleNameBlur}
                 />
                 <button
                   type="button"
@@ -485,6 +505,10 @@ export default function Home() {
                     <div id="tattooColorSwatches" />
                   </div>
                 );
+              }
+              // Hide any excluded feature families (weapon, etc.)
+              if (isExcludedFeatureBase(key)) {
+                return null;
               }
               // Default: feature selector row
               return (

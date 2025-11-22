@@ -14,6 +14,15 @@ export function setHideEquipment(v) {
 }
 export function getHideEquipment() { return !!__hideEquipment; }
 
+// --- Feature groups to exclude from the right-side UI (by base name) ---
+// Use lower-case base keys here (e.g., "weapon"). Add more bases as needed.
+export const EXCLUDED_FEATURE_BASES = new Set(['weapon']);
+
+export function isExcludedFeatureBase(key) {
+  const k = String(key || '').toLowerCase();
+  return EXCLUDED_FEATURE_BASES.has(k);
+}
+
 // 1x1 transparent pixel for “blank” slot entries
 const TRANSPARENT_PX =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAp8B6j3pBV8AAAAASUVORK5CYII=';
@@ -23,7 +32,9 @@ const TRANSPARENT_PX =
 // We'll convert this to a bottom-first rank so we can draw base first,
 // then tattoo → … → shoulder last.
 const SLOT_DRAW_ORDER_TOP_FIRST = [
+  // TOP-most → BOTTOM
   'shoulder',
+  'weapon',          // front-side weapons (draw above character)
   'helmet',
   'adornment+head',
   'beard',
@@ -35,9 +46,10 @@ const SLOT_DRAW_ORDER_TOP_FIRST = [
   'feet',
   'legs',
   'adornment',
+  'weapon+back',     // back-side weapons (draw behind body/hair)
   'underwear',
   'tattoo',
-  'base' // note: base is handled separately; included here for completeness
+  'base'             // base handled separately; kept for completeness
 ];
 
 // Right‑panel feature & color UI order (top → bottom). Items not listed here
@@ -90,11 +102,12 @@ function groupSlotKeysFor(node, base) {
   });
 }
 
-// Build a flat, ID-sorted list of entries across a base group; throws on duplicate IDs within the group.
+// Build a flat, ID-sorted list of entries across a base group; skips duplicate IDs (keeps first occurrence).
 function buildGroupEntries(node, base) {
   const keys = groupSlotKeysFor(node, base);
   const out = [];
   const seen = new Set();
+
   for (const k of keys) {
     const ti = node?.presets?.order?.[k];
     if (typeof ti !== 'number') continue;
@@ -103,14 +116,17 @@ function buildGroupEntries(node, base) {
       const it = arr[idx];
       const id = Number(it?.id || 0);
       if (!Number.isFinite(id) || id <= 0) continue;
+
       const dupKey = `${base}:${id}`;
       if (seen.has(dupKey)) {
-        throw new Error(`Duplicate id ${id} in bucket "${base}" (slot "${k}")`);
+        // Allow duplicate ids across all features. Keep only the first occurrence for the UI entry list.
+        continue;
       }
       seen.add(dupKey);
       out.push({ slotKey: k, arrIndex: idx, id });
     }
   }
+
   out.sort((a, b) => a.id - b.id);
   return out;
 }
@@ -131,7 +147,7 @@ function buildFeatureUiSnapshot() {
   }
 
   // Order bases by FEATURE_PANEL_ORDER_TOP_FIRST, then by rank/name
-  const bases = Array.from(groups.keys()).sort((a, b) => {
+  let bases = Array.from(groups.keys()).sort((a, b) => {
     const ai = FEATURE_PANEL_ORDER_TOP_FIRST.indexOf(a);
     const bi = FEATURE_PANEL_ORDER_TOP_FIRST.indexOf(b);
     if (ai !== -1 || bi !== -1) {
@@ -141,6 +157,8 @@ function buildFeatureUiSnapshot() {
     if (ra !== rb) return ra - rb;
     return a.localeCompare(b);
   });
+  // Exclude any base listed in EXCLUDED_FEATURE_BASES (e.g., "weapon")
+  bases = bases.filter(b => !isExcludedFeatureBase(b));
 
   const features = [];
   const values = {};
@@ -250,7 +268,7 @@ function getDefaultHairPalette(racePrimary, subrace) {
 function canonRace(s) {
   const t = (s || '').toLowerCase();
   const tnorm = t.replace(/[-_]/g, '');
-  if (tnorm === 'halforc') return 'halforc';
+  if (tnorm === 'halforc') return 'Half-Orc';
   return t;
 }
 
@@ -308,7 +326,7 @@ function applyArmorForClassToNode(node) {
   }
 }
 
-// --- Class → Weapon mapping (selects weapon/tool slot by id; clears if missing) ---
+// --- Class → Weapon mapping (selects weapon slot by id; clears if missing) ---
 const CLASS_TO_WEAPON = {
   sorceror: 2, cleric: 2, warlock: 2, shaman: 2, druid: 2,
   fighter: 1, paladin: 1,
@@ -324,36 +342,36 @@ function getSelectedWeaponId() {
 
 function applyWeaponForClassToNode(node) {
   if (!node) return;
+
   const wantId = getSelectedWeaponId();
+  const family = groupSlotKeysFor(node, 'weapon'); // e.g. ["weapon", "weapon+back"]
+  if (!family || family.length === 0) return;
 
-  const hasWeapon = (typeof node?.presets?.order?.weapon === 'number');
-  const hasTool   = (typeof node?.presets?.order?.tool === 'number');
-
-  // Prefer 'weapon' if both exist; clear the other to avoid double draw
-  let targetSlot = null;
-  if (hasWeapon) targetSlot = 'weapon';
-  else if (hasTool) targetSlot = 'tool';
-  if (!targetSlot) return;
-
-  if (hasWeapon && hasTool) {
-    const other = (targetSlot === 'weapon') ? 'tool' : 'weapon';
-    node.presets.features[other] = 0;
-  }
-
-  const ti  = node.presets.order[targetSlot];
-  const arr = node.template?.[ti] || [];
-
-  if (!wantId || arr.length <= 1 || __hideEquipment) {
-    node.presets.features[targetSlot] = 0; // no mapping or no options → none
+  // If hidden or no id requested, clear all weapon slots.
+  if (__hideEquipment || !wantId) {
+    for (const k of family) {
+      node.presets.features[k] = 0;
+    }
     return;
   }
 
-  // arrays were sorted by _id and got a blank at [0], so index == id (when present)
-  const maxId = arr.length - 1;
-  node.presets.features[targetSlot] = (wantId <= maxId) ? wantId : 0;
+  // For each concrete weapon slot variant, find the array index whose .id equals wantId.
+  // If found, apply it; otherwise clear that slot. This allows multi-part weapons
+  // (e.g., bow in front + quiver in back) to render together when they share the same id.
+  for (const k of family) {
+    const ti = node?.presets?.order?.[k];
+    if (typeof ti !== 'number') { continue; }
+    const arr = node?.template?.[ti] || [];
+    let foundIdx = 0;
+    for (let idx = 1; idx < arr.length; idx++) {
+      const ent = arr[idx];
+      const fileId = Number(ent?.id || 0);
+      if (fileId === wantId) { foundIdx = idx; break; }
+    }
+    node.presets.features[k] = foundIdx; // 0 clears if not found in this variant
+  }
 }
 
-// --- Class → Armor Filters (H/S/L/B/C). Use numbers or null to skip a channel.
 const CLASS_ARMOR_FILTERS = {
   sorceror: { h: null, s: null, l: null, b: null, c: null },
   cleric:   { h: null, s: -80, l: null, b: +20, c: +30 },
@@ -646,10 +664,11 @@ function randomizeNodeSelections(node) {
   if (filters && filters.length) {
     node.presets.features.skin = Math.floor(Math.random() * filters.length);
   }
-  // 2) Feature slots (exclude 'skin')
+  // 2) Feature slots (exclude 'skin' and 'weapon' family)
   const order = node.presets.order || {};
   for (const slot of Object.keys(order)) {
     if (slot === 'skin') continue;
+    if (isExcludedFeatureBase(slotBaseName(slot))) continue; // excluded families are never randomized
     const ti = order[slot];
     const arr = node.template[ti] || [];
     node.presets.features[slot] = (arr.length <= 1) ? 0 : Math.floor(Math.random() * arr.length);
@@ -802,7 +821,7 @@ async function initFromSprites() {
       }
     })(manifest);
 
-    // Attach slot arrays like "hair", "tool"… to a specific gender node.
+    // Attach slot arrays like "hair" to a specific gender node.
     function ensureSlot(node, slotKey) {
       if (!node.__slotBuffers) node.__slotBuffers = {};
       if (!node.__slotBuffers[slotKey]) node.__slotBuffers[slotKey] = [];

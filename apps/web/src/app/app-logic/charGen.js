@@ -504,46 +504,6 @@ function _applyArmorFilterPixelOKLab(r, g, b, spec) {
   return [out.nr, out.ng, out.nb];
 }
 
-// class-selected armor filter only where mask alpha > 0.
-function applyArmorFilterMaskOnCanvas(canvas, metas, imgs) {
-  const spec = getSelectedArmorFilterSpec();
-  if (!spec || !_armorFilterHasAnyChannel(spec)) return;
-  if (!canvas || !canvas.getContext) return;
-  const ctx0 = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx0) return;
-
-  // 1) Build mask of current armor (chest/legs/feet) by re-drawing those layers
-  const mask = document.createElement('canvas');
-  mask.width = canvas.width; mask.height = canvas.height;
-  const mctx = mask.getContext('2d', { willReadFrequently: true });
-  if (!mctx) return;
-  mctx.imageSmoothingEnabled = false;
-
-  for (let i = 0; i < metas.length; i++) {
-    const meta = (metas[i] || {});
-    const nm = String(meta.name || '').toLowerCase();
-    const isArmor = nm.startsWith('chest') || nm.startsWith('legs') || nm.startsWith('feet');
-    const isBlank = nm.startsWith('._') || nm.startsWith('_'); // our blank placeholder naming
-    if (!isArmor || isBlank) continue;
-    const img = imgs[i];
-    if (!img) continue;
-    try { mctx.drawImage(img, 0, 0, mask.width, mask.height); } catch(_) {}
-  }
-
-  // 2) Read pixels and apply filter where mask alpha > 0
-  const id = ctx0.getImageData(0, 0, canvas.width, canvas.height);
-  const md = mctx.getImageData(0, 0, canvas.width, canvas.height);
-  const d = id.data, m = md.data;
-  for (let p = 0; p < d.length; p += 4) {
-    if (m[p + 3] === 0) continue; // only affect armor pixels
-    if (d[p + 3] !== 255) continue; // and only fully opaque ones
-    const r = d[p], g = d[p + 1], b = d[p + 2];
-    const [rr, gg, bb] = _applyArmorFilterPixelOKLab(r, g, b, spec);
-    d[p] = rr; d[p + 1] = gg; d[p + 2] = bb; // keep original alpha
-  }
-  ctx0.putImageData(id, 0, 0);
-}
-
 export function applyClassArmorAndRedraw() {
   const node = getCurrentNode();
   if (!node) return;
@@ -1440,20 +1400,6 @@ function hexToRgb(hex) {
   throw new Error('Bad Hex: ' + hex);
 }
 
-function rgbToHex(r, g, b) {
-  const toHex = (n) => n.toString(16).padStart(2, '0');
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
-
-function darkenHex(hex, percent) {
-  const [r, g, b] = hexToRgb(hex);
-  const factor = Math.max(0, 1 - percent / 100);
-  const dr = Math.round(r * factor);
-  const dg = Math.round(g * factor);
-  const db = Math.round(b * factor);
-  return rgbToHex(dr, dg, db);
-}
-
 function rgbToHsl(r, g, b) {
   r /= 255; g /= 255; b /= 255;
   const max = Math.max(r, g, b), min = Math.min(r, g, b);
@@ -1494,81 +1440,10 @@ function hslToRgb(h, s, l) {
   return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
-function clamp01(x){ return Math.min(1, Math.max(0, x)); }
-
-// Photoshop-style tonemap: MODERN (sRGB-aware) only. Legacy pipeline removed.
-
-
 function srgbToLinear(v) {
   // v in 0..1
   if (v <= 0.04045) return v / 12.92;
   return Math.pow((v + 0.055) / 1.055, 2.4);
-}
-function linearToSrgb(v) {
-  // v in 0..1
-  if (v <= 0.0031308) return v * 12.92;
-  return 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
-}
-
-// --- sRGB ↔ Lab helpers (D65) ---
-function srgbToXyz01(v) {
-  // v in 0..1 sRGB → linear → XYZ using D65 matrix
-  const r = srgbToLinear(v[0]);
-  const g = srgbToLinear(v[1]);
-  const b = srgbToLinear(v[2]);
-  // sRGB to XYZ (D65)
-  const x = r * 0.4124564 + g * 0.3575761 + b * 0.1804375;
-  const y = r * 0.2126729 + g * 0.7151522 + b * 0.0721750;
-  const z = r * 0.0193339 + g * 0.1191920 + b * 0.9503041;
-  return [x, y, z];
-}
-
-function xyzToLabD65(x, y, z) {
-  // Reference white D65
-  const Xn = 0.95047, Yn = 1.00000, Zn = 1.08883;
-  let xr = x / Xn, yr = y / Yn, zr = z / Zn;
-  const f = (t) => (t > 216/24389 ? Math.cbrt(t) : (841/108) * t + 4/29);
-  const fx = f(xr), fy = f(yr), fz = f(zr);
-  const L = 116 * fy - 16;
-  const a = 500 * (fx - fy);
-  const b = 200 * (fy - fz);
-  return [L, a, b];
-}
-
-function labToXyzD65(L, a, b) {
-  const fy = (L + 16) / 116;
-  const fx = fy + a / 500;
-  const fz = fy - b / 200;
-  const finv = (t) => (t ** 3 > 216/24389 ? t ** 3 : (108/841) * (t - 4/29));
-  const Xn = 0.95047, Yn = 1.00000, Zn = 1.08883;
-  const xr = finv(fx), yr = finv(fy), zr = finv(fz);
-  return [xr * Xn, yr * Yn, zr * Zn];
-}
-
-function xyz01ToSrgb(v) {
-  const x = v[0], y = v[1], z = v[2];
-  // XYZ (D65) to linear sRGB
-  let r =  3.2404542 * x + -1.5371385 * y + -0.4985314 * z;
-  let g = -0.9692660 * x +  1.8760108 * y +  0.0415560 * z;
-  let b =  0.0556434 * x + -0.2040259 * y +  1.0572252 * z;
-  // linear → sRGB
-  r = clamp01(linearToSrgb(r));
-  g = clamp01(linearToSrgb(g));
-  b = clamp01(linearToSrgb(b));
-  return [r, g, b];
-}
-
-function srgbToLab(r8, g8, b8) {
-  const v = [r8/255, g8/255, b8/255];
-  const xyz = srgbToXyz01(v);
-  return xyzToLabD65(xyz[0], xyz[1], xyz[2]);
-}
-
-
-function labToSrgb(L, a, b) {
-  const xyz = labToXyzD65(L, a, b);
-  const sr = xyz01ToSrgb(xyz);
-  return [Math.round(sr[0]*255), Math.round(sr[1]*255), Math.round(sr[2]*255)];
 }
 
 /* ---- sRGB ↔ OKLab helpers (Björn Ottosson) ---- */
@@ -2013,8 +1888,6 @@ function drawChar(imageArray, name, replace) {
   });
 }
 
-let drawAmount = 0;
-
 // Generate all possible permutations of characters.
 function permute() {
   console.log('Permute is disabled for base-only mode.');
@@ -2139,7 +2012,6 @@ function notifyFeatures() {
     const labels = {};
 
     // First: handle special color pseudo-slots and skin
-    const allKeys = Object.keys(node.presets.features);
     const groups = _buildGroupMap(node);
     // The canonical list of features to show in the UI (grouped)
     const featureList = Array.from(groups.keys());
@@ -2839,7 +2711,6 @@ export function getDisplayTraitsSnapshot() {
   }
 
   const feats = (node.presets && node.presets.features) || {};
-  const colors = (node.presets && node.presets.colors) || {};
 
   const skin = (typeof feats.skin === 'number') ? feats.skin : null;
   const hair = (typeof feats.hair === 'number') ? feats.hair : null;

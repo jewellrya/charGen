@@ -71,6 +71,117 @@ function slotRank(slotName) {
   return (typeof r === 'number') ? r : 1000; // unknowns sorted alphabetically beyond known ones
 }
 
+// --- UI grouping helpers: treat "adornment+neck", "adornment+chest" as one control ("adornment") ---
+function slotBaseName(slotKey) {
+  const s = String(slotKey || '');
+  const i = s.indexOf('+');
+  return i === -1 ? s : s.slice(0, i);
+}
+
+function groupSlotKeysFor(node, base) {
+  const order = node?.presets?.order || {};
+  const keys = Object.keys(order).filter((k) => slotBaseName(k) === base);
+  // sort deterministically: bottom-first rank, then lexicographic (stable)
+  return keys.sort((a, b) => {
+    const ra = slotRank(a);
+    const rb = slotRank(b);
+    if (ra !== rb) return ra - rb;
+    return a.localeCompare(b);
+  });
+}
+
+// Build a flat, ID-sorted list of entries across a base group; throws on duplicate IDs within the group.
+function buildGroupEntries(node, base) {
+  const keys = groupSlotKeysFor(node, base);
+  const out = [];
+  const seen = new Set();
+  for (const k of keys) {
+    const ti = node?.presets?.order?.[k];
+    if (typeof ti !== 'number') continue;
+    const arr = node?.template?.[ti] || [];
+    for (let idx = 1; idx < arr.length; idx++) { // skip blank at 0
+      const it = arr[idx];
+      const id = Number(it?.id || 0);
+      if (!Number.isFinite(id) || id <= 0) continue;
+      const dupKey = `${base}:${id}`;
+      if (seen.has(dupKey)) {
+        throw new Error(`Duplicate id ${id} in bucket "${base}" (slot "${k}")`);
+      }
+      seen.add(dupKey);
+      out.push({ slotKey: k, arrIndex: idx, id });
+    }
+  }
+  out.sort((a, b) => a.id - b.id);
+  return out;
+}
+
+// Snapshot used by notifyFeatures/onSubscribeFeatures to expose grouped controls to the UI.
+function buildFeatureUiSnapshot() {
+  const node = getCurrentNode ? getCurrentNode() : null;
+  if (!node) return { features: [], uiOrder: [], values: {}, counts: {}, labels: {} };
+
+  const orderMap = node.presets?.order || {};
+  const allKeys = Object.keys(orderMap);
+
+  const groups = new Map(); // base -> [slotKey, slotKey+detail, ...]
+  for (const k of allKeys) {
+    const base = slotBaseName(k);
+    if (!groups.has(base)) groups.set(base, []);
+    groups.get(base).push(k);
+  }
+
+  // Order bases by FEATURE_PANEL_ORDER_TOP_FIRST, then by rank/name
+  const bases = Array.from(groups.keys()).sort((a, b) => {
+    const ai = FEATURE_PANEL_ORDER_TOP_FIRST.indexOf(a);
+    const bi = FEATURE_PANEL_ORDER_TOP_FIRST.indexOf(b);
+    if (ai !== -1 || bi !== -1) {
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    }
+    const ra = slotRank(a), rb = slotRank(b);
+    if (ra !== rb) return ra - rb;
+    return a.localeCompare(b);
+  });
+
+  const features = [];
+  const values = {};
+  const counts = {};
+  const labels = {};
+
+  for (const base of bases) {
+    const family = groups.get(base);
+    features.push(base); // single control per base family
+
+    let entries = [];
+    try {
+      entries = buildGroupEntries(node, base);
+      counts[base] = entries.length;
+    } catch (e) {
+      counts[base] = 0;
+      values[base] = 0;
+      labels[base] = `ERROR: ${e && e.message ? e.message : 'duplicate id'}`;
+      continue;
+    }
+
+    // Determine currently selected ID (first non-zero among the family's concrete slots)
+    let selectedId = 0;
+    for (const k of family) {
+      const sel = (node?.presets?.features?.[k] ?? 0) | 0;
+      if (sel > 0) {
+        const ti = node.presets.order[k];
+        const arr = node.template[ti] || [];
+        const it = arr[sel];
+        const id = Number(it?.id || 0);
+        if (id > 0) { selectedId = id; break; }
+      }
+    }
+
+    values[base] = selectedId;
+    labels[base] = selectedId === 0 ? 'none' : String(selectedId);
+  }
+
+  return { features, uiOrder: features, values, counts, labels };
+}
+
 function ensureCanvas() {
   if (typeof document === 'undefined') return false;
   if (canvas && ctx) return true;
@@ -1811,76 +1922,139 @@ function getCurrentNode() {
   }
   return raceGenderTemplateObject[racePrimaryName]?.genders?.[genderName] || null;
 }
+// ---- Grouping helpers (combine slots like "adornment+neck", "adornment+chest" under "adornment") ----
+function _canonSlotName(slot) {
+  return String(slot || '').split('+')[0];
+}
+function _isAutoManaged(slot) {
+  // hide underwear + class-controlled armor/weapon from UI
+  return ['underwear', 'chest', 'legs', 'feet', 'weapon'].includes(slot);
+}
+function _buildGroupMap(node) {
+  const map = new Map();
+  if (!node || !node.presets || !node.presets.features) return map;
+  for (const raw of Object.keys(node.presets.features)) {
+    if (_isAutoManaged(raw)) continue;
+    const base = _canonSlotName(raw);
+    if (!map.has(base)) map.set(base, []);
+    if (!map.get(base).includes(raw)) map.get(base).push(raw);
+  }
+  // stable ordering inside each base group
+  for (const [k, arr] of map.entries()) {
+    arr.sort((a, b) => a.localeCompare(b));
+  }
+  return map;
+}
+// Build a flat options list across all sub-slots in a base group.
+// Returns { options: [{slot, index, item}], max: number, ptr: number, label: string }
+function _groupStateFor(node, base) {
+  const ID_RE = /\+id(\d+)/i;
+  const res = { options: [], max: 0, ptr: 0, label: 'none' };
+  if (!node || !node.presets) return res;
+  const order = node.presets.order || {};
+  const features = node.presets.features || {};
+  const t = node.template || [];
+  const groups = _buildGroupMap(node);
+  const slots = groups.get(base);
+  if (!slots || !slots.length) return res;
+
+  // Build option list (skip index 0 placeholders)
+  const options = [];
+  for (const s of slots) {
+    const ti = order[s];
+    const arr = (typeof ti === 'number') ? (t[ti] || []) : [];
+    for (let i = 1; i < arr.length; i++) {
+      options.push({ slot: s, index: i, item: arr[i] });
+    }
+  }
+  res.options = options;
+  res.max = options.length + 1; // + "none"
+
+  // Determine current pointer and label
+  let curSlot = null, curIndex = 0, label = 'none';
+  for (const s of slots) {
+    const v = features[s] ?? 0;
+    if (typeof v === 'number' && v > 0) { curSlot = s; curIndex = v; break; }
+  }
+  if (curSlot) {
+    let ordinal = 0;
+    for (const opt of options) {
+      if (opt.slot === curSlot && opt.index === curIndex) break;
+      ordinal++;
+    }
+    res.ptr = ordinal + 1; // shift by "none"
+    const item = options[ordinal]?.item;
+    if (item) {
+      const fromName = (item?.name || '').match(/(\d+)/);
+      if (fromName && fromName[1]) {
+        label = String(parseInt(fromName[1], 10));
+      } else {
+        const src = item?.src ? decodeURIComponent(item.src) : '';
+        const m = src.match(ID_RE);
+        label = m ? String(parseInt(m[1], 10)) : String(curIndex);
+      }
+    }
+  }
+  res.label = label;
+  return res;
+}
 function notifyFeatures() {
   try {
     const node = getCurrentNode();
-    if (!node) return;
-    const all = Object.keys(node.presets.features);
-    const features = all.filter((f) => !['underwear', 'chest', 'legs', 'feet', 'weapon'].includes(f)); // hide underwear, armor, and weapon (class-controlled)
+    if (!node || !node.presets || !node.presets.features) return;
+
     const values = {};
     const counts = {};
     const labels = {};
-    const ID_RE = /\+id(\d+)/i;
 
-    for (const f of features) {
-      const v = node.presets.features[f] ?? 0;
-      values[f] = v;
+    // First: handle special color pseudo-slots and skin
+    const allKeys = Object.keys(node.presets.features);
+    const groups = _buildGroupMap(node);
+    // The canonical list of features to show in the UI (grouped)
+    const featureList = Array.from(groups.keys());
 
-      if (f === 'skin') {
+    // Compute counts/labels/values for grouped features
+    for (const base of featureList) {
+      if (base === 'skin') {
         const filters = getSkinFiltersForNode(node) || SKIN_FILTERS_HUMAN;
-        const max = filters.length;
-        counts[f] = max;
-        const cur = node.presets.features[f] ?? getDefaultSkinIndexForNode(node);
-        labels[f] = String(cur + 1);
+        counts[base] = filters.length;
+        const cur = node.presets.features[base] ?? getDefaultSkinIndexForNode(node);
+        labels[base] = String((cur ?? 0) + 1);
+        values[base] = cur ?? 0;
         continue;
       }
-
-      const ti = node.presets.order[f];
-      const arr = node.template[ti] || [];
-      counts[f] = arr.length;
-
-      let label = 'none';
-      if (v > 0) {
-        const item = arr[v];
-        const byName = (item?.name || '').match(/(\d+)/);
-        if (byName && byName[1]) {
-          label = String(parseInt(byName[1], 10));
-        } else {
-          const src = item?.src ? decodeURIComponent(item.src) : '';
-          const m = src.match(ID_RE);
-          label = m ? String(parseInt(m[1], 10)) : String(v);
-        }
-      }
-      labels[f] = label;
+      const st = _groupStateFor(node, base);
+      counts[base] = st.max;
+      values[base] = st.ptr;       // UI pointer (0 = none)
+      labels[base] = st.label;     // human-friendly number
     }
 
-    // Build UI order: start with explicit FEATURE_PANEL_ORDER_TOP_FIRST, then add remaining features
-    const setListed = new Set();
+    // UI order: explicit FEATURE_PANEL_ORDER_TOP_FIRST (includes "hairColor"/"tattooColor"), then rest
     const ordered = [];
-
+    const listed = new Set();
     for (const key of FEATURE_PANEL_ORDER_TOP_FIRST) {
       if (key === 'hairColor' || key === 'tattooColor') {
-        ordered.push(key);
-        setListed.add(key);
-        continue;
+        ordered.push(key); listed.add(key); continue;
       }
-      if (features.includes(key)) {
-        ordered.push(key);
-        setListed.add(key);
-      }
+      if (featureList.includes(key)) { ordered.push(key); listed.add(key); }
     }
-    for (const f of features) {
-      if (!setListed.has(f)) ordered.push(f);
-    }
+    for (const f of featureList) { if (!listed.has(f)) ordered.push(f); }
 
-    featureSubscribers.forEach((fn) => fn({
-      features,          // raw feature keys (back‑compat)
-      uiOrder: ordered,  // preferred UI order including color tokens
-      values,
-      counts,
-      labels,
-    }));
-  } catch {};
+    // Broadcast to modern subscribers
+    if (typeof __featureSubs !== 'undefined' && Array.isArray(__featureSubs)) {
+      for (const fn of __featureSubs) {
+        try { fn({ features: featureList, uiOrder: ordered, values, counts, labels }); } catch {}
+      }
+    }
+    // Back-compat Set-based subscribers
+    if (typeof featureSubscribers !== 'undefined' && featureSubscribers && typeof featureSubscribers.forEach === 'function') {
+      featureSubscribers.forEach((fn) => {
+        try { fn({ features: featureList, uiOrder: ordered, values, counts, labels }); } catch {}
+      });
+    }
+  } catch (e) {
+    // swallow to avoid breaking draws; this is UI-only
+  }
 }
 
 // Select Character Features Randomly
@@ -2059,15 +2233,56 @@ function selectFeaturePresets(feature, scale) {
   const node = getCurrentNode();
   if (!node) return;
 
-  let max;
+  // ---- Grouped virtual features (e.g., "adornment" combines "adornment+head", etc.) ----
+  const groups = _buildGroupMap(node);
+  const groupSlots = (!node.presets.features.hasOwnProperty(feature)) ? groups.get(feature) : null;
+
+  // Special-case "skin" is backed by skin filter list
   if (feature === 'skin') {
-  const filters = getSkinFiltersForNode(node) || SKIN_FILTERS_HUMAN;
-  max = filters.length;
-} else {
-    const ti = node.presets.order[feature];
-    if (typeof ti !== 'number') return; // unknown feature
-    max = (node.template[ti] || []).length;
+    const filters = getSkinFiltersForNode(node) || SKIN_FILTERS_HUMAN;
+    const max = filters.length;
+    const cur = node.presets.features[feature] ?? 0;
+    node.presets.features[feature] = (scale === 'increase')
+      ? ((cur + 1) % max)
+      : ((cur - 1 + max) % max);
+    genCharPresets(node.template);
+    genColorSwatches(hairColors, 'hair');
+    genColorSwatches(tattooColors, 'tattoo');
+    notifyFeatures();
+    return;
   }
+
+  if (groupSlots && groupSlots.length) {
+    // Build flattened option list across all sub-slots
+    const st = _groupStateFor(node, feature);
+    const max = st.max || 1;
+    const curPtr = st.ptr || 0;
+    let nextPtr = curPtr;
+    if (scale === 'increase') nextPtr = (curPtr + 1) % max;
+    else if (scale === 'decrease') nextPtr = (curPtr - 1 + max) % max;
+
+    // Apply: 0 => clear all; otherwise set exactly one slot/index and clear others
+    for (const s of groupSlots) node.presets.features[s] = 0;
+    if (nextPtr > 0) {
+      const opt = st.options[nextPtr - 1];
+      if (opt) {
+        node.presets.features[opt.slot] = opt.index;
+      }
+    }
+
+    // Render + notify
+    genCharPresets(node.template);
+    genColorSwatches(hairColors, 'hair');
+    genColorSwatches(tattooColors, 'tattoo');
+    notifyFeatures();
+    return;
+  }
+
+  // ---- Default (non-grouped) behavior ----
+  let max;
+  const ti = node.presets.order[feature];
+  if (typeof ti !== 'number') return; // unknown feature
+  max = (node.template[ti] || []).length;
   if (!max) return;
 
   const cur = node.presets.features[feature] ?? 0;
@@ -2077,8 +2292,7 @@ function selectFeaturePresets(feature, scale) {
     node.presets.features[feature] = (cur - 1 + max) % max;
   }
 
-  raceGenderFeaturePresets = node.presets.features;
-
+  // Preserve existing hair/tattoo color enable/disable behavior
   if (feature === 'hair' || feature === 'beard') {
     const disabled = hairColorShouldBeDisabled(node);
     if (disabled) {
@@ -2108,7 +2322,7 @@ function selectFeaturePresets(feature, scale) {
       }
     }
   }
-  
+
   genCharPresets(node.template);
   genColorSwatches(hairColors, 'hair');
   genColorSwatches(tattooColors, 'tattoo');
@@ -2396,15 +2610,18 @@ export function onSetClass(name) {
 }
 
 // Let React subscribe to live feature list / values
-export const onSubscribeFeatures = (cb) => {
-  if (typeof window === 'undefined') return () => {};
-  featureSubscribers.add(cb);
-  try {
-    notifyFeatures();
-  } catch {}
-  return () => featureSubscribers.delete(cb);
-};
+const __featureSubs = [];
 
+export function onSubscribeFeatures(cb) {
+  if (typeof cb === 'function') {
+    __featureSubs.push(cb);
+    try { cb(buildFeatureUiSnapshot()); } catch {}
+  }
+  return function unsubscribe() {
+    const i = __featureSubs.indexOf(cb);
+    if (i >= 0) __featureSubs.splice(i, 1);
+  };
+}
 // Export skin filter name getter (index-aligned)
 export const skinFilterNameAt = (i) => getSkinFilterName(i);
 

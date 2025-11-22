@@ -587,10 +587,6 @@ function selectClass(dir) {
   setClassLabel();
   applyClassArmorAndRedraw();
 }
-function setClassByName(name) {
-  const i = CLASS_OPTIONS.indexOf(name);
-  if (i >= 0) { classIndex = i; setClassLabel(); applyClassArmorAndRedraw(); }
-}
 
 function hairColorShouldBeDisabled(node) {
   const hairSel  = ((node?.presets?.features?.hair)  ?? 0) | 0;

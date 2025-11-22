@@ -4,7 +4,7 @@ import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 import React, { useEffect, useRef, useState } from "react";
 import type { ImmutableTraits } from "@/lib/metadata";
 import { buildAttributesFromTraits } from "@/lib/metadata";
-import { getHideEquipment, setHideEquipment, applyClassArmorAndRedraw } from "@/app/app-logic/charGen";
+import { getHideEquipment, setHideEquipment, applyClassArmorAndRedraw, getImmutableTraitsSnapshot } from "@/app/app-logic/charGen";
 
 function grabPngDataURL(): string {
   const img = document.querySelector<HTMLImageElement>("#charGen img");
@@ -194,7 +194,8 @@ export default function PreviewButton({ traits }: PreviewButtonProps) {
       if (!imageIpfs) throw new Error("Pin image failed (no CID)");
 
       // 3) Build metadata
-      const attributes: Attr[] = buildAttributesFromTraits(traits);
+      const snap = (typeof getImmutableTraitsSnapshot === "function") ? getImmutableTraitsSnapshot() : null;
+      const attributes: Attr[] = buildAttributesFromTraits(snap);
       const metadata = {
         name: `Nral Preview #${Date.now()}`,
         description: "Preview of what OpenSea will render for this sprite",
@@ -286,7 +287,8 @@ export default function PreviewButton({ traits }: PreviewButtonProps) {
       const imageIpfs = `ipfs://${fakeImgCid}`;
       const tokenURI = `ipfs://${fakeMetaCid}`;
 
-      const attributes: Attr[] = buildAttributesFromTraits(traits);
+      const snap = (typeof getImmutableTraitsSnapshot === "function") ? getImmutableTraitsSnapshot() : null;
+      const attributes: Attr[] = buildAttributesFromTraits(snap);
       const metadata = {
         name: `Nral Preview #${Date.now()}`,
         description: "Preview (emulated, not pinned)",

@@ -182,6 +182,28 @@ function buildFeatureUiSnapshot() {
   return { features, uiOrder: features, values, counts, labels };
 }
 
+// --- Selected ID helpers (array index -> normalized file id) ---
+function _selectedIdForSlot(node, slotKey) {
+  const ti = node?.presets?.order?.[slotKey];
+  if (typeof ti !== 'number') return 0;
+  const sel = (node?.presets?.features?.[slotKey] ?? 0) | 0;
+  if (sel <= 0) return 0;
+  const arr = node?.template?.[ti] || [];
+  const it = arr[sel];
+  const id = Number(it?.id || 0);
+  return Number.isFinite(id) ? id : 0;
+}
+
+// Read a whole base "family" like "adornment" across concrete keys (e.g., "adornment+neck", "adornment+chest", …)
+function _selectedIdForBase(node, base) {
+  const fam = groupSlotKeysFor(node, base);
+  for (const k of fam) {
+    const id = _selectedIdForSlot(node, k);
+    if (id > 0) return id;
+  }
+  return 0;
+}
+
 function ensureCanvas() {
   if (typeof document === 'undefined') return false;
   if (canvas && ctx) return true;
@@ -202,7 +224,7 @@ function getDefaultHairPalette(racePrimary, subrace) {
   const sr = (subrace || '').toLowerCase();
 
   // Human
-  if (rp === 'human') return hairColors.yellow1;
+  if (rp === 'human') return hairColors.blonde1;
 
   // Dwarf
   if (rp === 'dwarf') return hairColors.red2;
@@ -213,12 +235,12 @@ function getDefaultHairPalette(racePrimary, subrace) {
   // Elf subraces
   if (rp === 'elf') {
     if (sr === 'deepelf' || sr === 'deep-elf' || sr === 'deep_elf') return hairColors.gray1;   // Deep Elf
-    if (sr === 'highelf' || sr === 'high-elf' || sr === 'high_elf') return hairColors.yellow2; // High Elf
+    if (sr === 'highelf' || sr === 'high-elf' || sr === 'high_elf') return hairColors.blonde2; // High Elf
     if (sr === 'woodelf' || sr === 'wood-elf' || sr === 'wood_elf') return hairColors.brown4;  // Wood Elf
   }
 
   // Fallback for anything not specified
-  return hairColors.yellow1;
+  return hairColors.brown3;
 }
 
 /**
@@ -460,7 +482,6 @@ function _applyArmorFilterPixelOKLab(r, g, b, spec) {
   return [out.nr, out.ng, out.nb];
 }
 
-// Build an armor mask from the already-loaded layer images, and apply the
 // class-selected armor filter only where mask alpha > 0.
 function applyArmorFilterMaskOnCanvas(canvas, metas, imgs) {
   const spec = getSelectedArmorFilterSpec();
@@ -509,6 +530,67 @@ export function applyClassArmorAndRedraw() {
   applyWeaponForClassToNode(node);
   genCharPresets(node.template);
   notifyFeatures();
+}
+
+// Build a minimal, immutable traits snapshot for metadata.
+// Uses grouped families so "adornment+neck" shows up as one "adornment" trait.
+export function getImmutableTraitsSnapshot() {
+  const node = (typeof getCurrentNode === 'function') ? getCurrentNode() : null;
+  if (!node) return null;
+
+  // Name from the input box
+  let name = null;
+  try {
+    const el = (typeof document !== 'undefined') ? document.getElementById('charName') : null;
+    if (el && 'value' in el) {
+      const v = (el.value || '').trim();
+      name = v || null;
+    }
+  } catch {}
+
+  // Basic meta
+  const gender = node?._meta?.gender || null;
+  const race   = node?._meta?.subrace || node?._meta?.racePrimary || null;
+
+  let className = null;
+  try { className = (typeof getCurrentClass === 'function') ? getCurrentClass() : null; } catch {}
+
+  // Colors → attempt to map back to palette keys
+  let hairColor = null, tattooColor = null;
+  try {
+    const hc = node?.presets?.colors?.hair || null;
+    if (hc && typeof hairColors === 'object') {
+      for (const k in hairColors) { if (hairColors[k] === hc) { hairColor = k; break; } }
+      if (!hairColor) {
+        const s = JSON.stringify(hc);
+        for (const k in hairColors) { try { if (JSON.stringify(hairColors[k]) === s) { hairColor = k; break; } } catch {}
+        }
+      }
+    }
+  } catch {}
+  try {
+    const tc = node?.presets?.colors?.tattoo || null;
+    if (tc && typeof tattooColors === 'object') {
+      for (const k in tattooColors) { if (tattooColors[k] === tc) { tattooColor = k; break; } }
+      if (!tattooColor) {
+        const s = JSON.stringify(tc);
+        for (const k in tattooColors) { try { if (JSON.stringify(tattooColors[k]) === s) { tattooColor = k; break; } } catch {}
+        }
+      }
+    }
+  } catch {}
+
+  // Numeric features (normalize by file id, not array index)
+  const skin      = _selectedIdForSlot(node, 'skin');
+  const hair      = _selectedIdForSlot(node, 'hair');
+  const beard     = _selectedIdForSlot(node, 'beard');
+  const tattoo    = _selectedIdForSlot(node, 'tattoo');
+  const adornment = _selectedIdForBase(node, 'adornment'); // ← family‑aware (adornment+neck/chest/etc.)
+
+  return {
+    name, gender, race, className,
+    skin, hair, hairColor, beard, tattoo, tattooColor, adornment
+  };
 }
 
 function selectClass(dir) {
@@ -919,7 +1001,7 @@ async function initFromSprites() {
           setFeature(woodMale, 'tattoo', 1);
           setFeature(woodMale, 'adornment', 2);
           setFeature(woodMale, 'beard', 4);
-          setTattooColor(woodMale, 'orange1');
+          setTattooColor(woodMale, 'brown2');
         }
 
         // deep elf
@@ -950,7 +1032,7 @@ async function initFromSprites() {
       const humanMale = out.human?.genders?.male;
       if (humanMale) {
         setHairColor(humanMale, 'brown3');
-        setTattooColor(humanMale, 'orange1');
+        setTattooColor(humanMale, 'brown2');
       }
 
       // dwarf
@@ -959,7 +1041,7 @@ async function initFromSprites() {
         setHairColor(dwarfMale, 'red1');
         setFeature(dwarfMale, 'adornment', 3);
         setFeature(dwarfMale, 'beard', 6);
-        setTattooColor(dwarfMale, 'orange1');
+        setTattooColor(dwarfMale, 'brown2');
       }
 
       const dwarfFemale = out.dwarf?.genders?.female;
@@ -967,7 +1049,7 @@ async function initFromSprites() {
         setFeature(dwarfFemale, 'hair', 2);
         setHairColor(dwarfFemale, 'red1');
         setFeature(dwarfFemale, 'adornment', 4);
-        setTattooColor(dwarfFemale, 'orange1');
+        setTattooColor(dwarfFemale, 'brown2');
       }
 
       // halforc male
@@ -1061,10 +1143,13 @@ let hairColors = {
 
 let tattooColorIndex;
 let tattooColors = {
+  brown1: '#6d451e',
+  brown2: '#9d7a65',
   red1: '#8a4646',
-  red2: '#6d451e',
-  orange1: '#9d7a65',
-  yellow1: '#b8bc6b',
+  red2: '#9b2121',
+  orange1: '#d38c1a',
+  yellow1: '#e1cb26',
+  lime1: '#b8bc6b',
   green1: '#4a630c',
   green2: '#5ba347',
   cyan1: '#659d91',
@@ -2666,7 +2751,7 @@ function findTattooKeyForNode(node) {
  * Snapshot the current immutable-ish builder state so React/metadata can use it.
  * This is intentionally "display facing": uses the same labels as the UI where possible.
  */
-export function getImmutableTraitsSnapshot() {
+export function getDisplayTraitsSnapshot() {
   if (typeof document === 'undefined') return null;
 
   const node = getCurrentNode ? getCurrentNode() : null;

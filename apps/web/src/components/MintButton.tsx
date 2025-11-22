@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { mintNft, requestAccount, readNextId, readOwner, readTokenURI, resolveIpfs } from "@/lib/nral721";
 import type { ImmutableTraits } from "@/lib/metadata";
 import { buildMetadataForImage } from "@/lib/metadata";
-import { getHideEquipment, setHideEquipment, applyClassArmorAndRedraw } from "@/app/app-logic/charGen";
+import { getHideEquipment, setHideEquipment, applyClassArmorAndRedraw, getImmutableTraitsSnapshot } from "@/app/app-logic/charGen";
 
 const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NRAL721_ADDRESS as string;
@@ -110,7 +110,8 @@ export default function MintButton({ traits }: MintButtonProps) {
       if (!imageIpfs) throw new Error("Pin image failed (no CID)");
 
       // 4) Build metadata + pin (include immutable traits)
-      const metadata = buildMetadataForImage(imageIpfs, traits);
+      const snap = (typeof getImmutableTraitsSnapshot === "function") ? getImmutableTraitsSnapshot() : null;
+      const metadata = buildMetadataForImage(imageIpfs, snap);
       const metaRes = await fetch("/api/pin-json", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

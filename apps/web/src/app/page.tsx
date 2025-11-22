@@ -72,14 +72,32 @@ export default function Home() {
   const [hideEquipment, setHideEquipmentState] = useState<boolean>(false);
 
   const isRenderBlank = useCallback(() => {
-    if (typeof document === 'undefined') return false; // can't check on SSR
+    if (typeof document === 'undefined') return false; // SSR guard
 
-    // Only check the exported IMG inside #charGen (what users actually see)
+    // Prefer the exported <img> inside #charGen
     const img = document.querySelector('#charGen img') as HTMLImageElement | null;
-    if (!img) return true; // nothing injected yet
-    if (!img.complete) return true; // not loaded yet
-    if (img.naturalWidth === 0 || img.naturalHeight === 0) return true; // failed load
-    return false; // visible render present
+    if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+      return false;
+    }
+
+    // Fallback: inspect the hidden canvas for any non-transparent pixel
+    const c = document.getElementById('canvas') as HTMLCanvasElement | null;
+    if (c) {
+      const ctx2d = c.getContext('2d', { willReadFrequently: true });
+      if (ctx2d) {
+        try {
+          const w = c.width, h = c.height;
+          if (w && h) {
+            const id = ctx2d.getImageData(0, 0, w, h);
+            const d = id.data;
+            for (let i = 3; i < d.length; i += 4) {
+              if (d[i] !== 0) return false; // found some drawn pixel
+            }
+          }
+        } catch (_) {}
+      }
+    }
+    return true; // nothing visible yet
   }, []);
 
   const checkAndReportRender = useCallback((label: string) => {
@@ -96,13 +114,30 @@ export default function Home() {
   }, [isRenderBlank]);
 
   useEffect(() => {
-    setLoading(true);
-    const t = setTimeout(() => {
-      checkAndReportRender('initial boot');
-    }, 300);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      // nudge any UI init that might be lazy
+      try { onInitClassUI?.(); } catch {}
+      // Try to kick a first render if nothing has drawn yet
+      let triedRandom = false;
+      for (let attempt = 0; attempt < 25 && !cancelled; attempt++) {
+        const blank = isRenderBlank();
+        if (!blank) { setCanvasDebug(''); setLoading(false); return; }
+        if (!triedRandom) {
+          try { await (onRandom?.()); } catch {}
+          triedRandom = true;
+        }
+        await new Promise(r => setTimeout(r, 200)); // wait and re-check
+      }
+      if (!cancelled) {
+        // Give a clear hint and stop the spinner so it doesn't look stuck
+        setCanvasDebug('No image rendered. Check /api/sprites, asset paths under /public/assets, and that charGen initialized.');
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isRenderBlank]);
 
   useEffect(() => {
     onInitClassUI?.();
@@ -203,8 +238,10 @@ export default function Home() {
     } catch {}
 
     onSelectClass(dir);
+    // keep the canvas debug accurate after class swap
+    try { checkAndReportRender(`Select class ${dir}`); } catch {}
     refreshImmutableTraits();
-  }, [refreshImmutableTraits]);
+  }, [checkAndReportRender, refreshImmutableTraits]);
 
   const handleRandomizeFeatures = useCallback(async () => {
     setLoading(true);

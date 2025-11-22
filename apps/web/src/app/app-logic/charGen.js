@@ -673,6 +673,7 @@ function randomizeNodeSelections(node) {
   for (const slot of Object.keys(order)) {
     if (slot === 'skin') continue;
     if (isExcludedFeatureBase(slotBaseName(slot))) continue; // excluded families are never randomized
+    if (slot === 'chest' || slot === 'legs' || slot === 'feet') continue;
     const ti = order[slot];
     const arr = node.template[ti] || [];
     node.presets.features[slot] = (arr.length <= 1) ? 0 : Math.floor(Math.random() * arr.length);
@@ -2655,7 +2656,7 @@ function genRaceNameAndLore() {
   const elRace = document.getElementById('selectedRace');
   const elRaceLore = document.getElementById('selectedRaceLore');
 
-  if (elPrimary) elPrimary.innerHTML = racePrimaryName.includes('halforc') ? 'Halforc' : racePrimaryName;
+  if (elPrimary) elPrimary.innerHTML = racePrimaryName.includes('halforc') ? 'Half-orc' : racePrimaryName;
   if (elPrimaryLore) elPrimaryLore.innerHTML = racePrimaryLore || '';
 
   if (raceGenderTemplateObject[racePrimaryName].hasOwnProperty('races')) {

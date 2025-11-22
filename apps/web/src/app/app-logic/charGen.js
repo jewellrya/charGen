@@ -262,14 +262,18 @@ function getDefaultHairPalette(racePrimary, subrace) {
 }
 
 /**
- * Canonicalize race keys. We want "halforc" as the only half-orc key.
- * Converts case-insensitively and strips '-' and '_' when checking.
+ * Canonicalize race keys for internal logic (punctuation-free, lowercase).
+ * e.g. "Half-Orc", "half_orc", "halforc" => "halforc"
+ * Pretty display like "Half-Orc" should be handled by UI/metadata formatting, not here.
  */
 function canonRace(s) {
+  // Return a canonical key used for *logic* (lowercase, no hyphens/underscores).
+  // e.g. "Half-Orc", "half_orc", "halforc" => "halforc"
+  // Pretty display like "Half-Orc" should be handled by UI/metadata formatting, not here.
   const t = (s || '').toLowerCase();
   const tnorm = t.replace(/[-_]/g, '');
-  if (tnorm === 'halforc') return 'Half-Orc';
-  return t;
+  if (tnorm === 'halforc') return 'halforc';
+  return tnorm;
 }
 
 const CLASS_OPTIONS = [
@@ -1022,6 +1026,12 @@ async function initFromSprites() {
           setFeature(woodMale, 'beard', 4);
           setTattooColor(woodMale, 'brown2');
         }
+        const woodFemale = elf.woodelf?.genders?.female;
+        if (woodFemale) {
+          setFeature(woodFemale, 'tattoo', 4);
+          setFeature(woodFemale, 'adornment', 3);
+          setTattooColor(woodFemale, 'brown2');
+        }
 
         // deep elf
         const deepMale = elf.deepelf?.genders?.male;
@@ -1031,12 +1041,15 @@ async function initFromSprites() {
           setFeature(deepMale, 'hair', 12);
           setFeature(deepMale, 'adornment', 3);
           setFeature(deepMale, 'beard', 6);
-          setTattooColor(deepMale, 'red2');
+          setTattooColor(deepMale, 'red1');
         }
         const deepFemale = elf.deepelf?.genders?.female;
         if (deepFemale) {
-          setHairColor(deepFemale, 'black1');
-          setTattooColor(deepFemale, 'red2');
+          setFeature(deepFemale, 'hair', 7);
+          setHairColor(deepFemale, 'black2');
+          setFeature(deepFemale, 'tattoo', 7);
+          setTattooColor(deepFemale, 'brown2');
+          setFeature(deepFemale, 'adornment', 2);
         }
 
         // high elf male: adornment 2, tattoo color blue1
@@ -1044,6 +1057,10 @@ async function initFromSprites() {
         if (highMale) {
           setFeature(highMale, 'adornment', 2);
           setTattooColor(highMale, 'blue1');
+        }
+        const highFemale = elf.highelf?.genders?.female;
+        if (highFemale) {
+          setTattooColor(highFemale, 'cyan1');
         }
       }
 
@@ -1071,7 +1088,7 @@ async function initFromSprites() {
         setTattooColor(dwarfFemale, 'brown2');
       }
 
-      // halforc male
+      // halforc
       const halforcMale = out.halforc?.genders?.male;
       if (halforcMale) {
         setHairColor(halforcMale, 'brown1');
@@ -1079,6 +1096,15 @@ async function initFromSprites() {
         setFeature(halforcMale, 'hair', 9);
         setFeature(halforcMale, 'beard', 1);
         setTattooColor(halforcMale, 'white1');
+      }
+      const halforcFemale = out.halforc?.genders?.female;
+      if (halforcFemale) {
+        setFeature(halforcFemale, 'skin', 2);
+        setHairColor(halforcFemale, 'black2');
+        setFeature(halforcFemale, 'adornment', 1);
+        setFeature(halforcFemale, 'hair', 10);
+        setFeature(halforcFemale, 'tattoo', 6);
+        setTattooColor(halforcFemale, 'brown1');
       }
     })();
 

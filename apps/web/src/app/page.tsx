@@ -40,24 +40,24 @@ const FeatureSelector: React.FC<FeatureSelectorProps> = ({ category, onChange, v
   })();
   return (
     <>
-      <p className="m-0 text-base font-bold capitalize mb-2">{friendly}</p>
+      <p className="m-0 text-lg font-bold capitalize mb-2">{friendly}</p>
 
       <div className="flex items-center gap-2 mb-6">
         <button
           type="button"
-          className="btn btn-sm"
+          className="btn btn-sm text-lg"
           onClick={() => onChange(category, 'decrease')}
         >
           <FontAwesomeIcon icon={faChevronLeft} />
         </button>
 
-        <p id={id} className="m-0 flex-1 text-primary capitalize text-center">
+        <p id={id} className="m-0 flex-1 text-primary capitalize text-center text-[1.5rem] leading-tight">
           {valueText ?? ""}
         </p>
 
         <button
           type="button"
-          className="btn btn-sm"
+          className="btn btn-sm text-lg"
           onClick={() => onChange(category, 'increase')}
         >
           <FontAwesomeIcon icon={faChevronRight} />
@@ -397,12 +397,12 @@ export default function Home() {
                 <input
                   id="charName"
                   type="text"
-                  className="input flex-1"
+                  className="input flex-1 text-[1.5rem] leading-tight"
                   onBlur={handleNameBlur}
                 />
                 <button
                   type="button"
-                  className="btn "
+                  className="btn text-lg"
                   onClick={() => {
                     const names = ['Aren', 'Belira', 'Cador', 'Darin', 'Elandra', 'Faren', 'Garin', 'Helira', 'Isen', 'Jora', 'Kael', 'Lirien', 'Maren', 'Naris', 'Orin', 'Pelyn', 'Quara', 'Rhen', 'Sorin', 'Talia'];
                     const randomName = names[Math.floor(Math.random() * names.length)];
@@ -424,17 +424,17 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="btn btn-sm"
+                  className="btn btn-sm text-lg"
                   onClick={() => handleSelectRacePrimary("decrease")}
                 >
                   <FontAwesomeIcon icon={faChevronLeft} />
                 </button>
 
-                <div id="selectedRacePrimary" className="flex-1 text-primary capitalize text-center" />
+                <div id="selectedRacePrimary" className="flex-1 text-primary capitalize text-center text-[1.5rem] leading-tight" />
 
                 <button
                   type="button"
-                  className="btn btn-sm"
+                  className="btn btn-sm text-lg"
                   onClick={() => handleSelectRacePrimary("increase")}
                 >
                   <FontAwesomeIcon icon={faChevronRight} />
@@ -445,17 +445,17 @@ export default function Home() {
               <div id="selectedRaceDom" className="mt-3 flex items-center gap-2 hidden">
                 <button
                   type="button"
-                  className="btn btn-sm"
+                  className="btn btn-sm text-lg"
                   onClick={() => handleSelectRace("decrease")}
                 >
                   <FontAwesomeIcon icon={faChevronLeft} />
                 </button>
 
-                <div id="selectedRace" className="flex-1 text-primary capitalize text-center" />
+                <div id="selectedRace" className="flex-1 text-primary capitalize text-center text-[1.5rem] leading-tight" />
 
                 <button
                   type="button"
-                  className="btn btn-sm"
+                  className="btn btn-sm text-lg"
                   onClick={() => handleSelectRace("increase")}
                 >
                   <FontAwesomeIcon icon={faChevronRight} />
@@ -469,17 +469,17 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="btn btn-sm"
+                  className="btn btn-sm text-lg"
                   onClick={() => handleSelectClass("decrease")}
                 >
                   <FontAwesomeIcon icon={faChevronLeft} />
                 </button>
 
-                <div id="selectedClass" className="flex-1 text-primary capitalize text-center" />
+                <div id="selectedClass" className="flex-1 text-primary capitalize text-center text-[1.5rem] leading-tight" />
 
                 <button
                   type="button"
-                  className="btn btn-sm"
+                  className="btn btn-sm text-lg"
                   onClick={() => handleSelectClass("increase")}
                 >
                   <FontAwesomeIcon icon={faChevronRight} />

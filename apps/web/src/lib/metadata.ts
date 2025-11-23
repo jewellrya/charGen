@@ -7,7 +7,7 @@ export type ImmutableTraits = {
   skin?: number | null;        // index
   hair?: number | null;        // index
   hairColor?: string | null;   // e.g. "brown3"
-  beard?: number | null;       // index (only meaningful for male)
+  facialHair?: number | null;  // index (only meaningful for male)
   tattoo?: number | null;      // index
   tattooColor?: string | null; // e.g. "red2"
   adornment?: number | null;   // index
@@ -79,7 +79,7 @@ export function buildAttributesFromTraits(traits?: ImmutableTraits | null): Nral
   if (traits.hair != null) attrs.push({ trait_type: "Hair", value: traits.hair });
   if (traits.hairColor) attrs.push({ trait_type: "Hair Color", value: traits.hairColor });
 
-  if (traits.beard != null) attrs.push({ trait_type: "Beard", value: traits.beard });
+  if (traits.facialHair != null) attrs.push({ trait_type: "Facial Hair", value: traits.facialHair });
 
   // Tattoo value and color (only include color if tattoo is actually present)
   const hasTattoo = (traits.tattoo != null) && !omitZero('tattoo', traits.tattoo);

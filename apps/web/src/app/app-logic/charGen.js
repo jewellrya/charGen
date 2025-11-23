@@ -319,13 +319,13 @@ export function getImmutableTraitsSnapshot() {
   // Numeric features (normalize by file id, not array index)
   const skin      = getSelectedSkinNumber(node);
   const hair      = _selectedIdForSlot(node, 'hair');
-  const beard     = _selectedIdForSlot(node, 'beard');
+  const facialHair = _selectedIdForSlot(node, 'facialhair');
   const tattoo    = _selectedIdForSlot(node, 'tattoo');
   const adornment = _selectedIdForBase(node, 'adornment'); // ← family‑aware (adornment+neck/chest/etc.)
 
   return {
     name, gender, race, className,
-    skin, hair, hairColor, beard, tattoo, tattooColor, adornment
+    skin, hair, hairColor, facialHair, tattoo, tattooColor, adornment
   };
 }
 
@@ -344,13 +344,13 @@ function selectClass(dir) {
 
 function hairColorShouldBeDisabled(node) {
   const hairSel  = ((node?.presets?.features?.hair)  ?? 0) | 0;
-  const hasBeard = typeof node?.presets?.order?.beard === 'number';
-  const beardSel = hasBeard ? (((node?.presets?.features?.beard) ?? 0) | 0) : null;
+  const hasFacial = typeof node?.presets?.order?.facialhair === 'number';
+  const facialSel = hasFacial ? (((node?.presets?.features?.facialhair) ?? 0) | 0) : null;
 
-  if (hasBeard) {
-    return hairSel === 0 && beardSel === 0; // disable only if BOTH are none
+  if (hasFacial) {
+    return hairSel === 0 && facialSel === 0; // disable only if BOTH are none
   }
-  return hairSel === 0; // no beard slot → fall back to hair only
+  return hairSel === 0; // no facial hair slot → fall back to hair only
 }
 
 function tattooColorShouldBeDisabled(node) {
@@ -389,7 +389,7 @@ function randomizeNodeSelections(node) {
     node.presets.features[slot] = (arr.length <= 1) ? 0 : Math.floor(Math.random() * arr.length);
   }
 
-  // 3) Hair & tattoo color palettes (hair color disabled iff BOTH hair & beard are none when beard exists)
+  // 3) Hair & tattoo color palettes (hair color disabled iff BOTH hair & facial hair are none when facial hair exists)
   const disabled = hairColorShouldBeDisabled(node);
   if (disabled) {
     if (!node._lastHairPalette && node.presets?.colors?.hair) {
@@ -665,10 +665,10 @@ async function initFromSprites() {
           defaultIndex = 1;
         }
 
-        // Dwarf male: Beard 1 by default (if present)
+        // Dwarf male: Facial Hair 1 by default (if present)
         const meta = node._meta || {};
         if (
-          slot === 'beard' &&
+          slot === 'facialhair' &&
           arr.length > 1 &&
           (meta.racePrimary || '').toLowerCase() === 'dwarf' &&
           (meta.gender || '').toLowerCase() === 'male'
@@ -734,7 +734,7 @@ async function initFromSprites() {
         if (woodMale) {
           setFeature(woodMale, 'tattoo', 1);
           setFeature(woodMale, 'adornment', 2);
-          setFeature(woodMale, 'beard', 4);
+          setFeature(woodMale, 'facialhair', 4);
           setTattooColor(woodMale, 'brown2');
         }
         const woodFemale = elf.woodelf?.genders?.female;
@@ -751,7 +751,7 @@ async function initFromSprites() {
           setHairColor(deepMale, 'gray2');
           setFeature(deepMale, 'hair', 12);
           setFeature(deepMale, 'adornment', 3);
-          setFeature(deepMale, 'beard', 6);
+          setFeature(deepMale, 'facialhair', 6);
           setTattooColor(deepMale, 'red1');
         }
         const deepFemale = elf.deepelf?.genders?.female;
@@ -787,7 +787,7 @@ async function initFromSprites() {
       if (dwarfMale) {
         setHairColor(dwarfMale, 'red1');
         setFeature(dwarfMale, 'adornment', 3);
-        setFeature(dwarfMale, 'beard', 6);
+        setFeature(dwarfMale, 'facialhair', 6);
         setTattooColor(dwarfMale, 'brown2');
       }
 
@@ -805,7 +805,7 @@ async function initFromSprites() {
         setHairColor(halforcMale, 'brown1');
         setFeature(halforcMale, 'adornment', 3);
         setFeature(halforcMale, 'hair', 9);
-        setFeature(halforcMale, 'beard', 1);
+        setFeature(halforcMale, 'facialhair', 1);
         setTattooColor(halforcMale, 'white1');
       }
       const halforcFemale = out.halforc?.genders?.female;
@@ -1076,7 +1076,7 @@ function drawChar(imageArray, name, replace) {
         }
       }
 
-      if (lname.startsWith('hair') || lname.startsWith('beard')) {
+      if (lname.startsWith('hair') || lname.startsWith('facialhair')) {
         const id = octx.getImageData(0, 0, off.width, off.height);
         applyHairColor(id.data);
         octx.putImageData(id, 0, 0);
@@ -1551,7 +1551,7 @@ function selectFeaturePresets(feature, scale) {
   }
 
   // Preserve existing hair/tattoo color enable/disable behavior
-  if (feature === 'hair' || feature === 'beard') {
+  if (feature === 'hair' || feature === 'facialhair') {
     const disabled = hairColorShouldBeDisabled(node);
     if (disabled) {
       if (!node._lastHairPalette && node.presets?.colors?.hair) {
@@ -1731,7 +1731,7 @@ function selectRace(scale) {
 // select hair color
 function selectHairColor(color) {
   const node = getCurrentNode();
-  // If BOTH hair and (existing) beard are none, ignore color picks
+  // If BOTH hair and (existing) facial hair are none, ignore color picks
   if (node && hairColorShouldBeDisabled(node)) return;
 
   const selectedHairColor = hairColors[color];
@@ -1969,7 +1969,7 @@ export function getDisplayTraitsSnapshot() {
 
   const skin = getSelectedSkinNumber(node);
   const hair = (typeof feats.hair === 'number') ? feats.hair : null;
-  const beard = (typeof feats.beard === 'number') ? feats.beard : null;
+  const facialHair = (typeof feats.facialhair === 'number') ? feats.facialhair : null;
   const tattoo = (typeof feats.tattoo === 'number') ? feats.tattoo : null;
   const adornment = (typeof feats.adornment === 'number') ? feats.adornment : null;
 
@@ -1984,7 +1984,7 @@ export function getDisplayTraitsSnapshot() {
     skin,
     hair,
     hairColor: hairColorKey,
-    beard,
+    facialHair,
     tattoo,
     tattooColor: tattooColorKey,
     adornment,

@@ -28,9 +28,19 @@ interface FeatureSelectorProps {
 }
 const FeatureSelector: React.FC<FeatureSelectorProps> = ({ category, onChange, valueText }) => {
   const id = `${category}Value`;
+  const friendly = (() => {
+    if (category === 'hairColor') return 'Hair Color';
+    if (category === 'tattooColor') return 'Tattoo Color';
+    if (category === 'facialhair') return 'Facial Hair';
+    return category
+      .split(/(?=[A-Z])|_/g)
+      .filter(Boolean)
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(' ');
+  })();
   return (
     <>
-      <p className="m-0 text-base font-bold capitalize mb-2">{category}</p>
+      <p className="m-0 text-base font-bold capitalize mb-2">{friendly}</p>
 
       <div className="flex items-center gap-2 mb-6">
         <button

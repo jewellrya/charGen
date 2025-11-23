@@ -20,7 +20,7 @@ export const SLOT_DRAW_ORDER_TOP_FIRST = [
   'weapon',          // front-side weapons (draw above character)
   'helmet',
   'adornment+head',
-  'beard',
+  'facialhair',
   'hair',
   'adornment+neck',
   'hands',
@@ -42,7 +42,7 @@ export const SLOT_DRAW_ORDER_TOP_FIRST = [
 export const FEATURE_PANEL_ORDER_TOP_FIRST = [
   'skin',
   'hair',
-  'beard',
+  'facialhair',
   'hairColor',
   'tattoo',
   'tattooColor',

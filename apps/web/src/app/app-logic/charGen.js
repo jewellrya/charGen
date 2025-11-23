@@ -1,3 +1,36 @@
+import {
+  CLASS_ARMOR_FILTERS,
+  CLASS_OPTIONS,
+  CLASS_TO_ARMOR,
+  CLASS_TO_WEAPON,
+  FEATURE_PANEL_ORDER_TOP_FIRST,
+  SLOT_DRAW_ORDER_TOP_FIRST,
+  TRANSPARENT_PX,
+  isExcludedFeatureBase,
+} from './char-gen/constants';
+import {
+  DEFAULT_SKIN_INDEX_DWARF,
+  DEFAULT_SKIN_INDEX_ELF_DEEP,
+  DEFAULT_SKIN_INDEX_ELF_HIGH,
+  DEFAULT_SKIN_INDEX_ELF_WOOD,
+  DEFAULT_SKIN_INDEX_HALFORC,
+  DEFAULT_SKIN_INDEX_HUMAN,
+  SKIN_FILTERS_HUMAN,
+  hairColors,
+  tattooColors,
+  canonRace,
+  getDefaultHairPalette,
+  getDefaultSkinIndexForNode,
+  getSkinFiltersForNode,
+} from './char-gen/palettes';
+import { applyArmorFilterPixelOKLab, applySkinFilter, replaceColor } from './char-gen/colorMath';
+import {
+  buildGroupEntries,
+  groupSlotKeysFor,
+  slotBaseName,
+  slotRank,
+} from './char-gen/slotUtils';
+
 let canvas = null;
 let ctx = null;
 
@@ -13,123 +46,6 @@ export function setHideEquipment(v) {
   } catch {}
 }
 export function getHideEquipment() { return !!__hideEquipment; }
-
-// --- Feature groups to exclude from the right-side UI (by base name) ---
-// Use lower-case base keys here (e.g., "weapon"). Add more bases as needed.
-export const EXCLUDED_FEATURE_BASES = new Set(['weapon']);
-
-export function isExcludedFeatureBase(key) {
-  const k = String(key || '').toLowerCase();
-  return EXCLUDED_FEATURE_BASES.has(k);
-}
-
-// 1x1 transparent pixel for “blank” slot entries
-const TRANSPARENT_PX =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAp8B6j3pBV8AAAAASUVORK5CYII=';
-
-// Slot draw order provided by user (from TOP-most to BOTTOM).
-// Supports composite overrides like "adornment+chest" or "adornment+neck".
-// We'll convert this to a bottom-first rank so we can draw base first,
-// then tattoo → … → shoulder last.
-const SLOT_DRAW_ORDER_TOP_FIRST = [
-  // TOP-most → BOTTOM
-  'shoulder',
-  'weapon',          // front-side weapons (draw above character)
-  'helmet',
-  'adornment+head',
-  'beard',
-  'hair',
-  'adornment+neck',
-  'hands',
-  'chest',
-  'adornment+chest',
-  'feet',
-  'legs',
-  'adornment',
-  'weapon+back',     // back-side weapons (draw behind body/hair)
-  'underwear',
-  'tattoo',
-  'base'             // base handled separately; kept for completeness
-];
-
-// Right‑panel feature & color UI order (top → bottom). Items not listed here
-// will appear afterward in their existing discovery order. Special tokens:
-//   - 'hairColor'   → Hair color swatch block
-//   - 'tattooColor' → Tattoo color swatch block
-const FEATURE_PANEL_ORDER_TOP_FIRST = [
-  'skin',
-  'hair',
-  'beard',
-  'hairColor',
-  'tattoo',
-  'tattooColor',
-  'adornment',
-];
-
-// Map each known slot to a bottom-first rank (0 = closest to base). Unknown slots get 1000+
-const __SLOT_RANK = (() => {
-  const m = new Map();
-  const n = SLOT_DRAW_ORDER_TOP_FIRST.length;
-  for (let i = 0; i < n; i++) {
-    const slot = SLOT_DRAW_ORDER_TOP_FIRST[i];
-    const bottomFirstRank = (n - 1) - i; // base:0, tattoo:1, …, shoulder:last
-    m.set(slot, bottomFirstRank);
-  }
-  return m;
-})();
-
-function slotRank(slotName) {
-  const r = __SLOT_RANK.get(slotName);
-  return (typeof r === 'number') ? r : 1000; // unknowns sorted alphabetically beyond known ones
-}
-
-// --- UI grouping helpers: treat "adornment+neck", "adornment+chest" as one control ("adornment") ---
-function slotBaseName(slotKey) {
-  const s = String(slotKey || '');
-  const i = s.indexOf('+');
-  return i === -1 ? s : s.slice(0, i);
-}
-
-function groupSlotKeysFor(node, base) {
-  const order = node?.presets?.order || {};
-  const keys = Object.keys(order).filter((k) => slotBaseName(k) === base);
-  // sort deterministically: bottom-first rank, then lexicographic (stable)
-  return keys.sort((a, b) => {
-    const ra = slotRank(a);
-    const rb = slotRank(b);
-    if (ra !== rb) return ra - rb;
-    return a.localeCompare(b);
-  });
-}
-
-// Build a flat, ID-sorted list of entries across a base group; skips duplicate IDs (keeps first occurrence).
-function buildGroupEntries(node, base) {
-  const keys = groupSlotKeysFor(node, base);
-  const out = [];
-  const seen = new Set();
-
-  for (const k of keys) {
-    const ti = node?.presets?.order?.[k];
-    if (typeof ti !== 'number') continue;
-    const arr = node?.template?.[ti] || [];
-    for (let idx = 1; idx < arr.length; idx++) { // skip blank at 0
-      const it = arr[idx];
-      const id = Number(it?.id || 0);
-      if (!Number.isFinite(id) || id <= 0) continue;
-
-      const dupKey = `${base}:${id}`;
-      if (seen.has(dupKey)) {
-        // Allow duplicate ids across all features. Keep only the first occurrence for the UI entry list.
-        continue;
-      }
-      seen.add(dupKey);
-      out.push({ slotKey: k, arrIndex: idx, id });
-    }
-  }
-
-  out.sort((a, b) => a.id - b.id);
-  return out;
-}
 
 // Snapshot used by notifyFeatures/onSubscribeFeatures to expose grouped controls to the UI.
 function buildFeatureUiSnapshot() {
@@ -237,48 +153,6 @@ function ensureCanvas() {
   return true;
 }
 
-function getDefaultHairPalette(racePrimary, subrace) {
-  const rp = (racePrimary || '').toLowerCase();
-  const sr = (subrace || '').toLowerCase();
-
-  // Human
-  if (rp === 'human') return hairColors.blonde1;
-
-  // Dwarf
-  if (rp === 'dwarf') return hairColors.red2;
-
-  // Halforc
-  if (rp === 'halforc') return hairColors.brown1;
-
-  // Elf subraces
-  if (rp === 'elf') {
-    if (sr === 'deepelf' || sr === 'deep-elf' || sr === 'deep_elf') return hairColors.gray1;   // Deep Elf
-    if (sr === 'highelf' || sr === 'high-elf' || sr === 'high_elf') return hairColors.blonde2; // High Elf
-    if (sr === 'woodelf' || sr === 'wood-elf' || sr === 'wood_elf') return hairColors.brown4;  // Wood Elf
-  }
-
-  // Fallback for anything not specified
-  return hairColors.brown3;
-}
-
-/**
- * Canonicalize race keys for internal logic (punctuation-free, lowercase).
- * e.g. "Half-Orc", "half_orc", "halforc" => "halforc"
- * Pretty display like "Half-Orc" should be handled by UI/metadata formatting, not here.
- */
-function canonRace(s) {
-  // Return a canonical key used for *logic* (lowercase, no hyphens/underscores).
-  // e.g. "Half-Orc", "half_orc", "halforc" => "halforc"
-  // Pretty display like "Half-Orc" should be handled by UI/metadata formatting, not here.
-  const t = (s || '').toLowerCase();
-  const tnorm = t.replace(/[-_]/g, '');
-  if (tnorm === 'halforc') return 'halforc';
-  return tnorm;
-}
-
-const CLASS_OPTIONS = [
-  'Fighter', 'Ranger', 'Rogue', 'Sorceror', 'Cleric', 'Warlock', 'Paladin', 'Druid', 'Shaman'
-];
 let classIndex = -1; // start unset; initial render shows nothing until randomChar picks one
 
 function getCurrentClass() {
@@ -290,12 +164,6 @@ function setClassLabel() {
   const el = document.getElementById('selectedClass');
   if (el) el.textContent = getCurrentClass();
 }
-// --- Class → ArmorType mapping (auto-equips if sprites exist) ---
-const CLASS_TO_ARMOR = {
-  sorceror: 'cloth', cleric: 'cloth', warlock: 'cloth',
-  ranger: 'leather', druid: 'leather', shaman: 'leather', rogue: 'leather',
-  fighter: 'mail', paladin: 'mail'
-};
 
 function getSelectedArmorType() {
   const cls = (getCurrentClass() || '').toLowerCase();
@@ -329,14 +197,6 @@ function applyArmorForClassToNode(node) {
     node.presets.features[slot] = (match > 0) ? match : 0;
   }
 }
-
-// --- Class → Weapon mapping (selects weapon slot by id; clears if missing) ---
-const CLASS_TO_WEAPON = {
-  sorceror: 2, cleric: 2, warlock: 2, shaman: 2, druid: 2,
-  fighter: 1, paladin: 1,
-  ranger: 3,
-  rogue: 4,
-};
 
 function getSelectedWeaponId() {
   const cls = (getCurrentClass() || '').toLowerCase();
@@ -376,18 +236,6 @@ function applyWeaponForClassToNode(node) {
   }
 }
 
-const CLASS_ARMOR_FILTERS = {
-  sorceror: { h: null, s: null, l: null, b: null, c: null },
-  cleric:   { h: null, s: -80, l: null, b: +20, c: +30 },
-  warlock:  { h: -125, s: -30, l: null, b: -120, c: +50 },
-  shaman:   { h: -20, s: -30, l: null, b: -80, c: -20 },
-  druid:    { h: +55, s: -30, l: null, b: -40, c: +40 },
-  fighter:  { h: null, s: null, l: null, b: null, c: null },
-  paladin:  { h: +30, s: +120, l: null, b: +80, c: null },
-  ranger:   { h: null, s: null, l: null, b: null, c: null },
-  rogue:    { h: null, s: -80, l: null, b: -60, c: null },
-};
-
 function getSelectedArmorFilterSpec() {
   const cls = (getCurrentClass() || '').toLowerCase();
   return CLASS_ARMOR_FILTERS[cls] || null;
@@ -399,109 +247,15 @@ function _armorFilterHasAnyChannel(spec) {
   return ['h','s','l','b','c'].some((k) => typeof spec[k] === 'number');
 }
 
-// Apply class armor filter per pixel using the SAME OKLab pipeline as skin filters
-function _applyArmorFilterPixelOKLab(r, g, b, spec) {
-  // read deltas (numbers or 0)
-  const rawH = (typeof spec.h === 'number') ? spec.h : 0; // degrees
-  const rawS = (typeof spec.s === 'number') ? spec.s : 0; // percent
-  const rawL = (typeof spec.l === 'number') ? spec.l : 0; // percent
-  const rawB = (typeof spec.b === 'number') ? spec.b : 0; // PS brightness (−150..+150)
-  const rawC = (typeof spec.c === 'number') ? spec.c : 0; // PS contrast   (−100..+100)
-
-  const pureHue = (rawH !== 0) && (rawS === 0) && (rawL === 0) && (rawB === 0) && (rawC === 0);
-  const pureMul = (rawH === 0) && (rawS === 0) && (rawC === 0) && (rawL !== 0 || rawB !== 0);
-  const hRad = (rawH * Math.PI) / 180;
-
-  // helper: OKLab -> sRGB8 with gamut test (same as skin pipeline)
-  const toSRGBUnclamped = (Lx, Ax, Bx) => {
-    const l_ = Lx + 0.3963377774 * Ax + 0.2158037573 * Bx;
-    const m_ = Lx - 0.1055613458 * Ax - 0.0638541728 * Bx;
-    const s_ = Lx - 0.0894841775 * Ax - 1.2914855480 * Bx;
-    const l = l_ * l_ * l_;
-    const m = m_ * m_ * m_;
-    const s = s_ * s_ * s_;
-    let rLin = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
-    let gLin = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
-    let bLin = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
-    const inGamut = (rLin >= 0 && rLin <= 1) && (gLin >= 0 && gLin <= 1) && (bLin >= 0 && bLin <= 1);
-    const to8 = (vLin) => {
-      let v = vLin <= 0.0031308 ? vLin * 12.92 : 1.055 * Math.pow(vLin, 1/2.4) - 0.055;
-      if (v < 0) v = 0; else if (v > 1) v = 1;
-      return Math.round(v * 255);
-    };
-    return { inGamut, nr: to8(rLin), ng: to8(gLin), nb: to8(bLin) };
-  };
-
-  // 1) brightness/lightness only → pure RGB multiply (hue preserved exactly)
-  if (pureMul) {
-    const mul = (1
-      + (rawL / 100) * 0.60
-      + (rawB / 150) * 0.30
-    );
-    const m = Math.max(0.5, Math.min(1.5, mul));
-    const R = Math.max(0, Math.min(255, Math.round(r * m)));
-    const G = Math.max(0, Math.min(255, Math.round(g * m)));
-    const B = Math.max(0, Math.min(255, Math.round(b * m)));
-    return [R, G, B];
-  }
-
-  // 2) pure hue rotation in OKLab; keep chroma, reduce only if out-of-gamut
-  if (pureHue) {
-    let [L, A, B_] = srgbToOklab(r, g, b);
-    const C0 = Math.hypot(A, B_);
-    if (C0 === 0) return [r, g, b];
-    let angle = Math.atan2(B_, A) + hRad;
-    let scale = 1.0, tries = 0, out;
-    do {
-      const A1 = (C0 * scale) * Math.cos(angle);
-      const B1 = (C0 * scale) * Math.sin(angle);
-      out = toSRGBUnclamped(L, A1, B1);
-      if (out.inGamut) break;
-      scale *= 0.96; // shave chroma until in gamut
-      tries++;
-    } while (tries < 16);
-    return [out.nr, out.ng, out.nb];
-  }
-
-  // 3) general case (only apply channels you provided)
-  let [L, A, B_] = srgbToOklab(r, g, b);
-  const C0 = Math.hypot(A, B_);
-  let angle = Math.atan2(B_, A) + hRad; // rotate only if H requested (0 adds nothing)
-
-  const sScale = (rawS === 0) ? 1 : (1 + rawS / 100);
-  const lDelta = (rawL / 100) * 0.50;
-  const bDelta = (rawB / 150) * 0.35;
-  const cScale = (rawC === 0) ? 1 : (1 + (rawC / 100) * 0.85);
-
-  // Lightness path
-  let L1 = L + lDelta + bDelta;
-  if (cScale !== 1) {
-    const mid = 0.5; // same mid as skin
-    L1 = (L1 - mid) * cScale + mid;
-  }
-  if (L1 < 0) L1 = 0; else if (L1 > 1) L1 = 1;
-
-  // Chroma path
-  let C1 = C0 * sScale; // only scale if S requested
-  if (rawS > 0) {
-    const CHROMA_ABS_CAP = 0.40;
-    const CHROMA_REL_CAP = C0 * 1.30;
-    if (C1 > CHROMA_ABS_CAP) C1 = CHROMA_ABS_CAP;
-    if (C1 > CHROMA_REL_CAP) C1 = CHROMA_REL_CAP;
-  }
-
-  let scale = (C0 === 0) ? 0 : (C1 / C0);
-  let tries = 0, out;
-  do {
-    const A1 = (C0 * scale) * Math.cos(angle);
-    const B1 = (C0 * scale) * Math.sin(angle);
-    out = toSRGBUnclamped(L1, A1, B1);
-    if (out.inGamut) break;
-    scale *= 0.96; // keep hue/lightness, just pull chroma in
-    tries++;
-  } while (tries < 16);
-
-  return [out.nr, out.ng, out.nb];
+function getSelectedSkinNumber(node) {
+  const filters = getSkinFiltersForNode(node) || SKIN_FILTERS_HUMAN;
+  const max = Array.isArray(filters) ? filters.length : 0;
+  let idx = (typeof node?.presets?.features?.skin === 'number')
+    ? node.presets.features.skin
+    : getDefaultSkinIndexForNode(node);
+  if (!Number.isFinite(idx) || idx < 0) idx = 0;
+  if (max > 0 && idx >= max) idx = max - 1;
+  return max === 0 ? 0 : (idx + 1); // 1-based for metadata/display
 }
 
 export function applyClassArmorAndRedraw() {
@@ -563,7 +317,7 @@ export function getImmutableTraitsSnapshot() {
   } catch {}
 
   // Numeric features (normalize by file id, not array index)
-  const skin      = _selectedIdForSlot(node, 'skin');
+  const skin      = getSelectedSkinNumber(node);
   const hair      = _selectedIdForSlot(node, 'hair');
   const beard     = _selectedIdForSlot(node, 'beard');
   const tattoo    = _selectedIdForSlot(node, 'tattoo');
@@ -1124,163 +878,7 @@ let preload = function (imageArray, callback) {
 };
 
 let hairColorIndex;
-let hairColors = {
-  // three targets: [light, mid, dark]; if you authored palettes as 2 tones before, we duplicate the second
-  black1: ['#424247', '#232326', '#0e0e0f'],
-  black2: ['#4b453e', '#302a24', '#14110f'],
-  brown1: ['#51403a', '#362b27', '#241b18'],
-  brown2: ['#5f4148', '#4e373d', '#3a292e'],
-  brown3: ['#7a6966', '#574845', '#3f3533'],
-  brown4: ['#a0815c', '#7e6648', '#5e4b36'],
-  blonde1: ['#b9a088', '#a58f79', '#8e7764'],
-  blonde2: ['#dbc6ad', '#c7b39d', '#a7927c'],
-  blonde3: ['#f6dec2', '#dfc9b0', '#c2ae98'],
-  red1: ['#9e6246', '#84523a', '#6c432f'],
-  red2: ['#ab4438', '#8f392e', '#712d25'],
-  gray1: ['#8a8a8a', '#787878', '#5f5f5f'],
-  gray2: ['#acacac', '#909090', '#7a7a7a'],
-  gray3: ['#c4c4c4', '#acacac', '#959595'],
-  white1: ['#e4e4e4', '#d2d2d2', '#bdbdbd'],
-};
-
 let tattooColorIndex;
-let tattooColors = {
-  brown1: '#6d451e',
-  brown2: '#9d7a65',
-  red1: '#8a4646',
-  red2: '#9b2121',
-  orange1: '#d38c1a',
-  yellow1: '#e1cb26',
-  lime1: '#b8bc6b',
-  green1: '#4a630c',
-  green2: '#5ba347',
-  cyan1: '#659d91',
-  blue1: '#4164ab',
-  violet1: '#75659d',
-  black1: '#6a645f',
-  gray1: '#a5a09a',
-  white1: '#e6dbd2',
-  white2: '#d5dae0',
-};
-
-// Skin filters (HSL-based): entries may include { h, s, l, b, c } deltas where
-//  - h: hue delta in **degrees** (−180..+180)
-//  - s: saturation delta in **percent** (−100..+100)
-//  - l: lightness  delta in **percent** (−100..+100)
-//  - b: brightness in **Photoshop slider units** (−150..+150), mapped as additive offset b/255 in L*
-//  - c: contrast   in **Photoshop slider units** (−100..+100), mapped as scale 1 + c/100 in L*
-// Place `null` at the index you want to represent “normal / no change”.
-const SKIN_FILTERS_HUMAN = [
-  { s: -30, l: +25 },
-  { s: -30, l: +25, h: +40 },
-  { s: -15, l: +15 },
-  { s: -15, l: +15, h: +40 },
-  null,                   // <-- default “normal”
-  { s: +10, l: -15, c: +5 },
-  { s: +10, l: -15, c: +5, h: +40 },
-  { s: +25, l: -20, c: +10 },
-  { s: +25, l: -20, c: +10, h: +40 },
-  { s: +60, l: -30, c: +30 },
-  { s: +60, l: -30, c: +30, h: +40 },
-  { s: +75, l: -50, c: +40 },
-  { s: +100, l: -75, c: +50 },
-];
-
-const SKIN_FILTERS_DWARF = [
-  { l: +25 },
-  { l: +15 },
-  { s: -30, l: +15 },
-  null,
-  { l: -15, c: +20 },
-  { s: -30, l: -15, c: +20 },
-  { l: -5, c: +20 },
-  { s: -30, l: -20, c: +30 },
-  { s: -5, l: -20, c: +40 },
-  { s: -30, l: -30, c: +40 },
-];
-
-const SKIN_FILTERS_HALFORC = [
-  { b: +40, s: -40 },
-  { b: +100 },
-  { b: +15, s: -60 },
-  { b: +40 },
-  null,
-  { b: -40 },
-  { b: -25, s: -60 },
-];
-
-const SKIN_FILTERS_ELF_HIGH = [
-  { s: -20, l: +10 },
-  { s: -10, l: +5 },
-  null,
-  { s: +10, l: -10, c: +5 },
-  { s: +25, l: -20, c: +10 },
-];
-
-const SKIN_FILTERS_ELF_WOOD = [
-  { s: -15, l: +15 },
-  { s: -15, l: +15, h: +30 },
-  null,
-  { h: +30 },
-  { s: +10, l: -15, c: +5 },
-  { s: +10, l: -15, c: +5, h: +30 },
-  { s: +25, l: -35, c: +10 },
-  { s: +25, l: -35, c: +10, h: +30 },
-  { s: +75, l: -50, c: +40 },
-];
-
-const SKIN_FILTERS_ELF_DEEP = [
-  { s: -30, l: +25 },
-  { s: -15, l: +15 },
-  null,
-  { s: +10, l: -15, c: +5 },
-  { s: +25, l: -20, c: +10 },
-  { s: +60, l: -30, c: +30 },
-];
-
-/**
- * Compute the default skin index (the entry where the filter is `null`)
- * for any provided skin filter list.
- */
-const getDefaultSkinIndex = (filters) => {
-  const idx = filters.findIndex((v) => v === null);
-  return idx >= 0 ? idx : 0;
-};
-
-const DEFAULT_SKIN_INDEX_HUMAN = getDefaultSkinIndex(SKIN_FILTERS_HUMAN);
-const DEFAULT_SKIN_INDEX_DWARF = getDefaultSkinIndex(SKIN_FILTERS_DWARF);
-const DEFAULT_SKIN_INDEX_HALFORC = getDefaultSkinIndex(SKIN_FILTERS_HALFORC);
-const DEFAULT_SKIN_INDEX_ELF_HIGH = getDefaultSkinIndex(SKIN_FILTERS_ELF_HIGH);
-const DEFAULT_SKIN_INDEX_ELF_WOOD = getDefaultSkinIndex(SKIN_FILTERS_ELF_WOOD);
-const DEFAULT_SKIN_INDEX_ELF_DEEP = getDefaultSkinIndex(SKIN_FILTERS_ELF_DEEP);
-
-/**
- * Return the filters array for the node (race/subrace), or null if not supported.
- */
-function getSkinFiltersForNode(node) {
-  const rp = ((node?._meta?.racePrimary) || '').toLowerCase();
-  const sr = ((node?._meta?.subrace) || '').toLowerCase();
-
-  if (rp === 'human') return SKIN_FILTERS_HUMAN;
-  if (rp === 'dwarf') return SKIN_FILTERS_DWARF;
-  if (rp === 'halforc') return SKIN_FILTERS_HALFORC;
-
-  if (rp === 'elf') {
-    if (sr === 'highelf' || sr === 'high-elf' || sr === 'high_elf') return SKIN_FILTERS_ELF_HIGH;
-    if (sr === 'woodelf' || sr === 'wood-elf' || sr === 'wood_elf') return SKIN_FILTERS_ELF_WOOD;
-    if (sr === 'deepelf' || sr === 'deep-elf' || sr === 'deep_elf') return SKIN_FILTERS_ELF_DEEP;
-  }
-  return null; // others: no skin filter for now
-}
-
-/**
- * Determine the default skin index for the current node's race.
- * Falls back to HUMAN filters when the race is unknown.
- */
-function getDefaultSkinIndexForNode(node) {
-  const filters = getSkinFiltersForNode(node) || SKIN_FILTERS_HUMAN;
-  return getDefaultSkinIndex(filters);
-}
 
 // After React renders the swatch containers, rebuild hair/tattoo swatches on the next tick
 function refreshColorSwatchesDeferred() {
@@ -1380,345 +978,6 @@ function genColorSwatches(colorObject, subject) {
         (selectedColorRadio).checked = true;
       }
     }
-  }
-}
-
-function hexToRgb(hex) {
-  let c;
-  if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-    c = hex.substring(1).split('');
-    if (c.length == 3) {
-      c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-    }
-    c = '0x' + c.join('');
-    return [(c >> 16) & 255, (c >> 8) & 255, c & 255];
-  }
-  throw new Error('Bad Hex: ' + hex);
-}
-
-function rgbToHsl(r, g, b) {
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h, s, l = (max + min) / 2;
-  if (max === min) { h = s = 0; }
-  else {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max - min);
-    switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h /= 6;
-  }
-  return [h, s, l];
-}
-
-function hslToRgb(h, s, l) {
-  let r, g, b;
-  if (s === 0) {
-    r = g = b = l;
-  } else {
-    const hue2rgb = (p, q, t) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-      return p;
-    };
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1/3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1/3);
-  }
-  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-}
-
-function srgbToLinear(v) {
-  // v in 0..1
-  if (v <= 0.04045) return v / 12.92;
-  return Math.pow((v + 0.055) / 1.055, 2.4);
-}
-
-/* ---- sRGB ↔ OKLab helpers (Björn Ottosson) ---- */
-function srgbToOklab(r8, g8, b8) {
-  // sRGB 0..255 -> linear 0..1
-  let r = srgbToLinear(r8 / 255);
-  let g = srgbToLinear(g8 / 255);
-  let b = srgbToLinear(b8 / 255);
-
-  // linear sRGB -> LMS
-  const l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
-  const m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b;
-  const s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b;
-
-  // cube-root nonlinearity
-  const l_ = Math.cbrt(l);
-  const m_ = Math.cbrt(m);
-  const s_ = Math.cbrt(s);
-
-  // LMS -> OKLab
-  const L = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_;
-  const A = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_;
-  const B = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_;
-  return [L, A, B]; // L in 0..1
-}
-
-
-function replaceColor(data, colorFind, colorReplace, tolerance = 0, minAlpha = 0) {
-  const [fr, fg, fb] = hexToRgb(colorFind);
-  const [rr, rg, rb] = hexToRgb(colorReplace);
-  const tol = Math.max(0, tolerance|0);
-  const minA = Math.max(0, Math.min(255, minAlpha|0));
-
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    const a = data[i + 3];
-
-    if (a >= minA &&
-        Math.abs(r - fr) <= tol &&
-        Math.abs(g - fg) <= tol &&
-        Math.abs(b - fb) <= tol) {
-      data[i]     = rr;
-      data[i + 1] = rg;
-      data[i + 2] = rb;
-      // leave alpha unchanged
-    }
-  }
-}
-
-// Palette-safe skin filter (race-scoped):
-// Operates only on fully opaque pixels (alpha ≥ 250) and maps each unique RGB
-// to a single adjusted RGB. Hue is preserved; we only tweak lightness and clamp
-// saturation so high-chroma texels can't blow up. This avoids per-pixel drift
-// and semi-transparent edge artifacts.
-function applySkinFilterPaletteSafe(data, filter) {
-  if (!filter) return;
-  // Read raw values; default missing fields to 0
-  const rawH = (typeof filter.h === 'number') ? filter.h : 0; // degrees
-  const rawS = (typeof filter.s === 'number') ? filter.s : 0; // percent
-  const rawL = (typeof filter.l === 'number') ? filter.l : 0; // percent
-  const rawB = (typeof filter.b === 'number') ? filter.b : 0; // PS brightness (−150..+150)
-  const rawC = (typeof filter.c === 'number') ? filter.c : 0; // PS contrast   (−100..+100)
-
-  // If we're only nudging brightness/lightness, don't touch hue/saturation at all.
-  const pureMul = (rawH === 0) && (rawS === 0) && (rawC === 0);
-
-  // Map sliders to a pure RGB multiply (preserves hue ratios; no weird greens)
-  // rawL in % (−100..+100), rawB in PS units (−150..+150)
-  const mulFromL = (rawL / 100) * 0.6;      // moderate effect from L
-  const mulFromB = (rawB / 150) * 0.3;      // smaller effect from PS brightness
-  const mul = Math.max(0.5, Math.min(1.5, 1 + mulFromL + mulFromB));
-
-  // Build a map from original RGB to adjusted RGB (skip only fully transparent texels)
-  const map = new Map();
-  for (let i = 0; i < data.length; i += 4) {
-    const a = data[i + 3];
-    if (a !== 255) continue;
-    const r = data[i], g = data[i + 1], b = data[i + 2];
-    const key = (r << 16) | (g << 8) | b;
-    if (map.has(key)) continue;
-
-    // Pure channel-wise multiply → preserves hue relationships
-    let rr = Math.round(r * mul);
-    let gg = Math.round(g * mul);
-    let bb = Math.round(b * mul);
-    rr = rr < 0 ? 0 : (rr > 255 ? 255 : rr);
-    gg = gg < 0 ? 0 : (gg > 255 ? 255 : gg);
-    bb = bb < 0 ? 0 : (bb > 255 ? 255 : bb);
-
-    let out;
-
-    if (pureMul) {
-      // STRICT: do not touch hue/saturation at all for brightness-only or tiny tweaks
-      out = [rr, gg, bb];
-    } else {
-      // Guard rails (only for bigger changes involving s/h/c)
-      const [, s0] = rgbToHsl(r, g, b);
-      let   [hh, ss, ll] = rgbToHsl(rr, gg, bb);
-
-      // Never increase saturation vs original
-      ss = Math.min(ss, s0);
-
-      // Generic hard cap only; remove hue-specific green handling
-      if (ss > 0.75) {
-        ss = 0.75;
-      }
-      [rr, gg, bb] = hslToRgb(hh, ss, ll);
-      out = [rr, gg, bb];
-    }
-
-    // Safety: if conversion produced invalids, fall back
-    if (!Number.isFinite(out[0]) || !Number.isFinite(out[1]) || !Number.isFinite(out[2])) {
-      out = [r, g, b];
-    }
-    map.set(key, out);
-  }
-
-  // Second pass: apply mapping to all but fully transparent texels
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] !== 255) continue;
-    const key = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2];
-    const out = map.get(key);
-    if (out) {
-      data[i]     = out[0];
-      data[i + 1] = out[1];
-      data[i + 2] = out[2];
-    }
-  }
-}
-
-function applySkinFilter(data, variantIndex, filters = SKIN_FILTERS_HUMAN, opts = {}) {
-  const f = filters[variantIndex];
-  if (!f) return; // null entry = no-op
-
-  // Resolve pipeline: filter.mode > opts.pipeline > 'modern'
-  const pipeline = (f && typeof f.mode === 'string') ? f.mode
-                   : (typeof opts.pipeline === 'string' ? opts.pipeline : 'modern');
-
-  if (pipeline === 'safe') {
-    applySkinFilterPaletteSafe(data, f);
-    return;
-  }
-  // Default: modern perceptual path (OKLab-based for H/S/L and B/C)
-  applySkinFilterModernOKLab(data, f);
-}
-
-// Modern unified filter: OKLab/OKLCH-like edits (perceptual). Works for any layer/race.
-function applySkinFilterModernOKLab(data, filter) {
-  // Read raw values; default missing fields to 0
-  const rawH = (typeof filter.h === 'number') ? filter.h : 0; // degrees (−180..+180)
-  const rawS = (typeof filter.s === 'number') ? filter.s : 0; // percent (−100..+100)
-  const rawL = (typeof filter.l === 'number') ? filter.l : 0; // percent (−100..+100)
-  const rawB = (typeof filter.b === 'number') ? filter.b : 0; // PS brightness (−150..+150)
-  const rawC = (typeof filter.c === 'number') ? filter.c : 0; // PS contrast   (−100..+100)
-
-  // Branching flags
-  const pureHue = (rawH !== 0) && (rawS === 0) && (rawL === 0) && (rawB === 0) && (rawC === 0);
-  const pureMul = (rawH === 0) && (rawS === 0) && (rawC === 0) && (rawL !== 0 || rawB !== 0);
-
-  const hRad   = (rawH * Math.PI) / 180;         // hue rotation in radians
-
-  // Helper: convert OKLab -> linear sRGB (unclamped), test gamut in linear, then gamma encode to 0..255
-  const toSRGBUnclamped = (Lx, Ax, Bx) => {
-    const l_ = Lx + 0.3963377774 * Ax + 0.2158037573 * Bx;
-    const m_ = Lx - 0.1055613458 * Ax - 0.0638541728 * Bx;
-    const s_ = Lx - 0.0894841775 * Ax - 1.2914855480 * Bx;
-    const l = l_ * l_ * l_;
-    const m = m_ * m_ * m_;
-    const s = s_ * s_ * s_;
-    let rLin = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
-    let gLin = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
-    let bLin = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
-    const inGamut = (rLin >= 0 && rLin <= 1) && (gLin >= 0 && gLin <= 1) && (bLin >= 0 && bLin <= 1);
-    const to8 = (vLin) => {
-      let v = vLin <= 0.0031308 ? vLin * 12.92 : 1.055 * Math.pow(vLin, 1/2.4) - 0.055;
-      if (v < 0) v = 0; else if (v > 1) v = 1;
-      return Math.round(v * 255);
-    };
-    return { inGamut, nr: to8(rLin), ng: to8(gLin), nb: to8(bLin) };
-  };
-
-  // 1) PURE RGB MULTIPLY for brightness/lightness-only (no H/S/C requested)
-  if (pureMul) {
-    const mul = (1
-      + (rawL / 100) * 0.60  // moderate effect from L
-      + (rawB / 150) * 0.30  // smaller effect from PS brightness
-    );
-    const m = Math.max(0.5, Math.min(1.5, mul));
-    for (let i = 0; i < data.length; i += 4) {
-      if (data[i + 3] !== 255) continue;
-      data[i]     = Math.max(0, Math.min(255, Math.round(data[i]     * m)));
-      data[i + 1] = Math.max(0, Math.min(255, Math.round(data[i + 1] * m)));
-      data[i + 2] = Math.max(0, Math.min(255, Math.round(data[i + 2] * m)));
-    }
-    return;
-  }
-
-  // 2) PURE HUE ROTATION (keep L and C; reduce C only if needed for gamut)
-  if (pureHue) {
-    for (let i = 0; i < data.length; i += 4) {
-      const a = data[i + 3];
-      if (a !== 255) continue;
-      const r = data[i], g = data[i + 1], b = data[i + 2];
-
-      let [L, A, B_] = srgbToOklab(r, g, b);
-      const C0 = Math.hypot(A, B_);
-      if (C0 === 0) continue; // achromatic
-
-      let angle = Math.atan2(B_, A) + hRad;
-      let scale = 1.0, tries = 0, out;
-      do {
-        const A1 = (C0 * scale) * Math.cos(angle);
-        const B1 = (C0 * scale) * Math.sin(angle);
-        out = toSRGBUnclamped(L, A1, B1);
-        if (out.inGamut) break;
-        scale *= 0.96; // reduce chroma until in gamut
-        tries++;
-      } while (tries < 16);
-
-      data[i]     = out.nr;
-      data[i + 1] = out.ng;
-      data[i + 2] = out.nb;
-    }
-    return;
-  }
-
-  // 3) MIXED / GENERAL CASE (OKLab). Only apply the sliders you provided.
-  const sScale = (rawS === 0) ? 1 : (1 + rawS / 100);  // only scale C if S was requested
-  const lDelta = (rawL / 100) * 0.50;                  // L delta
-  const bDelta = (rawB / 150) * 0.35;                  // brightness -> L offset
-  const cScale = (rawC === 0) ? 1 : (1 + (rawC / 100) * 0.85); // contrast scale
-
-  for (let i = 0; i < data.length; i += 4) {
-    const a = data[i + 3];
-    if (a !== 255) continue;
-    const r = data[i], g = data[i + 1], b = data[i + 2];
-
-    let [L, A, B_] = srgbToOklab(r, g, b);
-    const C0 = Math.hypot(A, B_);
-    let angle = Math.atan2(B_, A);
-
-    if (hRad !== 0) angle += hRad; // only if H requested
-
-    // Lightness pipeline: only L/B/Contrast affect L
-    let L1 = L + lDelta + bDelta;
-    if (cScale !== 1) {
-      const mid = 0.5;
-      L1 = (L1 - mid) * cScale + mid; // contrast around mid
-    }
-    if (L1 < 0) L1 = 0; else if (L1 > 1) L1 = 1;
-
-    // Chroma pipeline: keep original C unless S requested
-    let C1 = C0 * sScale;
-
-    // No global chroma caps when S wasn't asked for; only enforce gamut.
-    if (rawS > 0) {
-      // Allow increases but keep them sane; avoid neon explosions
-      const CHROMA_ABS_CAP = 0.40;     // absolute OKLab chroma ceiling
-      const CHROMA_REL_CAP = C0 * 1.30; // no more than +30% over source
-      C1 = Math.min(C1, CHROMA_ABS_CAP, CHROMA_REL_CAP);
-    }
-
-    // Try convert; if out of gamut, reduce chroma only (preserve your requested L/H/C changes)
-    let scale = (C0 === 0) ? 0 : (C1 / C0);
-    let tries = 0, out;
-    do {
-      const A1 = (C0 * scale) * Math.cos(angle);
-      const B1 = (C0 * scale) * Math.sin(angle);
-      out = toSRGBUnclamped(L1, A1, B1);
-      if (out.inGamut) break;
-      scale *= 0.96; // shave chroma until we fit sRGB
-      tries++;
-    } while (tries < 16);
-
-    data[i]     = out.nr;
-    data[i + 1] = out.ng;
-    data[i + 2] = out.nb;
   }
 }
 
@@ -1840,7 +1099,7 @@ function drawChar(imageArray, name, replace) {
           for (let i2 = 0; i2 < d.length; i2 += 4) {
             if (d[i2 + 3] !== 255) continue; // operate only on fully opaque texels of the sprite
             const r0 = d[i2], g0 = d[i2 + 1], b0 = d[i2 + 2];
-            const [rr, gg, bb] = _applyArmorFilterPixelOKLab(r0, g0, b0, spec);
+            const [rr, gg, bb] = applyArmorFilterPixelOKLab(r0, g0, b0, spec);
             d[i2] = rr; d[i2 + 1] = gg; d[i2 + 2] = bb; // keep alpha as‑is
           }
           octx.putImageData(id, 0, 0);
@@ -2708,7 +1967,7 @@ export function getDisplayTraitsSnapshot() {
 
   const feats = (node.presets && node.presets.features) || {};
 
-  const skin = (typeof feats.skin === 'number') ? feats.skin : null;
+  const skin = getSelectedSkinNumber(node);
   const hair = (typeof feats.hair === 'number') ? feats.hair : null;
   const beard = (typeof feats.beard === 'number') ? feats.beard : null;
   const tattoo = (typeof feats.tattoo === 'number') ? feats.tattoo : null;

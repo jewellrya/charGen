@@ -7,8 +7,8 @@ import {
   onSelectClass, onInitClassUI,
   getImmutableTraitsSnapshot,
   setHideEquipment, getHideEquipment, applyClassArmorAndRedraw,
-  isExcludedFeatureBase
 } from "./app-logic/charGen";
+import { isExcludedFeatureBase } from './app-logic/char-gen/constants';
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronRight, faChevronLeft, faDice } from '@fortawesome/free-solid-svg-icons';

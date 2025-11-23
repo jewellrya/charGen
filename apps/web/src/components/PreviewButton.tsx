@@ -1,10 +1,9 @@
 "use client";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 import React, { useEffect, useRef, useState } from "react";
 import type { ImmutableTraits } from "@/lib/metadata";
 import { buildAttributesFromTraits } from "@/lib/metadata";
 import { getHideEquipment, setHideEquipment, applyClassArmorAndRedraw, getImmutableTraitsSnapshot } from "@/app/app-logic/charGen";
+import { Icon } from "./icons";
 
 function grabPngDataURL(): string {
   const img = document.querySelector<HTMLImageElement>("#charGen img");
@@ -342,9 +341,7 @@ export default function PreviewButton({ traits }: PreviewButtonProps) {
         aria-expanded={open}
       >
         {busy ? "Working…" : "Preview"}
-        {!busy && (
-          <FontAwesomeIcon icon={open ? faCaretUp : faCaretDown} size="sm" className="mb-1" />
-        )}
+        {!busy && <Icon icon={open ? "ChevronUp" : "ChevronDown"} className="pointer-events-none" />}
       </button>
 
       {open && (

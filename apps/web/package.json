@@ -11,13 +11,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^7.1.0",
-    "@fortawesome/free-solid-svg-icons": "^7.1.0",
-    "@fortawesome/react-fontawesome": "^3.1.0",
     "axios": "^1.12.2",
     "ethers": "^6.15.0",
     "form-data": "^4.0.4",
     "next": "^15.3.3",
+    "pixelarticons": "^1.8.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "viem": "^2.39.0"

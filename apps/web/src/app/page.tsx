@@ -10,8 +10,7 @@ import {
 } from "./app-logic/charGen";
 import { isExcludedFeatureBase } from './app-logic/char-gen/constants';
 import { useCallback, useEffect, useState } from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronRight, faChevronLeft, faDice } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from "../components/icons";
 import MintButton from "../components/MintButton";
 import PreviewButton from "../components/PreviewButton";
 
@@ -48,10 +47,10 @@ const FeatureSelector: React.FC<FeatureSelectorProps> = ({ category, onChange, v
           className="btn btn-sm text-lg"
           onClick={() => onChange(category, 'decrease')}
         >
-          <FontAwesomeIcon icon={faChevronLeft} />
+          <Icon icon="ChevronLeft" />
         </button>
 
-        <p id={id} className="m-0 flex-1 text-primary capitalize text-center text-[1.5rem] leading-tight">
+        <p id={id} className="m-0 flex-1 text-primary capitalize text-center text-lg leading-tight">
           {valueText ?? ""}
         </p>
 
@@ -60,7 +59,7 @@ const FeatureSelector: React.FC<FeatureSelectorProps> = ({ category, onChange, v
           className="btn btn-sm text-lg"
           onClick={() => onChange(category, 'increase')}
         >
-          <FontAwesomeIcon icon={faChevronRight} />
+          <Icon icon="ChevronRight" />
         </button>
       </div>
     </>
@@ -362,11 +361,11 @@ export default function Home() {
                 type="button"
                 className="btn btn-sm"
                 onClick={handleRandom}
-                aria-label="Random Character"
-                title="Random Character"
+                aria-label="Roll Character"
+                title="Roll Character"
               >
-                <FontAwesomeIcon icon={faDice} className="me-2" />
-                <span className="hidden sm:inline">Random Character</span>
+                <Icon icon="Dice" />
+                <span className="hidden sm:inline">Roll Character</span>
               </button>
             </div>
             {/* Gender Toggle (DaisyUI button radios) */}
@@ -392,12 +391,12 @@ export default function Home() {
             </div>
 
             <div className="mb-6">
-              <p className="font-bold mb-2">Name</p>
+              <p className="font-bold text-lg mb-2">Name</p>
               <div className="flex gap-2">
                 <input
                   id="charName"
                   type="text"
-                  className="input flex-1 text-[1.5rem] leading-tight"
+                  className="input flex-1 text-lg leading-tight"
                   onBlur={handleNameBlur}
                 />
                 <button
@@ -417,7 +416,7 @@ export default function Home() {
             </div>
 
             {/* Select Race */}
-            <p className="mb-2 text-base font-bold">Race</p>
+            <p className="mb-2 text-lg font-bold">Race</p>
           
             <div className="mb-6">
               {/* Primary race selector */}
@@ -427,17 +426,17 @@ export default function Home() {
                   className="btn btn-sm text-lg"
                   onClick={() => handleSelectRacePrimary("decrease")}
                 >
-                  <FontAwesomeIcon icon={faChevronLeft} />
+                  <Icon icon="ChevronLeft" />
                 </button>
 
-                <div id="selectedRacePrimary" className="flex-1 text-primary capitalize text-center text-[1.5rem] leading-tight" />
+                <div id="selectedRacePrimary" className="flex-1 text-primary capitalize text-center text-lg leading-tight" />
 
                 <button
                   type="button"
                   className="btn btn-sm text-lg"
                   onClick={() => handleSelectRacePrimary("increase")}
                 >
-                  <FontAwesomeIcon icon={faChevronRight} />
+                  <Icon icon="ChevronRight" />
                 </button>
               </div>
 
@@ -448,23 +447,23 @@ export default function Home() {
                   className="btn btn-sm text-lg"
                   onClick={() => handleSelectRace("decrease")}
                 >
-                  <FontAwesomeIcon icon={faChevronLeft} />
+                  <Icon icon="ChevronLeft" />
                 </button>
 
-                <div id="selectedRace" className="flex-1 text-primary capitalize text-center text-[1.5rem] leading-tight" />
+                <div id="selectedRace" className="flex-1 text-primary capitalize text-center text-lg leading-tight" />
 
                 <button
                   type="button"
                   className="btn btn-sm text-lg"
                   onClick={() => handleSelectRace("increase")}
                 >
-                  <FontAwesomeIcon icon={faChevronRight} />
+                  <Icon icon="ChevronRight" />
                 </button>
               </div>
             </div>
 
             {/* Class select */}
-            <p className="mb-2 text-base font-bold">Class</p>
+            <p className="mb-2 text-lg font-bold">Class</p>
             <div className="mb-4">
               <div className="flex items-center gap-2">
                 <button
@@ -472,17 +471,17 @@ export default function Home() {
                   className="btn btn-sm text-lg"
                   onClick={() => handleSelectClass("decrease")}
                 >
-                  <FontAwesomeIcon icon={faChevronLeft} />
+                  <Icon icon="ChevronLeft" />
                 </button>
 
-                <div id="selectedClass" className="flex-1 text-primary capitalize text-center text-[1.5rem] leading-tight" />
+                <div id="selectedClass" className="flex-1 text-primary capitalize text-center text-lg leading-tight" />
 
                 <button
                   type="button"
                   className="btn btn-sm text-lg"
                   onClick={() => handleSelectClass("increase")}
                 >
-                  <FontAwesomeIcon icon={faChevronRight} />
+                  <Icon icon="ChevronRight" />
                 </button>
               </div>
             </div>
@@ -515,7 +514,7 @@ export default function Home() {
                 aria-label="Randomize Features"
                 title="Randomize Features"
               >
-                <FontAwesomeIcon icon={faDice} />
+                <span className="hidden sm:inline">Randomize Features</span>
               </button>
 
               {/* Hide equipment toggle (logs only for now) */}

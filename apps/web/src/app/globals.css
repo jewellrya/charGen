@@ -86,7 +86,7 @@
     text-shadow: 6px 6px #000;
     
     span {
-      text-shadow: 2px 2px 2px #000;
+      text-shadow: 2px 3px 3px #000;
     }
   }
 
@@ -104,6 +104,6 @@
   } */
 
   .icon {
-    filter: brightness(0) invert(1) drop-shadow(2px 2px 2px #000);
+    filter: brightness(0) invert(1) drop-shadow(2px 2px 4px #000);
   }
 }

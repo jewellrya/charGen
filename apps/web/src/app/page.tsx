@@ -13,8 +13,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Icon } from "../components/icons";
 import MintButton from "../components/MintButton";
 import PreviewButton from "../components/PreviewButton";
-
 import type { ImmutableTraits } from "@/lib/metadata";
+import MusicToggle from "../components/MusicToggle";
 
 // Types
 type Dir = 'increase' | 'decrease';
@@ -306,6 +306,7 @@ export default function Home() {
             <h1 className="text-2xl md:text-3xl font-semibold leading-tight">The Trials of Nral</h1>
           </div>
           <div className="flex items-center gap-2">
+            <MusicToggle />
             <button
               type="button"
               className="btn btn-sm"

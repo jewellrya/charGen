@@ -1113,28 +1113,29 @@ function drawChar(imageArray, name, replace) {
 
 
     let img = canvas.toDataURL('image/png');
-    let charGenComponent =
-      '<div id="component_' +
-      name +
-      '" class="w-full md:w-3/4 lg:w-7/10"><div class="flex flex-col items-center gap-2"><img id="img_' +
-      name +
-      '" src="' +
-      img +
-      '" class="w-full mx-auto"/><a class="link text-center truncate" href="' +
-      img +
-      '" download="' +
-      name +
-      '">Export "' +
-      name +
-      '"</a></div></div>';
-
     if (typeof document !== 'undefined') {
       const cg = document.getElementById('charGen');
       if (cg) {
+        const container = document.createElement('div');
+        container.id = `component_${name}`;
+        container.className = 'w-full md:w-3/4 lg:w-7/10';
+
+        const inner = document.createElement('div');
+        inner.className = 'flex flex-col items-center gap-2';
+
+        const imgEl = document.createElement('img');
+        imgEl.id = `img_${name}`;
+        imgEl.src = img;
+        imgEl.className = 'w-full mx-auto';
+        inner.appendChild(imgEl);
+
+        container.appendChild(inner);
+
         if (!replace) {
-          cg.innerHTML += charGenComponent;
+          cg.appendChild(container);
         } else {
-          cg.innerHTML = charGenComponent;
+          cg.innerHTML = '';
+          cg.appendChild(container);
         }
       }
     }

@@ -359,17 +359,17 @@ export default function Home() {
             <div className="mb-6">
               <button
                 type="button"
-                className="btn btn-sm"
+                className="btn btn-game"
                 onClick={handleRandom}
                 aria-label="Roll Character"
                 title="Roll Character"
               >
-                <Icon icon="Dice" />
-                <span className="hidden sm:inline">Roll Character</span>
+                <Icon icon="Dice" className="me-1" />
+                <span className="hidden sm:inline leading-none">Roll Character</span>
               </button>
             </div>
             {/* Gender Toggle (DaisyUI button radios) */}
-            <div className="join w-full mb-6">
+            <div className="join w-full leading-none mb-6">
               <input
                 type="radio"
                 name="genderRadio"
@@ -511,10 +511,10 @@ export default function Home() {
                 type="button"
                 className="btn btn-sm"
                 onClick={handleRandomizeFeatures}
-                aria-label="Randomize Features"
-                title="Randomize Features"
+                aria-label="Randomize"
+                title="Randomize"
               >
-                <span className="hidden sm:inline">Randomize Features</span>
+                <span className="hidden sm:inline">Randomize</span>
               </button>
 
               {/* Hide equipment toggle (logs only for now) */}

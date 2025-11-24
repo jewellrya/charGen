@@ -4,16 +4,18 @@
 @plugin "daisyui/theme" {
   name: "scroll";
   default: false;
-  color-scheme: light;
-  prefersdark: false;
-  --color-base-100: oklch(100% 0 0);
-  --color-base-200: oklch(98% 0 0);
-  --color-base-300: oklch(95% 0 0);
-  --color-base-content: oklch(0.467 0.032 102.2);
-  --color-primary: oklch(0.467 0.032 102.2);
-  --color-primary-content: oklch(98% 0.026 102.212);
-  --color-secondary: oklch(98% 0.026 102.212);
-  --color-secondary-content: oklch(0.467 0.032 102.2);
+  color-scheme: dark;
+  prefersdark: true;
+
+  --color-primary: #cfb689;
+  --color-primary-content: #000000;
+
+  /* background */
+  --color-base-100: #1a1313;
+  /* buttons */
+  --color-base-200: #362727;
+  /* idk */
+  --color-base-300: #362727;
 
   /* Cards */
   --card-fs: 1.125rem;
@@ -23,4 +25,85 @@
   --radius-selector: 0.5rem;
   --radius-field: 0.5rem;
   --radius-box: 0.5rem;
+}
+
+@layer utilities {
+  :root {
+    --frame-src: url("/assets/ui/frame-9slice-basic.png");
+    --frame-slice: 14;
+    --frame-border: 14px;
+  }
+
+  /* Base 9-slice utility (uses the "basic" frame). Swap the URL to propagate everywhere. */
+  .frame-9slice {
+    border-width: var(--frame-border);
+    border-style: solid;
+    border-image-source: var(--frame-src);
+    border-image-slice: var(--frame-slice) fill;
+    border-image-repeat: stretch;
+    image-rendering: pixelated;
+    background-clip: padding-box;
+  }
+
+  /* Optional alternates if you want fancier chrome on specific components */
+  .frame-9slice-fancy {
+    --frame-src: url("/assets/ui/frame-9slice-fancy.png");
+    border-width: var(--frame-border);
+    border-style: solid;
+    border-image-source: var(--frame-src);
+    border-image-slice: var(--frame-slice) fill;
+    border-image-repeat: stretch;
+    image-rendering: pixelated;
+    background-clip: padding-box;
+  }
+
+  .frame-9slice-ornate {
+    --frame-src: url("/assets/ui/frame-9slice-ornate.png");
+    border-width: var(--frame-border);
+    border-style: solid;
+    border-image-source: var(--frame-src);
+    border-image-slice: var(--frame-slice) fill;
+    border-image-repeat: stretch;
+    image-rendering: pixelated;
+    background-clip: padding-box;
+  }
+}
+
+@layer components {
+  /* Game-styled button using the base 9-slice */
+  .btn-game {
+    @apply btn px-4 py-2 font-semibold tracking-wide rounded-none;
+    border-width: var(--frame-border);
+    border-style: solid;
+    border-image-source: var(--frame-src);
+    border-image-slice: var(--frame-slice) fill;
+    border-image-repeat: stretch;
+    image-rendering: pixelated;
+    background-clip: padding-box;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: hsl(var(--pc));
+    text-shadow: 6px 6px #000;
+    
+    span {
+      text-shadow: 2px 2px 2px #000;
+    }
+  }
+
+  .btn-game:hover {
+    filter: brightness(1.05);
+  }
+
+  .btn-game:active {
+    transform: translateY(1px);
+  }
+
+  /* Utility surface for panels/cards using the ornate frame */
+  /* .panel-game {
+    @apply frame-9slice-ornate p-4 bg-base-100;
+  } */
+
+  .icon {
+    filter: brightness(0) invert(1) drop-shadow(2px 2px 2px #000);
+  }
 }

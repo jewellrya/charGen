@@ -15,6 +15,7 @@ import MintButton from "../components/MintButton";
 import PreviewButton from "../components/PreviewButton";
 import type { ImmutableTraits } from "@/lib/metadata";
 import MusicToggle from "../components/MusicToggle";
+import useClickSound from "../components/useClickSound";
 
 // Types
 type Dir = 'increase' | 'decrease';
@@ -24,8 +25,9 @@ interface FeatureSelectorProps {
   category: string;
   onChange: (category: string, dir: Dir) => void;
   valueText?: string;
+  playClick?: () => void;
 }
-const FeatureSelector: React.FC<FeatureSelectorProps> = ({ category, onChange, valueText }) => {
+const FeatureSelector: React.FC<FeatureSelectorProps> = ({ category, onChange, valueText, playClick }) => {
   const id = `${category}Value`;
   const friendly = (() => {
     if (category === 'hairColor') return 'Hair Color';
@@ -44,8 +46,11 @@ const FeatureSelector: React.FC<FeatureSelectorProps> = ({ category, onChange, v
       <div className="flex items-center gap-2 mb-6">
         <button
           type="button"
-          className="btn btn-sm text-lg"
-          onClick={() => onChange(category, 'decrease')}
+          className="btn btn-sm text-lg btn-game secondary"
+          onClick={() => {
+            playClick?.();
+            onChange(category, 'decrease');
+          }}
         >
           <Icon icon="ChevronLeft" />
         </button>
@@ -56,8 +61,11 @@ const FeatureSelector: React.FC<FeatureSelectorProps> = ({ category, onChange, v
 
         <button
           type="button"
-          className="btn btn-sm text-lg"
-          onClick={() => onChange(category, 'increase')}
+          className="btn btn-sm text-lg btn-game secondary"
+          onClick={() => {
+            playClick?.();
+            onChange(category, 'increase');
+          }}
         >
           <Icon icon="ChevronRight" />
         </button>
@@ -69,6 +77,7 @@ const FeatureSelector: React.FC<FeatureSelectorProps> = ({ category, onChange, v
 export default function Home() {
   const [canvasDebug, setCanvasDebug] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const playClick = useClickSound();
 
   // dynamic feature slots discovered from filenames (hair, tool, etc.)
   const [features, setFeatures] = useState<string[]>([]);
@@ -165,6 +174,11 @@ export default function Home() {
   }, []);
 
   const [immutableTraits, setImmutableTraits] = useState<ImmutableTraits | null>(null);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).__playClick = playClick;
+    }
+  }, [playClick]);
 
   const refreshImmutableTraits = useCallback(() => {
     try {
@@ -360,8 +374,11 @@ export default function Home() {
             <div className="mb-6">
               <button
                 type="button"
-                className="btn btn-game"
-                onClick={handleRandom}
+                className="btn btn-game primary"
+                onClick={() => {
+                  playClick();
+                  handleRandom();
+                }}
                 aria-label="Roll Character"
                 title="Roll Character"
               >
@@ -377,8 +394,11 @@ export default function Home() {
                 id="genderRadio1"
                 autoComplete="off"
                 aria-label="Male"
-                className="join-item btn"
-                onClick={() => handleSelectGender("male")}
+                className="join-item btn btn-game"
+                onClick={() => {
+                  playClick();
+                  handleSelectGender("male");
+                }}
               />
               <input
                 type="radio"
@@ -386,8 +406,11 @@ export default function Home() {
                 id="genderRadio2"
                 autoComplete="off"
                 aria-label="Female"
-                className="join-item btn"
-                onClick={() => handleSelectGender("female")}
+                className="join-item btn btn-game"
+                onClick={() => {
+                  playClick();
+                  handleSelectGender("female");
+                }}
               />
             </div>
 
@@ -402,8 +425,9 @@ export default function Home() {
                 />
                 <button
                   type="button"
-                  className="btn text-lg"
+                  className="btn btn-game secondary"
                   onClick={() => {
+                    playClick();
                     const names = ['Aren', 'Belira', 'Cador', 'Darin', 'Elandra', 'Faren', 'Garin', 'Helira', 'Isen', 'Jora', 'Kael', 'Lirien', 'Maren', 'Naris', 'Orin', 'Pelyn', 'Quara', 'Rhen', 'Sorin', 'Talia'];
                     const randomName = names[Math.floor(Math.random() * names.length)];
                     const nameInput = document.getElementById('charName');
@@ -424,8 +448,11 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="btn btn-sm text-lg"
-                  onClick={() => handleSelectRacePrimary("decrease")}
+                  className="btn btn-sm btn-game secondary text-lg"
+                  onClick={() => {
+                    playClick();
+                    handleSelectRacePrimary("decrease");
+                  }}
                 >
                   <Icon icon="ChevronLeft" />
                 </button>
@@ -434,8 +461,11 @@ export default function Home() {
 
                 <button
                   type="button"
-                  className="btn btn-sm text-lg"
-                  onClick={() => handleSelectRacePrimary("increase")}
+                  className="btn btn-sm btn-game secondary text-lg"
+                  onClick={() => {
+                    playClick();
+                    handleSelectRacePrimary("increase");
+                  }}
                 >
                   <Icon icon="ChevronRight" />
                 </button>
@@ -445,8 +475,11 @@ export default function Home() {
               <div id="selectedRaceDom" className="mt-3 flex items-center gap-2 hidden">
                 <button
                   type="button"
-                  className="btn btn-sm text-lg"
-                  onClick={() => handleSelectRace("decrease")}
+                  className="btn btn-sm btn-game secondary text-lg"
+                  onClick={() => {
+                    playClick();
+                    handleSelectRace("decrease");
+                  }}
                 >
                   <Icon icon="ChevronLeft" />
                 </button>
@@ -455,8 +488,11 @@ export default function Home() {
 
                 <button
                   type="button"
-                  className="btn btn-sm text-lg"
-                  onClick={() => handleSelectRace("increase")}
+                  className="btn btn-sm btn-game secondary text-lg"
+                  onClick={() => {
+                    playClick();
+                    handleSelectRace("increase");
+                  }}
                 >
                   <Icon icon="ChevronRight" />
                 </button>
@@ -469,8 +505,11 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="btn btn-sm text-lg"
-                  onClick={() => handleSelectClass("decrease")}
+                  className="btn btn-sm btn-game secondary text-lg"
+                  onClick={() => {
+                    playClick();
+                    handleSelectClass("decrease");
+                  }}
                 >
                   <Icon icon="ChevronLeft" />
                 </button>
@@ -479,8 +518,11 @@ export default function Home() {
 
                 <button
                   type="button"
-                  className="btn btn-sm text-lg"
-                  onClick={() => handleSelectClass("increase")}
+                  className="btn btn-sm btn-game secondary text-lg"
+                  onClick={() => {
+                    playClick();
+                    handleSelectClass("increase");
+                  }}
                 >
                   <Icon icon="ChevronRight" />
                 </button>
@@ -510,8 +552,11 @@ export default function Home() {
             <div className="mb-4 flex items-center gap-3">
               <button
                 type="button"
-                className="btn btn-sm"
-                onClick={handleRandomizeFeatures}
+                className="btn btn-game secondary leading-none"
+                onClick={() => {
+                  playClick();
+                  handleRandomizeFeatures();
+                }}
                 aria-label="Randomize"
                 title="Randomize"
               >
@@ -563,6 +608,7 @@ export default function Home() {
                   key={key}
                   category={key}
                   onChange={handleFeatureChange}
+                  playClick={playClick}
                   valueText={featureLabels[key] ?? ((featureValues[key] ?? 0) === 0 ? 'none' : String(featureValues[key]))}
                 />
               );

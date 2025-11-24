@@ -7,7 +7,7 @@
   color-scheme: dark;
   prefersdark: true;
 
-  --color-primary: #cfb689;
+  --color-primary: #ed9f51;
   --color-primary-content: #000000;
 
   /* background */
@@ -32,6 +32,7 @@
     --frame-src: url("/assets/ui/frame-9slice-basic.png");
     --frame-slice: 14;
     --frame-border: 14px;
+    --frame-textshadow: 2px 3px 3px #000;
   }
 
   /* Base 9-slice utility (uses the "basic" frame). Swap the URL to propagate everywhere. */
@@ -75,7 +76,6 @@
     @apply btn px-4 py-2 font-semibold tracking-wide rounded-none;
     border-width: var(--frame-border);
     border-style: solid;
-    border-image-source: var(--frame-src);
     border-image-slice: var(--frame-slice) fill;
     border-image-repeat: stretch;
     image-rendering: pixelated;
@@ -83,12 +83,47 @@
     background-repeat: no-repeat;
     background-size: cover;
     color: hsl(var(--pc));
-    text-shadow: 6px 6px #000;
     
     span {
-      text-shadow: 2px 3px 3px #000;
+      text-shadow: var(--frame-textshadow);
+    }
+
+    &.primary {
+      border-image-source: url("/assets/ui/frame-9slice-basic.png");
+    }
+
+    &.secondary {
+      border-image-source: url("/assets/ui/frame-9slice-secondary.png");
     }
   }
+
+  .btn:where(input:checked:not(.filter .btn)) {
+    outline: none !important;
+    border-width: 0 !important;
+    background-color: transparent !important;
+    color: inherit !important;
+    text-shadow: var(--frame-textshadow) !important;
+    border-image-source: url("/assets/ui/frame-9slice-basic.png");
+  }
+
+  .btn:where(input:not(:checked:not(.filter .btn))) {
+    outline: none !important;
+    border-width: 0 !important;
+    background-color: transparent !important;
+    color: inherit !important;
+    text-shadow: var(--frame-textshadow) !important;
+    border-image-source: url("/assets/ui/frame-9slice-secondary.png");
+  }
+
+  /* .btn:where(input) {
+    color: hsl(var(--pc));
+    border-image-source: url("/assets/ui/frame-9slice-secondary.png");
+  } */
+
+  /* .btn.btn-secondary:where(input) {
+    color: hsl(var(--pc));
+    border-image-source: url("/assets/ui/frame-9slice-secondary.png");
+  } */
 
   .btn-game:hover {
     filter: brightness(1.05);
@@ -97,6 +132,8 @@
   .btn-game:active {
     transform: translateY(1px);
   }
+
+  
 
   /* Utility surface for panels/cards using the ornate frame */
   /* .panel-game {

@@ -942,7 +942,7 @@ function genColorSwatches(colorObject, subject) {
     let colorSwatchComponent =
       '<div class="w-7">' +
       '<input class="sr-only peer" id="' + inputName + i.toString() + '" type="radio" name="' + inputName + '" autocomplete="off">' +
-      '<label onclick=select' + subjectCap + 'Color("' + colorName + '") ' +
+      '<label onclick="(window.__playClick && window.__playClick()), select' + subjectCap + 'Color(\'' + colorName + '\')" ' +
       'class="block w-10 cursor-pointer rounded border border-2 border-base-300 p-1 hover:bg-base-300 transition' +
       'peer-checked:border-2 peer-checked:border-primary" ' +
       'for="' + inputName + i.toString() + '">' +
@@ -1814,6 +1814,7 @@ if (typeof window !== 'undefined') {
   window.selectTattooColor = selectTattooColor;
   window.randomChar = randomChar;
   window.randomizeCurrentFeatures = randomizeCurrentFeatures;
+  window.__playClick = window.__playClick || null;
 
   const run = async () => {
     if (!ensureCanvas()) return;

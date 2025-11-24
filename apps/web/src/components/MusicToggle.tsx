@@ -9,6 +9,7 @@ export default function MusicToggle() {
   useEffect(() => {
     const audio = new Audio(AUDIO_SRC);
     audio.loop = true;
+    audio.volume = 0.5;
     audioRef.current = audio;
 
     return () => {

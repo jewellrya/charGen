@@ -404,7 +404,8 @@ export function applyArmorFilterPixelOKLab(r, g, b, spec) {
   const C0 = Math.hypot(A, B_);
   let angle = Math.atan2(B_, A) + hRad; // rotate only if H requested (0 adds nothing)
 
-  const sScale = (rawS === 0) ? 1 : (1 + rawS / 100);
+  // Increase saturation influence and remove caps
+  const sScale = (rawS === 0) ? 1 : (1 + rawS / 50);
   const lDelta = (rawL / 100) * 0.50;
   const bDelta = (rawB / 150) * 0.35;
   const cScale = (rawC === 0) ? 1 : (1 + (rawC / 100) * 0.85);
@@ -419,12 +420,7 @@ export function applyArmorFilterPixelOKLab(r, g, b, spec) {
 
   // Chroma path
   let C1 = C0 * sScale; // only scale if S requested
-  if (rawS > 0) {
-    const CHROMA_ABS_CAP = 0.40;
-    const CHROMA_REL_CAP = C0 * 1.30;
-    if (C1 > CHROMA_ABS_CAP) C1 = CHROMA_ABS_CAP;
-    if (C1 > CHROMA_REL_CAP) C1 = CHROMA_REL_CAP;
-  }
+  // no chroma caps; rely on gamut fallbacks only
 
   let scale = (C0 === 0) ? 0 : (C1 / C0);
   let tries = 0, out;

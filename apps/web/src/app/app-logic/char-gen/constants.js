@@ -75,9 +75,18 @@ export const CLASS_ARMOR_FILTERS = {
   cleric:   { h: null, s: -80, l: null, b: +20, c: +30 },
   warlock:  { h: -125, s: -30, l: null, b: -120, c: +50 },
   shaman:   { h: -20, s: -30, l: null, b: -80, c: -20 },
-  druid:    { h: +55, s: -30, l: null, b: -40, c: +40 },
+  druid:    { h: +55, s: -10, l: null, b: -40, c: +10 },
   fighter:  { h: null, s: null, l: null, b: null, c: null },
-  paladin:  { h: +30, s: +120, l: null, b: +80, c: null },
+  paladin:  { h: +30, s: +60, l: +20, b: null, c: null },
   ranger:   { h: null, s: null, l: null, b: null, c: null },
-  rogue:    { h: null, s: -80, l: null, b: -60, c: null },
+  rogue:    { h: null, s: -40, l: null, b: -60, c: null },
+};
+
+// Race-level armor filters (applied after class filters). Defaults are all neutral (null).
+// Tweak these per race to globally shift armor tones.
+export const RACE_ARMOR_FILTERS = {
+  human:   { h: null, s: null, l: null, b: null, c: null },
+  dwarf:   { h: null, s: +10, l: null, b: -20, c: null },
+  elf:     { h: null, s: null, l: null, b: null, c: null },
+  halforc: { h: null, s: null, l: null, b: null, c: null },
 };

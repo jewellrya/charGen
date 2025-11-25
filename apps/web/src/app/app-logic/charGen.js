@@ -1,5 +1,6 @@
 import {
   CLASS_ARMOR_FILTERS,
+  RACE_ARMOR_FILTERS,
   CLASS_OPTIONS,
   CLASS_TO_ARMOR,
   CLASS_TO_WEAPON,
@@ -239,6 +240,32 @@ function applyWeaponForClassToNode(node) {
 function getSelectedArmorFilterSpec() {
   const cls = (getCurrentClass() || '').toLowerCase();
   return CLASS_ARMOR_FILTERS[cls] || null;
+}
+
+function getRaceArmorFilterSpec(node) {
+  const rp = canonRace(node?._meta?.racePrimary || '');
+  if (!rp) return null;
+  return RACE_ARMOR_FILTERS[rp] || null;
+}
+
+function combineArmorFilters(specA, specB) {
+  if (!specA && !specB) return null;
+  const out = {};
+  const keys = ['h','s','l','b','c'];
+  for (const k of keys) {
+    const a = (specA && typeof specA[k] === 'number') ? specA[k] : null;
+    const b = (specB && typeof specB[k] === 'number') ? specB[k] : null;
+    if (a === null && b === null) {
+      out[k] = null;
+    } else if (a === null) {
+      out[k] = b;
+    } else if (b === null) {
+      out[k] = a;
+    } else {
+      out[k] = a + b;
+    }
+  }
+  return out;
 }
 
 // ---- Armor filter mask helpers ----
@@ -1092,7 +1119,9 @@ function drawChar(imageArray, name, replace) {
         octx.putImageData(id, 0, 0);
       }
       else if (lname.startsWith('chest') || lname.startsWith('legs') || lname.startsWith('feet')) {
-        const spec = getSelectedArmorFilterSpec();
+        const classSpec = getSelectedArmorFilterSpec();
+        const raceSpec = getRaceArmorFilterSpec(getCurrentNode());
+        const spec = combineArmorFilters(classSpec, raceSpec);
         if (spec && _armorFilterHasAnyChannel(spec)) {
           const id = octx.getImageData(0, 0, off.width, off.height);
           const d = id.data;
@@ -1101,6 +1130,20 @@ function drawChar(imageArray, name, replace) {
             const r0 = d[i2], g0 = d[i2 + 1], b0 = d[i2 + 2];
             const [rr, gg, bb] = applyArmorFilterPixelOKLab(r0, g0, b0, spec);
             d[i2] = rr; d[i2 + 1] = gg; d[i2 + 2] = bb; // keep alpha as‑is
+          }
+          octx.putImageData(id, 0, 0);
+        }
+      } else if (lname.startsWith('weapon')) {
+        const raceSpec = getRaceArmorFilterSpec(getCurrentNode());
+        const spec = raceSpec;
+        if (spec && _armorFilterHasAnyChannel(spec)) {
+          const id = octx.getImageData(0, 0, off.width, off.height);
+          const d = id.data;
+          for (let i2 = 0; i2 < d.length; i2 += 4) {
+            if (d[i2 + 3] !== 255) continue;
+            const r0 = d[i2], g0 = d[i2 + 1], b0 = d[i2 + 2];
+            const [rr, gg, bb] = applyArmorFilterPixelOKLab(r0, g0, b0, spec);
+            d[i2] = rr; d[i2 + 1] = gg; d[i2 + 2] = bb;
           }
           octx.putImageData(id, 0, 0);
         }

@@ -1,15 +1,12 @@
 'use client';
 
 import Link from "next/link";
-import SiteHeader from "../../components/SiteHeader";
 import useClickSound from "../../components/useClickSound";
 
 export default function AdventurePage() {
   const playClick = useClickSound();
   return (
     <main className="py-10 space-y-8">
-      <SiteHeader className="pb-4" />
-
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">Adventures are assembling</h2>
         <p className="text-base leading-relaxed text-base-content/90">

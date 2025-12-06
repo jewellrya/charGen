@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Tiny5 } from "next/font/google";
 import "./globals.css";
 import { MusicProvider } from "../components/MusicProvider";
+import SiteHeader from "../components/SiteHeader";
 
 const tiny5 = Tiny5({
   variable: "--font-tiny5",
@@ -22,7 +23,12 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="scroll" suppressHydrationWarning>
       <body className={`${tiny5.className} antialiased max-w-6xl px-5 mx-auto`}>
-        <MusicProvider>{children}</MusicProvider>
+        <MusicProvider>
+          <div className="max-w-6xl mx-auto">
+            <SiteHeader />
+            {children}
+          </div>
+        </MusicProvider>
       </body>
     </html>
   );

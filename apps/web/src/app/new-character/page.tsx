@@ -22,7 +22,6 @@ import MintButton from "../../components/MintButton";
 import PreviewButton from "../../components/PreviewButton";
 import type { ImmutableTraits } from "@/lib/metadata";
 import useClickSound from "../../components/useClickSound";
-import SiteHeader from "../../components/SiteHeader";
 
 // Types
 type Dir = 'increase' | 'decrease';
@@ -321,302 +320,299 @@ export default function Home() {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto">
-        <SiteHeader className="pt-8 pb-4 mb-4 md:pt-12 md:pb-6 md:mb-6" />
-        <div className="flex items-center gap-2 justify-center mb-4">
-          <button
-            type="button"
-            className="btn btn-sm btn-game secondary"
-            onClick={async () => {
-              playClick();
-              const img = document.querySelector<HTMLImageElement>('#charGen img');
-              if (!img || !img.complete || img.naturalWidth === 0) {
-                alert('No image yet');
-                return;
-              }
-              // Mirror <img> into an offscreen canvas (natural size)
-              const c = document.createElement('canvas');
-              c.width = img.naturalWidth;
-              c.height = img.naturalHeight;
-              const ctx = c.getContext('2d', { willReadFrequently: true });
-              if (!ctx) return;
-              ctx.imageSmoothingEnabled = false;
-              ctx.drawImage(img, 0, 0);
+      <div className="flex items-center gap-2 justify-center mb-4">
+        <button
+          type="button"
+          className="btn btn-sm btn-game secondary"
+          onClick={async () => {
+            playClick();
+            const img = document.querySelector<HTMLImageElement>('#charGen img');
+            if (!img || !img.complete || img.naturalWidth === 0) {
+              alert('No image yet');
+              return;
+            }
+            // Mirror <img> into an offscreen canvas (natural size)
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth;
+            c.height = img.naturalHeight;
+            const ctx = c.getContext('2d', { willReadFrequently: true });
+            if (!ctx) return;
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(img, 0, 0);
 
-              const id = ctx.getImageData(0, 0, c.width, c.height);
-              const d = id.data;
-              const counts = new Map<number, number>();
-              for (let i = 0; i < d.length; i += 4) {
-                if (d[i + 3] === 0) continue; // skip fully transparent
-                const key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
-                counts.set(key, (counts.get(key) || 0) + 1);
-              }
-              const toHex = (k: number) => '#' + k.toString(16).padStart(6, '0');
-              const rows = Array.from(counts.entries())
-                .map(([k, v]) => ({ hex: toHex(k), count: v }))
-                .sort((a, b) => b.count - a.count);
+            const id = ctx.getImageData(0, 0, c.width, c.height);
+            const d = id.data;
+            const counts = new Map<number, number>();
+            for (let i = 0; i < d.length; i += 4) {
+              if (d[i + 3] === 0) continue; // skip fully transparent
+              const key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+              counts.set(key, (counts.get(key) || 0) + 1);
+            }
+            const toHex = (k: number) => '#' + k.toString(16).padStart(6, '0');
+            const rows = Array.from(counts.entries())
+              .map(([k, v]) => ({ hex: toHex(k), count: v }))
+              .sort((a, b) => b.count - a.count);
 
-              // eslint-disable-next-line no-console
-              console.table(rows);
-            }}
-            aria-label="Dump Hex Palette"
-            title="Dump Hex Palette"
-          >
-            <span className="hidden sm:inline">Hexes</span>
-          </button>
-          
-          <PreviewButton traits={immutableTraits} onClickSound={playClick} />
-          <MintButton traits={immutableTraits} onClickSound={playClick} />
+            // eslint-disable-next-line no-console
+            console.table(rows);
+          }}
+          aria-label="Dump Hex Palette"
+          title="Dump Hex Palette"
+        >
+          <span className="hidden sm:inline">Hexes</span>
+        </button>
+        
+        <PreviewButton traits={immutableTraits} onClickSound={playClick} />
+        <MintButton traits={immutableTraits} onClickSound={playClick} />
+      </div>
+
+      {/* Main grid */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Left column */}
+        <div className="col-span-12 md:col-span-3">
+          {/* Random Character (moved here) */}
+          <div className="mb-6">
+            <button
+              type="button"
+              className="btn btn-game primary"
+              onClick={() => {
+                playClick();
+                handleRandom();
+              }}
+              aria-label="Roll Character"
+              title="Roll Character"
+            >
+              <Icon icon="Dice" className="me-1" />
+              <span className="hidden sm:inline leading-none">Roll Character</span>
+            </button>
+          </div>
+          {/* Gender Toggle (DaisyUI button radios) */}
+          <div className="join w-full leading-none mb-6">
+            <input
+              type="radio"
+              name="genderRadio"
+              id="genderRadio1"
+              autoComplete="off"
+              aria-label="Male"
+              className="join-item btn btn-game"
+              onClick={() => {
+                playClick();
+                handleSelectGender("male");
+              }}
+            />
+            <input
+              type="radio"
+              name="genderRadio"
+              id="genderRadio2"
+              autoComplete="off"
+              aria-label="Female"
+              className="join-item btn btn-game"
+              onClick={() => {
+                playClick();
+                handleSelectGender("female");
+              }}
+            />
+          </div>
+
+          <div className="mb-6">
+            <p className="font-bold text-lg mb-2">Name</p>
+            <div className="flex gap-2">
+              <input
+                id="charName"
+                type="text"
+                className="input flex-1 text-lg leading-tight"
+                onBlur={handleNameBlur}
+              />
+              <button
+                type="button"
+                className="btn btn-game secondary"
+                onClick={() => {
+                  playClick();
+                  const names = ['Aren', 'Belira', 'Cador', 'Darin', 'Elandra', 'Faren', 'Garin', 'Helira', 'Isen', 'Jora', 'Kael', 'Lirien', 'Maren', 'Naris', 'Orin', 'Pelyn', 'Quara', 'Rhen', 'Sorin', 'Talia'];
+                  const randomName = names[Math.floor(Math.random() * names.length)];
+                  const nameInput = document.getElementById('charName');
+                  if (nameInput && 'value' in nameInput) (nameInput as HTMLInputElement).value = randomName;
+                  refreshImmutableTraits();
+                }}
+              >
+                Random
+              </button>
+            </div>
+          </div>
+
+          {/* Select Race */}
+          <p className="mb-2 text-lg font-bold">Race</p>
+        
+          <div className="mb-6">
+            {/* Primary race selector */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-game secondary text-lg"
+                onClick={() => {
+                  playClick();
+                  handleSelectRacePrimary("decrease");
+                }}
+              >
+                <Icon icon="ChevronLeft" />
+              </button>
+
+              <div id="selectedRacePrimary" className="flex-1 text-primary capitalize text-center text-lg leading-tight" />
+
+              <button
+                type="button"
+                className="btn btn-sm btn-game secondary text-lg"
+                onClick={() => {
+                  playClick();
+                  handleSelectRacePrimary("increase");
+                }}
+              >
+                <Icon icon="ChevronRight" />
+              </button>
+            </div>
+
+            {/* Sub-race / domain selector */}
+            <div id="selectedRaceDom" className="mt-3 flex items-center gap-2 hidden">
+              <button
+                type="button"
+                className="btn btn-sm btn-game secondary text-lg"
+                onClick={() => {
+                  playClick();
+                  handleSelectRace("decrease");
+                }}
+              >
+                <Icon icon="ChevronLeft" />
+              </button>
+
+              <div id="selectedRace" className="flex-1 text-primary capitalize text-center text-lg leading-tight" />
+
+              <button
+                type="button"
+                className="btn btn-sm btn-game secondary text-lg"
+                onClick={() => {
+                  playClick();
+                  handleSelectRace("increase");
+                }}
+              >
+                <Icon icon="ChevronRight" />
+              </button>
+            </div>
+          </div>
+
+          {/* Class select */}
+          <p className="mb-2 text-lg font-bold">Class</p>
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-game secondary text-lg"
+                onClick={() => {
+                  playClick();
+                  handleSelectClass("decrease");
+                }}
+              >
+                <Icon icon="ChevronLeft" />
+              </button>
+
+              <div id="selectedClass" className="flex-1 text-primary capitalize text-center text-lg leading-tight" />
+
+              <button
+                type="button"
+                className="btn btn-sm btn-game secondary text-lg"
+                onClick={() => {
+                  playClick();
+                  handleSelectClass("increase");
+                }}
+              >
+                <Icon icon="ChevronRight" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Main grid */}
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left column */}
-          <div className="col-span-12 md:col-span-3">
-            {/* Random Character (moved here) */}
-            <div className="mb-6">
-              <button
-                type="button"
-                className="btn btn-game primary"
-                onClick={() => {
-                  playClick();
-                  handleRandom();
-                }}
-                aria-label="Roll Character"
-                title="Roll Character"
-              >
-                <Icon icon="Dice" className="me-1" />
-                <span className="hidden sm:inline leading-none">Roll Character</span>
-              </button>
-            </div>
-            {/* Gender Toggle (DaisyUI button radios) */}
-            <div className="join w-full leading-none mb-6">
-              <input
-                type="radio"
-                name="genderRadio"
-                id="genderRadio1"
-                autoComplete="off"
-                aria-label="Male"
-                className="join-item btn btn-game"
-                onClick={() => {
-                  playClick();
-                  handleSelectGender("male");
-                }}
-              />
-              <input
-                type="radio"
-                name="genderRadio"
-                id="genderRadio2"
-                autoComplete="off"
-                aria-label="Female"
-                className="join-item btn btn-game"
-                onClick={() => {
-                  playClick();
-                  handleSelectGender("female");
-                }}
-              />
-            </div>
-
-            <div className="mb-6">
-              <p className="font-bold text-lg mb-2">Name</p>
-              <div className="flex gap-2">
-                <input
-                  id="charName"
-                  type="text"
-                  className="input flex-1 text-lg leading-tight"
-                  onBlur={handleNameBlur}
-                />
-                <button
-                  type="button"
-                  className="btn btn-game secondary"
-                  onClick={() => {
-                    playClick();
-                    const names = ['Aren', 'Belira', 'Cador', 'Darin', 'Elandra', 'Faren', 'Garin', 'Helira', 'Isen', 'Jora', 'Kael', 'Lirien', 'Maren', 'Naris', 'Orin', 'Pelyn', 'Quara', 'Rhen', 'Sorin', 'Talia'];
-                    const randomName = names[Math.floor(Math.random() * names.length)];
-                    const nameInput = document.getElementById('charName');
-                    if (nameInput && 'value' in nameInput) (nameInput as HTMLInputElement).value = randomName;
-                    refreshImmutableTraits();
-                  }}
-                >
-                  Random
-                </button>
-              </div>
-            </div>
-
-            {/* Select Race */}
-            <p className="mb-2 text-lg font-bold">Race</p>
+        {/* Middle column */}
+        <div className="col-span-12 md:col-span-6">
           
-            <div className="mb-6">
-              {/* Primary race selector */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="btn btn-sm btn-game secondary text-lg"
-                  onClick={() => {
-                    playClick();
-                    handleSelectRacePrimary("decrease");
-                  }}
-                >
-                  <Icon icon="ChevronLeft" />
-                </button>
-
-                <div id="selectedRacePrimary" className="flex-1 text-primary capitalize text-center text-lg leading-tight" />
-
-                <button
-                  type="button"
-                  className="btn btn-sm btn-game secondary text-lg"
-                  onClick={() => {
-                    playClick();
-                    handleSelectRacePrimary("increase");
-                  }}
-                >
-                  <Icon icon="ChevronRight" />
-                </button>
-              </div>
-
-              {/* Sub-race / domain selector */}
-              <div id="selectedRaceDom" className="mt-3 flex items-center gap-2 hidden">
-                <button
-                  type="button"
-                  className="btn btn-sm btn-game secondary text-lg"
-                  onClick={() => {
-                    playClick();
-                    handleSelectRace("decrease");
-                  }}
-                >
-                  <Icon icon="ChevronLeft" />
-                </button>
-
-                <div id="selectedRace" className="flex-1 text-primary capitalize text-center text-lg leading-tight" />
-
-                <button
-                  type="button"
-                  className="btn btn-sm btn-game secondary text-lg"
-                  onClick={() => {
-                    playClick();
-                    handleSelectRace("increase");
-                  }}
-                >
-                  <Icon icon="ChevronRight" />
-                </button>
-              </div>
+          <canvas id="canvas" width={360} height={600} className="hidden" />
+          <div id="drawAmount" className="text-sm text-base-content/70" />
+          {loading && (
+            <div className="flex flex-col items-center py-8 text-base-content/70 w-full" aria-live="polite" aria-busy="true">
+              <span className="loading loading-spinner loading-md mb-2"></span>
+              <span>Generating random character...</span>
             </div>
+          )}
+          <div id="charGen" className={`flex justify-center ${loading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} />
+          {canvasDebug && (
+            <p className="mt-2 text-sm text-error">{canvasDebug}</p>
+          )}
+        </div>
 
-            {/* Class select */}
-            <p className="mb-2 text-lg font-bold">Class</p>
-            <div className="mb-4">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="btn btn-sm btn-game secondary text-lg"
-                  onClick={() => {
-                    playClick();
-                    handleSelectClass("decrease");
-                  }}
-                >
-                  <Icon icon="ChevronLeft" />
-                </button>
+        {/* Right column */}
+        <div className="col-span-12 md:col-span-3">
+          <div className="mb-4 flex items-center gap-3">
+            <button
+              type="button"
+              className="btn btn-game secondary leading-none"
+              onClick={() => {
+                playClick();
+                handleRandomizeFeatures();
+              }}
+              aria-label="Randomize"
+              title="Randomize"
+            >
+              <span className="hidden sm:inline">Randomize</span>
+            </button>
 
-                <div id="selectedClass" className="flex-1 text-primary capitalize text-center text-lg leading-tight" />
-
-                <button
-                  type="button"
-                  className="btn btn-sm btn-game secondary text-lg"
-                  onClick={() => {
-                    playClick();
-                    handleSelectClass("increase");
-                  }}
-                >
-                  <Icon icon="ChevronRight" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Middle column */}
-          <div className="col-span-12 md:col-span-6">
-            
-            <canvas id="canvas" width={360} height={600} className="hidden" />
-            <div id="drawAmount" className="text-sm text-base-content/70" />
-            {loading && (
-              <div className="flex flex-col items-center py-8 text-base-content/70" aria-live="polite" aria-busy="true">
-                <span className="loading loading-spinner loading-md mb-2"></span>
-                <span>Generating random character...</span>
-              </div>
-            )}
-            <div id="charGen" className={`flex justify-center ${loading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} />
-            {canvasDebug && (
-              <p className="mt-2 text-sm text-error">{canvasDebug}</p>
-            )}
-          </div>
-
-          {/* Right column */}
-          <div className="col-span-12 md:col-span-3">
-            <div className="mb-4 flex items-center gap-3">
-              <button
-                type="button"
-                className="btn btn-game secondary leading-none"
-                onClick={() => {
-                  playClick();
-                  handleRandomizeFeatures();
+            {/* Hide equipment toggle (logs only for now) */}
+            <label className="label cursor-pointer flex items-center gap-2 m-0 ms-auto">
+              <input
+                type="checkbox"
+                className="toggle toggle-sm"
+                checked={hideEquipment}
+                onChange={(e) => {
+                  const next = e.target.checked;
+                  setHideEquipmentState(next);
+                  try { setHideEquipment(next); } catch {}
+                  // Trigger a redraw path so `applyClassArmorAndRedraw()` logs the value.
+                  try { applyClassArmorAndRedraw(); } catch {}
                 }}
-                aria-label="Randomize"
-                title="Randomize"
-              >
-                <span className="hidden sm:inline">Randomize</span>
-              </button>
-
-              {/* Hide equipment toggle (logs only for now) */}
-              <label className="label cursor-pointer flex items-center gap-2 m-0 ms-auto">
-                <input
-                  type="checkbox"
-                  className="toggle toggle-sm"
-                  checked={hideEquipment}
-                  onChange={(e) => {
-                    const next = e.target.checked;
-                    setHideEquipmentState(next);
-                    try { setHideEquipment(next); } catch {}
-                    // Trigger a redraw path so `applyClassArmorAndRedraw()` logs the value.
-                    try { applyClassArmorAndRedraw(); } catch {}
-                  }}
-                />
-                <span className="label-text text-sm">Hide equipment</span>
-              </label>
-            </div>
-
-            {(uiOrder.length ? uiOrder : features).map((key) => {
-              if (key === 'hairColor') {
-                return (
-                  <div key="hairColor-block" className="mb-6">
-                    <p className="m-0 text-base font-bold mb-2">Hair Color</p>
-                    <div id="hairColorSwatches" />
-                  </div>
-                );
-              }
-              if (key === 'tattooColor') {
-                return (
-                  <div key="tattooColor-block" className="mb-6">
-                    <p className="m-0 text-base font-bold mb-2">Tattoo Color</p>
-                    <div id="tattooColorSwatches" />
-                  </div>
-                );
-              }
-              // Hide any excluded feature families (weapon, etc.)
-              if (isExcludedFeatureBase(key)) {
-                return null;
-              }
-              // Default: feature selector row
-              return (
-                <FeatureSelector
-                  key={key}
-                  category={key}
-                  onChange={handleFeatureChange}
-                  playClick={playClick}
-                  valueText={featureLabels[key] ?? ((featureValues[key] ?? 0) === 0 ? 'none' : String(featureValues[key]))}
-                />
-              );
-            })}
+              />
+              <span className="label-text text-sm">Hide equipment</span>
+            </label>
           </div>
+
+          {(uiOrder.length ? uiOrder : features).map((key) => {
+            if (key === 'hairColor') {
+              return (
+                <div key="hairColor-block" className="mb-6">
+                  <p className="m-0 text-base font-bold mb-2">Hair Color</p>
+                  <div id="hairColorSwatches" />
+                </div>
+              );
+            }
+            if (key === 'tattooColor') {
+              return (
+                <div key="tattooColor-block" className="mb-6">
+                  <p className="m-0 text-base font-bold mb-2">Tattoo Color</p>
+                  <div id="tattooColorSwatches" />
+                </div>
+              );
+            }
+            // Hide any excluded feature families (weapon, etc.)
+            if (isExcludedFeatureBase(key)) {
+              return null;
+            }
+            // Default: feature selector row
+            return (
+              <FeatureSelector
+                key={key}
+                category={key}
+                onChange={handleFeatureChange}
+                playClick={playClick}
+                valueText={featureLabels[key] ?? ((featureValues[key] ?? 0) === 0 ? 'none' : String(featureValues[key]))}
+              />
+            );
+          })}
         </div>
       </div>
     </>

@@ -9,7 +9,7 @@ interface Props {
 
 export default function SiteHeader({ className = "" }: Props) {
   return (
-    <header className={`border-b border-base-300 ${className}`}>
+    <header className={`border-b border-base-300 pt-8 pb-4 mb-4 md:pt-12 md:pb-6 md:mb-6 ${className}`}>
       <div className="flex flex-wrap items-center gap-4">
         <h1 className="text-2xl md:text-3xl font-semibold leading-tight">
           The Trials of Nral

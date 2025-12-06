@@ -1,15 +1,12 @@
 'use client';
 
 import Link from "next/link";
-import SiteHeader from "../components/SiteHeader";
 import useClickSound from "../components/useClickSound";
 
 export default function MarketingPage() {
   const playClick = useClickSound();
   return (
     <main className="py-12 space-y-10">
-      <SiteHeader className="pb-6" />
-
       <section className="grid gap-8 md:grid-cols-2 items-start">
         <div className="space-y-4">
           <p className="text-lg leading-relaxed text-base-content/90">

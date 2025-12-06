@@ -13,7 +13,7 @@
   /* background */
   --color-base-100: #1a1313;
   /* buttons */
-  --color-base-200: #362727;
+  --color-base-200: #261c1c;
   /* idk */
   --color-base-300: #362727;
   --color-base-content: #fff;
@@ -84,6 +84,7 @@
     background-repeat: no-repeat;
     background-size: cover;
     color: hsl(var(--pc));
+    text-shadow: var(--frame-textshadow) !important;
     
     span {
       text-shadow: var(--frame-textshadow);

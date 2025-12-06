@@ -114,7 +114,38 @@ function buildFeatureUiSnapshot() {
     labels[base] = selectedId === 0 ? 'none' : String(selectedId);
   }
 
-  return { features, uiOrder: features, values, counts, labels };
+  // Inject color swatch pseudo-features so they always appear in the UI
+  const hairKeys = Object.keys(hairColors || {});
+  if (!features.includes('hairColor')) {
+    features.push('hairColor');
+    counts.hairColor = hairKeys.length;
+    const hairKey = findHairKeyForNode(node);
+    values.hairColor = Math.max(0, hairKeys.indexOf(hairKey || hairKeys[0] || '') + 1);
+    labels.hairColor = hairKey || '';
+  }
+  const tattooKeys = Object.keys(tattooColors || {});
+  if (!features.includes('tattooColor')) {
+    features.push('tattooColor');
+    counts.tattooColor = tattooKeys.length;
+    const tattooKey = findTattooKeyForNode(node);
+    values.tattooColor = Math.max(0, tattooKeys.indexOf(tattooKey || tattooKeys[0] || '') + 1);
+    labels.tattooColor = tattooKey || '';
+  }
+
+  // UI order should respect FEATURE_PANEL_ORDER_TOP_FIRST when available
+  const uiOrder = [];
+  const listed = new Set();
+  for (const key of FEATURE_PANEL_ORDER_TOP_FIRST) {
+    if (features.includes(key)) {
+      uiOrder.push(key);
+      listed.add(key);
+    }
+  }
+  for (const f of features) {
+    if (!listed.has(f)) uiOrder.push(f);
+  }
+
+  return { features, uiOrder, values, counts, labels };
 }
 
 // --- Selected ID helpers (array index -> normalized file id) ---
@@ -409,6 +440,7 @@ function randomizeNodeSelections(node) {
   const order = node.presets.order || {};
   for (const slot of Object.keys(order)) {
     if (slot === 'skin') continue;
+    if (slotBaseName(slot) === 'tattoo') continue; // keep preset tattoo selection
     if (isExcludedFeatureBase(slotBaseName(slot))) continue; // excluded families are never randomized
     if (slot === 'chest' || slot === 'legs' || slot === 'feet') continue;
     const ti = order[slot];
@@ -438,13 +470,6 @@ function randomizeNodeSelections(node) {
       node._lastTattooColor = node.presets.colors.tattoo;
     }
     node.presets.colors.tattoo = null;
-  } else {
-    const tattooKeys = Object.keys(tattooColors);
-    if (tattooKeys.length) {
-      const tk = tattooKeys[Math.floor(Math.random() * tattooKeys.length)];
-      node.presets.colors.tattoo = node._lastTattooColor || tattooColors[tk];
-      node._lastTattooColor = node.presets.colors.tattoo;
-    }
   }
 }
 
@@ -1161,7 +1186,7 @@ function drawChar(imageArray, name, replace) {
       if (cg) {
         const container = document.createElement('div');
         container.id = `component_${name}`;
-        container.className = 'w-full md:w-3/4 lg:w-7/10';
+        container.className = 'w-full';
 
         const inner = document.createElement('div');
         inner.className = 'flex flex-col items-center gap-2';

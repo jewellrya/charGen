@@ -6,7 +6,7 @@ import useClickSound from "../components/useClickSound";
 export default function MarketingPage() {
   const playClick = useClickSound();
   return (
-    <main className="py-12 space-y-10">
+    <main className="py-12 space-y-10 flex-1 flex flex-col">
       <section className="grid gap-8 md:grid-cols-2 items-start">
         <div className="space-y-4">
           <p className="text-lg leading-relaxed text-base-content/90">
@@ -34,7 +34,7 @@ export default function MarketingPage() {
           </div>
         </div>
 
-        <div className="p-6 rounded-lg frame-9slice-fancy bg-base-100/70 backdrop-blur">
+        <div className="p-6 rounded-lg bg-base-100/70 backdrop-blur">
           <h2 className="text-2xl font-semibold mb-4">Drop Timeline</h2>
           <div className="space-y-3 text-base-content/85">
             <div>

@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import useClickSound from "./useClickSound";
 
 const links = [
-  { href: "/", label: "About" },
   { href: "/new-character", label: "New Character" },
-  { href: "/adventure", label: "Adventure" },
+  { href: "/quests", label: "Quests" },
+  { href: "/", label: "About" },
 ];
 
 export default function NavLinks() {

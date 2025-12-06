@@ -3,7 +3,13 @@ export const TRANSPARENT_PX =
 
 // --- Feature groups to exclude from the right-side UI (by base name) ---
 // Use lower-case base keys here (e.g., "weapon"). Add more bases as needed.
-export const EXCLUDED_FEATURE_BASES = new Set(['weapon']);
+export const EXCLUDED_FEATURE_BASES = new Set([
+  'weapon',
+  'underwear',
+  'chest',
+  'legs',
+  'feet',
+]);
 
 export function isExcludedFeatureBase(key) {
   const k = String(key || '').toLowerCase();

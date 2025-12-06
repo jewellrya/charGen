@@ -3,10 +3,10 @@
 import Link from "next/link";
 import useClickSound from "../../components/useClickSound";
 
-export default function AdventurePage() {
+export default function QuestPage() {
   const playClick = useClickSound();
   return (
-    <main className="py-10 space-y-8">
+    <main className="py-10 space-y-8 flex-1 flex flex-col">
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">Adventures are assembling</h2>
         <p className="text-base leading-relaxed text-base-content/90">

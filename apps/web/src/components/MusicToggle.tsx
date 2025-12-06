@@ -16,7 +16,7 @@ export default function MusicToggle() {
         toggle();
       }}
     >
-      {enabled ? "🔊 Music On" : "🔈 Music Off"}
+      {enabled ? "Music On" : "Music Off"}
     </button>
   );
 }

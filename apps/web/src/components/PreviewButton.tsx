@@ -416,7 +416,7 @@ export default function PreviewButton({ traits, onClickSound }: PreviewButtonPro
       )}
       <style jsx>{`
         .menuItem { background: #fff; transition: background 0.2s ease; }
-        .menuItem:hover { background: #f3f4f6; }
+        .menuItem:hover { background: #e5e5e5ff; }
       `}</style>
     </div>
   );

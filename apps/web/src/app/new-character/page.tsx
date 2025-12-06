@@ -319,57 +319,11 @@ export default function Home() {
   }, []);
 
   return (
-    <>
-      <div className="flex items-center gap-2 justify-center mb-4">
-        <button
-          type="button"
-          className="btn btn-sm btn-game secondary"
-          onClick={async () => {
-            playClick();
-            const img = document.querySelector<HTMLImageElement>('#charGen img');
-            if (!img || !img.complete || img.naturalWidth === 0) {
-              alert('No image yet');
-              return;
-            }
-            // Mirror <img> into an offscreen canvas (natural size)
-            const c = document.createElement('canvas');
-            c.width = img.naturalWidth;
-            c.height = img.naturalHeight;
-            const ctx = c.getContext('2d', { willReadFrequently: true });
-            if (!ctx) return;
-            ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(img, 0, 0);
-
-            const id = ctx.getImageData(0, 0, c.width, c.height);
-            const d = id.data;
-            const counts = new Map<number, number>();
-            for (let i = 0; i < d.length; i += 4) {
-              if (d[i + 3] === 0) continue; // skip fully transparent
-              const key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
-              counts.set(key, (counts.get(key) || 0) + 1);
-            }
-            const toHex = (k: number) => '#' + k.toString(16).padStart(6, '0');
-            const rows = Array.from(counts.entries())
-              .map(([k, v]) => ({ hex: toHex(k), count: v }))
-              .sort((a, b) => b.count - a.count);
-
-            // eslint-disable-next-line no-console
-            console.table(rows);
-          }}
-          aria-label="Dump Hex Palette"
-          title="Dump Hex Palette"
-        >
-          <span className="hidden sm:inline">Hexes</span>
-        </button>
-        
-        <PreviewButton traits={immutableTraits} onClickSound={playClick} />
-        <MintButton traits={immutableTraits} onClickSound={playClick} />
-      </div>
-
+    <div className="flex-1 flex flex-col h-full min-h-0 md:overflow-hidden">
       {/* Main grid */}
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-16 gap-8 flex-1 min-h-0 md:auto-rows-fr md:overflow-hidden">
         {/* Left column */}
-        <div className="col-span-12 md:col-span-3">
+        <div className="col-span-12 md:col-span-5 h-full min-h-0 md:overflow-y-auto md:pr-2">
           {/* Random Character (moved here) */}
           <div className="mb-6">
             <button
@@ -531,10 +485,55 @@ export default function Home() {
         </div>
 
         {/* Middle column */}
-        <div className="col-span-12 md:col-span-6">
-          
-          <canvas id="canvas" width={360} height={600} className="hidden" />
-          <div id="drawAmount" className="text-sm text-base-content/70" />
+          <div className="col-span-12 md:col-span-6 h-full min-h-0">
+            <div className="flex items-center gap-2 justify-center mb-4">
+              <button
+                type="button"
+                className="btn btn-sm btn-game secondary"
+                onClick={async () => {
+                  playClick();
+                  const img = document.querySelector<HTMLImageElement>('#charGen img');
+                  if (!img || !img.complete || img.naturalWidth === 0) {
+                    alert('No image yet');
+                    return;
+                  }
+                  // Mirror <img> into an offscreen canvas (natural size)
+                  const c = document.createElement('canvas');
+                  c.width = img.naturalWidth;
+                  c.height = img.naturalHeight;
+                  const ctx = c.getContext('2d', { willReadFrequently: true });
+                  if (!ctx) return;
+                  ctx.imageSmoothingEnabled = false;
+                  ctx.drawImage(img, 0, 0);
+
+                  const id = ctx.getImageData(0, 0, c.width, c.height);
+                  const d = id.data;
+                  const counts = new Map<number, number>();
+                  for (let i = 0; i < d.length; i += 4) {
+                    if (d[i + 3] === 0) continue; // skip fully transparent
+                    const key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+                    counts.set(key, (counts.get(key) || 0) + 1);
+                  }
+                  const toHex = (k: number) => '#' + k.toString(16).padStart(6, '0');
+                  const rows = Array.from(counts.entries())
+                    .map(([k, v]) => ({ hex: toHex(k), count: v }))
+                    .sort((a, b) => b.count - a.count);
+
+                  // eslint-disable-next-line no-console
+                  console.table(rows);
+                }}
+                aria-label="Dump Hex Palette"
+                title="Dump Hex Palette"
+              >
+                <span className="hidden sm:inline">Hexes</span>
+              </button>
+              
+              <PreviewButton traits={immutableTraits} onClickSound={playClick} />
+              <MintButton traits={immutableTraits} onClickSound={playClick} />
+            </div>
+            
+            <canvas id="canvas" width={360} height={600} className="hidden" />
+            <div id="drawAmount" className="text-sm text-base-content/70" />
           {loading && (
             <div className="flex flex-col items-center py-8 text-base-content/70 w-full" aria-live="polite" aria-busy="true">
               <span className="loading loading-spinner loading-md mb-2"></span>
@@ -547,74 +546,78 @@ export default function Home() {
           )}
         </div>
 
-        {/* Right column */}
-        <div className="col-span-12 md:col-span-3">
-          <div className="mb-4 flex items-center gap-3">
-            <button
-              type="button"
-              className="btn btn-game secondary leading-none"
-              onClick={() => {
-                playClick();
-                handleRandomizeFeatures();
-              }}
-              aria-label="Randomize"
-              title="Randomize"
-            >
-              <span className="hidden sm:inline">Randomize</span>
-            </button>
-
-            {/* Hide equipment toggle (logs only for now) */}
-            <label className="label cursor-pointer flex items-center gap-2 m-0 ms-auto">
-              <input
-                type="checkbox"
-                className="toggle toggle-sm"
-                checked={hideEquipment}
-                onChange={(e) => {
-                  const next = e.target.checked;
-                  setHideEquipmentState(next);
-                  try { setHideEquipment(next); } catch {}
-                  // Trigger a redraw path so `applyClassArmorAndRedraw()` logs the value.
-                  try { applyClassArmorAndRedraw(); } catch {}
+          {/* Right column */}
+          <div className="col-span-12 md:col-span-5 h-full min-h-0 md:overflow-hidden flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="btn btn-game secondary leading-none"
+                onClick={() => {
+                  playClick();
+                  handleRandomizeFeatures();
                 }}
-              />
-              <span className="label-text text-sm">Hide equipment</span>
-            </label>
-          </div>
+                aria-label="Randomize"
+                title="Randomize"
+              >
+                <span className="hidden sm:inline">Randomize</span>
+              </button>
 
-          {(uiOrder.length ? uiOrder : features).map((key) => {
-            if (key === 'hairColor') {
-              return (
-                <div key="hairColor-block" className="mb-6">
-                  <p className="m-0 text-base font-bold mb-2">Hair Color</p>
-                  <div id="hairColorSwatches" />
-                </div>
-              );
-            }
-            if (key === 'tattooColor') {
-              return (
-                <div key="tattooColor-block" className="mb-6">
-                  <p className="m-0 text-base font-bold mb-2">Tattoo Color</p>
-                  <div id="tattooColorSwatches" />
-                </div>
-              );
-            }
-            // Hide any excluded feature families (weapon, etc.)
-            if (isExcludedFeatureBase(key)) {
-              return null;
-            }
-            // Default: feature selector row
-            return (
-              <FeatureSelector
-                key={key}
-                category={key}
-                onChange={handleFeatureChange}
-                playClick={playClick}
-                valueText={featureLabels[key] ?? ((featureValues[key] ?? 0) === 0 ? 'none' : String(featureValues[key]))}
-              />
-            );
-          })}
-        </div>
+              {/* Hide equipment toggle (logs only for now) */}
+              <label className="label cursor-pointer flex items-center gap-2 m-0 ms-auto">
+                <input
+                  type="checkbox"
+                  className="toggle toggle-sm"
+                  checked={hideEquipment}
+                  onChange={(e) => {
+                    const next = e.target.checked;
+                    setHideEquipmentState(next);
+                    try { setHideEquipment(next); } catch {}
+                    // Trigger a redraw path so `applyClassArmorAndRedraw()` logs the value.
+                    try { applyClassArmorAndRedraw(); } catch {}
+                  }}
+                />
+                <span className="label-text text-sm">Hide equipment</span>
+              </label>
+            </div>
+
+            <div className="h-full min-h-0 overflow-y-auto bg-base-200 p-1 md:p-5">
+              <div className="space-y-6">
+                {(uiOrder.length ? uiOrder : features).map((key) => {
+                  if (key === 'hairColor') {
+                    return (
+                      <div key="hairColor-block" className="mb-6">
+                        <p className="m-0 text-base text-lg font-bold mb-2">Hair Color</p>
+                        <div id="hairColorSwatches" />
+                      </div>
+                    );
+                  }
+                  if (key === 'tattooColor') {
+                    return (
+                      <div key="tattooColor-block" className="mb-6">
+                        <p className="m-0 text-base text-lg font-bold mb-2">Tattoo Color</p>
+                        <div id="tattooColorSwatches" />
+                      </div>
+                    );
+                  }
+                  // Hide any excluded feature families (weapon, etc.)
+                  if (isExcludedFeatureBase(key)) {
+                    return null;
+                  }
+                  // Default: feature selector row
+                  return (
+                    <FeatureSelector
+                      key={key}
+                      category={key}
+                      onChange={handleFeatureChange}
+                      playClick={playClick}
+                      valueText={featureLabels[key] ?? ((featureValues[key] ?? 0) === 0 ? 'none' : String(featureValues[key]))}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -8,7 +8,7 @@
   prefersdark: true;
 
   --color-primary: #ed9f51;
-  --color-primary-content: #000000;
+  --color-primary-content: #ffffff;
 
   /* background */
   --color-base-100: #1a1313;
@@ -16,6 +16,7 @@
   --color-base-200: #362727;
   /* idk */
   --color-base-300: #362727;
+  --color-base-content: #fff;
 
   /* Cards */
   --card-fs: 1.125rem;
@@ -115,16 +116,6 @@
     border-image-source: url("/assets/ui/frame-9slice-secondary.png");
   }
 
-  /* .btn:where(input) {
-    color: hsl(var(--pc));
-    border-image-source: url("/assets/ui/frame-9slice-secondary.png");
-  } */
-
-  /* .btn.btn-secondary:where(input) {
-    color: hsl(var(--pc));
-    border-image-source: url("/assets/ui/frame-9slice-secondary.png");
-  } */
-
   .btn-game:hover {
     filter: brightness(1.05);
   }
@@ -132,13 +123,6 @@
   .btn-game:active {
     transform: translateY(1px);
   }
-
-  
-
-  /* Utility surface for panels/cards using the ornate frame */
-  /* .panel-game {
-    @apply frame-9slice-ornate p-4 bg-base-100;
-  } */
 
   .icon {
     filter: brightness(0) invert(1) drop-shadow(2px 3px 3px #000);

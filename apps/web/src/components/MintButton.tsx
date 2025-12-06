@@ -69,12 +69,14 @@ function humanError(e: any): string {
 
 type MintButtonProps = {
   traits?: ImmutableTraits | null;
+  onClickSound?: () => void;
 };
 
-export default function MintButton({ traits }: MintButtonProps) {
+export default function MintButton({ traits, onClickSound }: MintButtonProps) {
   const [busy, setBusy] = useState(false);
 
   const onClick = async () => {
+    onClickSound?.();
     try {
       setBusy(true);
       if (!CONTRACT_ADDRESS) throw new Error("Set NEXT_PUBLIC_NRAL721_ADDRESS in .env.local");
@@ -190,7 +192,7 @@ export default function MintButton({ traits }: MintButtonProps) {
   };
 
   return (
-    <button className={`btn btn-sm ${busy ? "btn-disabled" : ""}`} onClick={onClick} disabled={busy}>
+    <button className={`btn btn-sm btn-game secondary ${busy ? "btn-disabled" : ""}`} onClick={onClick} disabled={busy}>
       {busy ? "Minting…" : "Mint on Sepolia"}
     </button>
   );

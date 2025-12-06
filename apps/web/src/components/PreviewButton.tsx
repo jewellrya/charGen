@@ -131,9 +131,10 @@ function htmlTemplate({
 
 type PreviewButtonProps = {
   traits?: ImmutableTraits | null;
+  onClickSound?: () => void;
 };
 
-export default function PreviewButton({ traits }: PreviewButtonProps) {
+export default function PreviewButton({ traits, onClickSound }: PreviewButtonProps) {
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -334,8 +335,11 @@ export default function PreviewButton({ traits }: PreviewButtonProps) {
   return (
     <div className="relative inline-block" ref={menuRef}>
       <button
-        className={`btn btn-sm ${busy ? "btn-disabled" : ""}`}
-        onClick={() => setOpen((v) => !v)}
+        className={`btn btn-sm btn-game secondary ${busy ? "btn-disabled" : ""}`}
+        onClick={() => {
+          onClickSound?.();
+          setOpen((v) => !v);
+        }}
         disabled={busy}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -366,7 +370,10 @@ export default function PreviewButton({ traits }: PreviewButtonProps) {
           <button
             role="menuitem"
             className="menuItem"
-            onClick={previewWithPinnedIpfs}
+            onClick={() => {
+              onClickSound?.();
+              previewWithPinnedIpfs();
+            }}
             disabled={busy}
             style={{
               display: "block",
@@ -386,7 +393,10 @@ export default function PreviewButton({ traits }: PreviewButtonProps) {
           <button
             role="menuitem"
             className="menuItem"
-            onClick={previewEmulatedNoPin}
+            onClick={() => {
+              onClickSound?.();
+              previewEmulatedNoPin();
+            }}
             disabled={busy}
             style={{
               display: "block",

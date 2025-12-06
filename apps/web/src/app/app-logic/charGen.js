@@ -1496,9 +1496,8 @@ function genCharPresets(raceGenderTemplate) {
     genChar.push({ name: '_background', src: node._backgroundSrc, x: 0, y: 0, _slot: 'background' });
   }
 
-  // Base/skin next (mark so recolor logic can find it regardless of index)
+  // Base/skin layer (drawn after any behind-base slots; marked so recolor logic can find it)
   const baseLayer = { ...base, _isBase: true };
-  genChar.push(baseLayer);
 
   // Add each feature layer in the node's order
   const { features, order } = node.presets;
@@ -1510,6 +1509,9 @@ function genCharPresets(raceGenderTemplate) {
       return ia - ib; // lower template index draws earlier (closer to base)
     });
 
+  const layersBeforeBase = [];
+  const layersAfterBase = [];
+
   for (const slot of orderedSlots) {
     const selIndex = features[slot];
     const ti = order[slot];
@@ -1517,14 +1519,25 @@ function genCharPresets(raceGenderTemplate) {
     // Only draw when a real option is selected (skip index 0 which is the transparent placeholder)
     if (typeof selIndex === 'number' && selIndex > 0) {
       const chosen = arr?.[selIndex] || null;
-      if (chosen) genChar.push(chosen);
+      if (chosen) {
+        const layer = { ...chosen, _slot: slot };
+        // Any slot variant ending in "+back" should render behind the base body layer.
+        if (slot.endsWith('+back')) {
+          layersBeforeBase.push(layer);
+        } else {
+          layersAfterBase.push(layer);
+        }
+      }
     }
   }
 
+  genChar.push(...layersBeforeBase);
+  genChar.push(baseLayer);
   const genName = `${racePrimaryIndex ?? 0}${raceIndex ?? ''}${genderIndex ?? 0}0000${padZeroes(
     hairColorIndex,
     2
   )}${padZeroes(tattooColorIndex, 2)}`;
+  genChar.push(...layersAfterBase);
   drawChar(genChar, genName, true);
   notifyFeatures();
   refreshColorSwatchesDeferred();

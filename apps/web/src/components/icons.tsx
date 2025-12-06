@@ -49,11 +49,16 @@ const ICON_MAP = {
   ChevronUp: ChevronUpIcon,
   ChevronDown: ChevronDownIcon,
   Dice: DiceIcon,
+  Wallet: DiceIcon,
 } as const;
 
 type IconName = keyof typeof ICON_MAP;
+const FallbackIcon: React.FC<IconProps> = ({ className }) => (
+  <span className={"icon text-sm " + (className || "")} aria-hidden="true">?</span>
+);
 
 export function Icon({ icon, ...rest }: { icon: IconName } & IconProps) {
   const Comp = ICON_MAP[icon];
-  return <Comp {...rest} />;
+  const Render = Comp ?? FallbackIcon;
+  return <Render {...rest} />;
 }

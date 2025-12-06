@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-theme="scroll" suppressHydrationWarning>
-      <body className={`${tiny5.className} antialiased max-w-6xl px-5 pb-5 mx-auto h-screen md:overflow-hidden`}>
+      <body className={`${tiny5.className} antialiased max-w-6xl px-5 pb-12 mx-auto h-screen md:overflow-hidden`}>
         <MusicProvider>
           <div className="flex flex-col h-full overflow-hidden">
             <SiteHeader />
